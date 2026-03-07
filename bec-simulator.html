@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BEC詐欺シミュレーター｜セキュリティ研修</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;500;700;900&family=Orbitron:wght@700;900&display=swap');
+:root{--bg:#f0f4f8;--surface:#fff;--surface2:#f7f9fc;--border:#dde4ed;--text:#1a2535;--sub:#5a7090;--green:#007a52;--green-bg:#e8f5f0;--green-bd:#a8d8c4;--red:#bf1a2f;--red-bg:#fdeef1;--red-bd:#f0b8c2;--amber:#8a5a00;--amber-bg:#fdf4e3;--amber-bd:#f0d090;--blue:#1450a0;--blue-bg:#e8f0fc;--blue-bd:#a0c0f0;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 40px rgba(0,0,0,0.14)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:0 20px}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:200;box-shadow:var(--shadow)}
+.header-inner{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Orbitron',monospace;font-size:11px;color:var(--green);letter-spacing:3px;font-weight:700}
+.badge-train{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;letter-spacing:2px;font-weight:700}
+.stepper{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border)}
+.step-item{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 12px;font-size:12px;font-weight:700;color:var(--sub);border-right:1px solid var(--border);cursor:default;transition:all 0.3s}
+.step-item:last-child{border-right:none}
+.step-item.active{color:var(--blue);background:var(--blue-bg)}
+.step-item.done{color:var(--green);background:var(--green-bg)}
+.step-num{width:22px;height:22px;border-radius:50%;font-family:'Share Tech Mono',monospace;font-size:11px;display:flex;align-items:center;justify-content:center;background:var(--border);color:var(--sub);flex-shrink:0;font-weight:700}
+.step-item.active .step-num{background:var(--blue);color:#fff}
+.step-item.done .step-num{background:var(--green);color:#fff}
+.step-label{font-size:11px}
+.section{display:none;padding:32px 0 60px}
+.section.active{display:block}
+.about-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 32px;margin-bottom:28px;box-shadow:var(--shadow)}
+.about-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.about-icon{font-size:28px}
+.about-title{font-size:18px;font-weight:900}
+.about-title small{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--sub);display:block;letter-spacing:2px;font-weight:400;margin-bottom:2px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.stat-box{background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:14px 12px;text-align:center}
+.stat-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--red)}
+.stat-lbl{font-size:10px;color:var(--sub);margin-top:4px;line-height:1.4}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.about-block h4{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.about-block h4::before{content:'';width:3px;height:12px;background:var(--red);border-radius:2px;display:inline-block}
+.about-block p{font-size:12px;color:var(--sub);line-height:1.8}
+.about-block p strong{color:var(--text)}
+.flow-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.flow-lbl{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--sub);margin-right:4px}
+.flow-step{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
+.flow-arr{color:var(--sub)}
+.phase-block{margin-bottom:36px}
+.phase-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.phase-badge{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:#fff;padding:4px 12px;border-radius:4px;letter-spacing:1px}
+.pb-green{background:var(--green)}.pb-amber{background:#b07000}.pb-red{background:var(--red)}.pb-blue{background:var(--blue)}
+.phase-title-text{font-size:15px;font-weight:900}
+.phase-sub{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--sub);margin-top:1px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.hcard{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;transition:all 0.2s}
+.hcard:hover{border-color:#b0c4d8;box-shadow:var(--shadow);transform:translateY(-1px)}
+.hcard.sel-green{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 3px rgba(0,122,82,0.12)}
+.hcard.sel-red{border-color:var(--red);background:var(--red-bg);box-shadow:0 0 0 3px rgba(191,26,47,0.10)}
+.hcard.sel-amber{border-color:#c07800;background:var(--amber-bg);box-shadow:0 0 0 3px rgba(138,90,0,0.10)}
+.hcard.sel-blue{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(20,80,160,0.10)}
+.hcard-icon{font-size:22px;margin-bottom:8px}
+.hcard-tag{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;margin-bottom:8px;letter-spacing:1px;font-weight:700;text-transform:uppercase}
+.tg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.tr{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.ta{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+.tb{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.hcard-title{font-size:13px;font-weight:700;margin-bottom:6px;line-height:1.4}
+.hcard-desc{font-size:11px;color:var(--sub);line-height:1.7;margin-bottom:10px}
+.hcard-foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border)}
+.hcard-profit{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green);font-weight:700}
+.hcard-check{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;flex-shrink:0;transition:all 0.2s}
+.hcard.sel-green .hcard-check{background:var(--green);border-color:var(--green);color:#fff}
+.hcard.sel-red .hcard-check{background:var(--red);border-color:var(--red);color:#fff}
+.hcard.sel-amber .hcard-check{background:#c07800;border-color:#c07800;color:#fff}
+.hcard.sel-blue .hcard-check{background:var(--blue);border-color:var(--blue);color:#fff}
+.profit-meter{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 22px;display:flex;align-items:center;gap:20px;margin-bottom:20px;box-shadow:var(--shadow);flex-wrap:wrap}
+.pm-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--sub);letter-spacing:2px;min-width:110px}
+.pm-amount{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--green);min-width:130px}
+.pm-track{flex:1;min-width:160px}
+.pm-bar{height:7px;background:var(--bg);border-radius:4px;border:1px solid var(--border);overflow:hidden;margin-bottom:4px}
+.pm-fill{height:100%;background:linear-gradient(90deg,var(--green),#00b87a);border-radius:4px;width:0;transition:width 0.6s cubic-bezier(0.16,1,0.3,1)}
+.pm-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--sub)}
+.selection-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:28px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:46px}
+.sel-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--sub);letter-spacing:2px;margin-right:4px}
+.sel-tag{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--blue)}
+.sel-none{font-size:11px;color:#aab8c8;font-style:italic}
+.exec-area{text-align:center;padding:28px 0 12px}
+.exec-btn{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:3px;padding:14px 48px;background:var(--red);color:#fff;border:none;border-radius:8px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(191,26,47,0.22);text-transform:uppercase}
+.exec-btn:hover{background:#9e1525;transform:translateY(-2px)}
+.exec-btn:disabled{background:#c8d4e0;color:#8a9db0;cursor:not-allowed;transform:none;box-shadow:none}
+.exec-hint{font-size:11px;color:var(--sub);margin-top:10px}
+.victim-header{background:linear-gradient(135deg,#fff8f9,#fff);border:1px solid var(--red-bd);border-radius:12px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow);flex-wrap:wrap}
+.persona-avatar{width:48px;height:48px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid var(--blue-bd);flex-shrink:0}
+.persona-name{font-size:14px;font-weight:900}
+.persona-role{font-size:11px;color:var(--sub);margin-top:2px}
+.victim-notice{margin-left:auto;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:6px;padding:8px 14px;font-size:11px;color:var(--red);font-weight:700;text-align:center;flex-shrink:0}
+.step-nav{display:flex;align-items:center;gap:4px;margin-bottom:20px;flex-wrap:wrap}
+.snav-item{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--sub);background:var(--surface);transition:all 0.2s}
+.snav-item.current{background:var(--blue);border-color:var(--blue);color:#fff}
+.snav-item.done-nav{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.snav-sep{color:var(--sub);font-size:12px}
+.scenario-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px}
+.sc-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sc-source-badge{font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:1px}
+.badge-email{background:#f0f4ff;border:1px solid #c0d0f0;color:#2050c0}
+.badge-sms{background:#f0fff4;border:1px solid #b0e0c0;color:#1a7a40}
+.badge-line{background:#e8ffe8;border:1px solid #90d890;color:#007a20}
+.badge-internal{background:var(--amber-bg);border:1px solid var(--amber-bd);color:var(--amber)}
+.sc-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--sub);margin-left:auto}
+.sc-body{padding:20px}
+.sc-attack-label{font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:700;color:var(--red);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase}
+.email-ui{background:#fafbfc;border:1px solid #e0e8f0;border-radius:8px;overflow:hidden}
+.email-toolbar{background:#f0f4f8;border-bottom:1px solid #e0e8f0;padding:8px 14px;display:flex;align-items:center;gap:8px}
+.email-dot{width:10px;height:10px;border-radius:50%}
+.email-head{padding:14px 18px;border-bottom:1px solid #e0e8f0}
+.email-row{display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:baseline}
+.email-field{color:var(--sub);font-size:11px;min-width:42px;flex-shrink:0}
+.email-val{color:var(--text);word-break:break-all}
+.email-spoofed{color:var(--red);font-weight:700}
+.email-subj{font-size:13px;font-weight:700;color:var(--text);margin-top:10px}
+.email-content{padding:18px;font-size:13px;line-height:1.9;color:var(--text)}
+.email-sig{margin-top:14px;padding-top:12px;border-top:1px solid #e0e8f0;font-size:11px;color:var(--sub)}
+.email-attach{margin:10px 0 0;padding:10px 14px;background:#f0f4ff;border:1px solid #c0d0f0;border-radius:6px;display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);font-weight:700}
+.sms-ui{background:#1c1c1e;border-radius:16px;padding:16px;max-width:340px;margin:0 auto}
+.sms-header{text-align:center;margin-bottom:12px}
+.sms-name{font-size:13px;font-weight:700;color:#fff}
+.sms-sub{font-size:10px;color:#888}
+.sms-bubbles{display:flex;flex-direction:column;gap:8px}
+.sms-bubble{background:#2c2c2e;border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:13px;color:#fff;line-height:1.6;max-width:85%;word-break:break-word}
+.sms-time{font-size:10px;color:#666;margin-top:4px}
+.line-ui{background:#87ceab;border-radius:12px;overflow:hidden;max-width:360px;margin:0 auto}
+.line-header{background:#00b900;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.line-avatar{width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.line-name{font-size:13px;font-weight:700;color:#fff}
+.line-messages{padding:16px 12px;display:flex;flex-direction:column;gap:10px}
+.line-msg-row{display:flex;align-items:flex-end;gap:8px}
+.line-msg-avatar{width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.line-bubble{background:#fff;border-radius:0 12px 12px 12px;padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;max-width:80%;word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.line-time{font-size:10px;color:#555;flex-shrink:0}
+.fake-site{background:#fff;border:1px solid #d0d8e8;border-radius:8px;overflow:hidden}
+.fake-site-bar{background:#f0f4f8;border-bottom:1px solid #d0d8e8;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:11px}
+.fake-url{color:var(--sub);font-family:'Share Tech Mono',monospace}
+.fake-url span{color:var(--red)}
+.fake-site-body{padding:24px}
+.fake-form{display:flex;flex-direction:column;gap:12px;max-width:360px}
+.fake-form-title{font-size:16px;font-weight:900;margin-bottom:8px}
+.fake-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text)}
+.fake-btn{padding:10px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:default}
+.doc-ui{background:#fffef0;border:1px solid var(--amber-bd);border-radius:8px;padding:18px}
+.doc-title{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:10px}
+.doc-table{width:100%;border-collapse:collapse;font-size:12px}
+.doc-table th{background:var(--amber-bg);padding:6px 10px;text-align:left;border:1px solid var(--amber-bd);font-weight:700}
+.doc-table td{padding:6px 10px;border:1px solid var(--amber-bd);color:var(--text)}
+.doc-table tr:nth-child(even) td{background:#fffdf0}
+.explain-bar{background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:12px 16px;margin-top:14px;font-size:12px;color:var(--red);display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.explain-icon{flex-shrink:0;font-size:16px;margin-top:1px}
+.next-area{display:flex;justify-content:flex-end;margin-top:20px}
+.next-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 3px 12px rgba(20,80,160,0.2)}
+.next-btn:hover{background:#0e3a82;transform:translateY(-1px)}
+.result-hero{background:linear-gradient(135deg,#fff8f9,var(--surface));border:2px solid var(--red-bd);border-radius:14px;padding:32px;text-align:center;margin-bottom:28px;box-shadow:var(--shadow)}
+.result-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--red);margin-bottom:6px}
+.result-sub{font-size:13px;color:var(--sub);margin-bottom:24px}
+.damage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.damage-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px}
+.damage-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--sub);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase}
+.damage-val{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:var(--red)}
+.damage-note{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5}
+.learn-list{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px}
+.learn-title{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--blue);letter-spacing:2px;margin-bottom:16px;font-weight:700}
+.learn-item{display:flex;gap:10px;padding:12px 14px;margin-bottom:8px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:8px;font-size:12px;color:var(--text);line-height:1.7}
+.learn-item::before{content:'✓';color:var(--blue);font-weight:900;flex-shrink:0;margin-top:1px}
+.restart-btn{display:block;margin:28px auto 0;background:var(--surface);border:2px solid var(--border);color:var(--sub);border-radius:8px;padding:12px 32px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.restart-btn:hover{border-color:var(--blue);color:var(--blue)}
+.warn-bar{background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:12px 16px;margin-bottom:24px;font-size:12px;color:var(--amber);display:flex;gap:10px;line-height:1.7}
+.warn-bar strong{color:#5a3000}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn 0.35s ease both}
+@keyframes countUp{from{transform:scale(1.2)}to{transform:scale(1)}}
+.count-anim{animation:countUp 0.35s ease}
+@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.about-grid{grid-template-columns:1fr}.step-label{display:none}.card-grid{grid-template-columns:1fr}.damage-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">&#128274; Security Simulator</div>
+      <div class="badge-train">&#9888; TRAINING MODE</div>
+    </div>
+  </div>
+</header>
+<div class="stepper" id="stepper">
+  <div class="step-item active" id="stp-0"><div class="step-num">1</div><div class="step-label">BECとは</div></div>
+  <div class="step-item" id="stp-1"><div class="step-num">2</div><div class="step-label">ハッカー視点</div></div>
+  <div class="step-item" id="stp-2"><div class="step-num">3</div><div class="step-label">被害者体験</div></div>
+  <div class="step-item" id="stp-3"><div class="step-num">4</div><div class="step-label">結果・学習</div></div>
+</div>
+
+<!-- SEC 0: 解説 -->
+<div class="section active" id="sec-0">
+<div class="container">
+  <div style="padding:32px 0 8px;text-align:center;">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);letter-spacing:3px;margin-bottom:10px;">// MODULE 03 — BUSINESS EMAIL COMPROMISE</div>
+    <div style="font-family:'Orbitron',monospace;font-size:26px;font-weight:900;margin-bottom:10px;">BEC詐欺シミュレーター</div>
+    <div style="font-size:13px;color:var(--sub);max-width:520px;margin:0 auto 28px;line-height:1.8;">ハッカーの視点で攻撃手法を選択し、<br>被害者がどのような体験をするかを体感してください。</div>
+  </div>
+  <div class="about-box">
+    <div class="about-head"><div class="about-icon">&#128231;</div><div class="about-title"><small>// WHAT IS BEC?</small>ビジネスメール詐欺（BEC）とは</div></div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val">$2.9B</div><div class="stat-lbl">2023年 世界の被害額<br>(FBI報告)</div></div>
+      <div class="stat-box"><div class="stat-val">21,489</div><div class="stat-lbl">2023年 被害件数<br>(米国内)</div></div>
+      <div class="stat-box"><div class="stat-val">&#165;4.2&#20740;</div><div class="stat-lbl">国内1件あたり<br>平均被害額</div></div>
+      <div class="stat-box"><div class="stat-val">7%</div><div class="stat-lbl">資金回収できた<br>割合（平均）</div></div>
+    </div>
+    <div class="about-grid">
+      <div class="about-block"><h4>BECの定義</h4><p>攻撃者がCEO・取引先・社内担当者になりすまし、正規のメールを装って<strong>不正送金・機密情報の開示</strong>を指示する詐欺。マルウェアに頼らず<strong>人間の心理・信頼関係を悪用</strong>するため検知が困難。</p></div>
+      <div class="about-block"><h4>なぜBECを選ぶのか？</h4><p>初期費用ほぼゼロ（ドメイン取得数百円〜）。成功すれば数百万〜数千万円の利益。追跡も困難。<strong>「リスクが低く、リターンが高い」</strong>犯罪として組織的に展開される。</p></div>
+      <div class="about-block"><h4>標的になりやすい組織</h4><p>経理・財務部門を持つ企業、M&A・大型取引を行う組織。<strong>承認フローが属人的</strong>な組織は危険。Email・SMS・LINEなど複数チャネルで攻撃される。</p></div>
+      <div class="about-block"><h4>搾取される情報・資産</h4><p>不正送金・<strong>社員名簿・個人情報</strong>・取引先データ・機密文書。金銭だけでなくデータも重大な被害。二次攻撃にも悪用される。</p></div>
+    </div>
+    <div class="flow-bar">
+      <span class="flow-lbl">攻撃の流れ：</span>
+      <span class="flow-step">① 偵察</span><span class="flow-arr">→</span>
+      <span class="flow-step">② なりすまし</span><span class="flow-arr">→</span>
+      <span class="flow-step">③ 接触・誘導</span><span class="flow-arr">→</span>
+      <span class="flow-step">④ 搾取実行</span><span class="flow-arr">→</span>
+      <span class="flow-step">⑤ 証拠隠滅</span>
+    </div>
+  </div>
+  <div class="exec-area">
+    <button class="exec-btn" onclick="goSection(1)">&#9654; ハッカー視点へ進む</button>
+    <div class="exec-hint">次のステップで攻撃手法を選択します</div>
+  </div>
+</div>
+</div>
+
+<!-- SEC 1: ハッカー視点 -->
+<div class="section" id="sec-1">
+<div class="container">
+  <div style="padding:28px 0 16px;">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);letter-spacing:3px;margin-bottom:8px;">// あなたはハッカーです</div>
+    <div style="font-size:20px;font-weight:900;margin-bottom:6px;">攻撃手法を選択してください</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.7;">攻撃の流れに沿ってカードを選択します。選択内容が被害者にどう見えるか、次のステップで体験できます。</div>
+  </div>
+  <div class="warn-bar"><span>&#9888;&#65039;</span><span><strong>研修目的のシミュレーションです。</strong> 実際に行った場合は不正アクセス禁止法・詐欺罪等の刑事罰の対象となります。</span></div>
+  <div class="profit-meter">
+    <div class="pm-label">HACKER PROFIT</div>
+    <div class="pm-amount" id="pmAmount">&#165;0</div>
+    <div class="pm-track"><div class="pm-bar"><div class="pm-fill" id="pmFill"></div></div><div class="pm-sub">選択手法の期待利益（最大 ¥10,000,000）</div></div>
+  </div>
+  <div class="selection-box" id="selBox">
+    <span class="sel-label">選択中：</span>
+    <span class="sel-none" id="selNone">手法を選択してください...</span>
+  </div>
+
+  <div class="phase-block">
+    <div class="phase-head"><span class="phase-badge pb-green">STEP 1</span><div><div class="phase-title-text">&#128269; ターゲット偵察</div><div class="phase-sub">// 誰を・どうやって狙うか調べる</div></div></div>
+    <div class="card-grid">
+      <div class="hcard" data-id="osint" data-profit="0" data-label="OSINT調査" data-c="green" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#128269;</div><span class="hcard-tag tg">OSINT</span>
+        <div class="hcard-title">SNS・会社サイトで社員情報を収集</div>
+        <div class="hcard-desc">LinkedInや会社HPから社員名・役職・メールアドレスを無料で収集。CFO・経理担当者を特定する。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">準備フェーズ ¥0</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">検知率: 1%</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+      <div class="hcard" data-id="phish-cred" data-profit="0" data-label="フィッシングで認証情報窃取" data-c="amber" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#127907;</div><span class="hcard-tag ta">PHISHING</span>
+        <div class="hcard-title">偽ログインページで認証情報を盗む</div>
+        <div class="hcard-desc">ニセのシステムメンテナンスメールを送り、本物そっくりのログイン画面でIDとパスワードを窃取する。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">アカウント乗っ取り可</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">検知率: 22%</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-block">
+    <div class="phase-head"><span class="phase-badge pb-amber">STEP 2</span><div><div class="phase-title-text">&#128232; 接触手段を選ぶ</div><div class="phase-sub">// どのチャネルで被害者に接触するか（複数可）</div></div></div>
+    <div class="card-grid">
+      <div class="hcard" data-id="ch-email" data-profit="0" data-label="メール攻撃" data-c="blue" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#128231;</div><span class="hcard-tag tb">EMAIL</span>
+        <div class="hcard-title">なりすましメールを送信</div>
+        <div class="hcard-desc">CEO・取引先・IT部門を装ったメールを送信。偽ドメインまたは乗っ取りアカウントから本物そっくりに。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">到達率: 95%+</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">主力チャネル</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+      <div class="hcard" data-id="ch-sms" data-profit="0" data-label="SMS攻撃" data-c="green" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#128172;</div><span class="hcard-tag tg">SMS</span>
+        <div class="hcard-title">SMSで緊急性を演出</div>
+        <div class="hcard-desc">上司を名乗りSMSで「急ぎで対応を」と誘導。メールチェックを促したり直接リンクを送ったりする。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">開封率: 98%</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">緊急演出に最適</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+      <div class="hcard" data-id="ch-line" data-profit="0" data-label="LINE攻撃" data-c="green" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#128154;</div><span class="hcard-tag tg">LINE</span>
+        <div class="hcard-title">LINEで親近感を演出</div>
+        <div class="hcard-desc">取引先・同僚になりすましたLINEアカウントで友人感覚に誘導。警戒心が下がりやすい。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">信頼度: 高</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">警戒心が下がる</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-block">
+    <div class="phase-head"><span class="phase-badge pb-red">STEP 3</span><div><div class="phase-title-text">&#128176; 攻撃の目的を選ぶ</div><div class="phase-sub">// 何を搾取するか（複数可）</div></div></div>
+    <div class="card-grid">
+      <div class="hcard" data-id="goal-wire" data-profit="3500000" data-label="不正送金" data-c="red" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#128184;</div><span class="hcard-tag tr">HIGH VALUE</span>
+        <div class="hcard-title">不正送金（振込先変更・緊急送金）</div>
+        <div class="hcard-desc">CEOや取引先を装い経理担当者に送金指示。「口座変更」「急ぎの案件」で判断力を奪う。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">期待利益: +&#165;3,500,000</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">成功率: 18%</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+      <div class="hcard" data-id="goal-data" data-profit="1200000" data-label="社員名簿・データ搾取" data-c="amber" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#128203;</div><span class="hcard-tag ta">DATA THEFT</span>
+        <div class="hcard-title">社員名簿・個人情報の窃取</div>
+        <div class="hcard-desc">HR・総務担当者に「監査対応」「システム移行」を名目に社員名簿・給与情報を送信させる。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">期待利益: +&#165;1,200,000</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">二次攻撃にも活用</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+      <div class="hcard" data-id="goal-takeover" data-profit="5000000" data-label="アカウント乗っ取り" data-c="red" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#128273;</div><span class="hcard-tag tr">CRITICAL</span>
+        <div class="hcard-title">メールアカウント完全掌握</div>
+        <div class="hcard-desc">盗んだ認証情報で本物のアカウントにログイン。過去の会話を使って完璧ななりすましを実施。長期潜伏も可能。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">期待利益: +&#165;5,000,000</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">検知困難・最高価値</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-block">
+    <div class="phase-head"><span class="phase-badge pb-blue">STEP 4</span><div><div class="phase-title-text">&#129529; 逃走・証拠隠滅</div><div class="phase-sub">// 資金を隠し、追跡を逃れる</div></div></div>
+    <div class="card-grid">
+      <div class="hcard" data-id="esc-mule" data-profit="0" data-label="マネーミュール活用" data-c="blue" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#127970;</div><span class="hcard-tag tb">LAUNDERING</span>
+        <div class="hcard-title">マネーミュール口座を経由</div>
+        <div class="hcard-desc">着金後30分以内に複数の中継口座へ分散送金。警察の凍結依頼が届く前に資金を移動させる。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">回収阻止率: +85%</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">必須工程</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+      <div class="hcard" data-id="esc-crypto" data-profit="0" data-label="暗号資産に変換" data-c="blue" onclick="toggleHCard(this)">
+        <div class="hcard-icon">&#129693;</div><span class="hcard-tag tb">CRYPTO</span>
+        <div class="hcard-title">暗号資産に変換して国際送金</div>
+        <div class="hcard-desc">ビットコイン・モネロに変換後、海外ウォレットへ。組戻し期限を超えれば回収不可能。</div>
+        <div class="hcard-foot"><div><div class="hcard-profit">追跡不能化: 完了</div><div style="font-size:10px;color:var(--sub);margin-top:2px;">匿名性: 最高</div></div><div class="hcard-check">&#10003;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exec-area">
+    <button class="exec-btn" id="execBtn" disabled onclick="startVictim()">&#9654; 被害者視点へ切り替える</button>
+    <div class="exec-hint" id="execHint">※ 少なくとも1つの手法を選択してください</div>
+  </div>
+</div>
+</div>
+
+<!-- SEC 2: 被害者体験 -->
+<div class="section" id="sec-2">
+<div class="container">
+  <div class="victim-header fade-in">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="persona-avatar">&#128105;&#8205;&#128188;</div>
+      <div><div class="persona-name">鈴木 花子（経理部 主任）</div><div class="persona-role">田中商事株式会社 ／ 経理・総務兼任</div></div>
+    </div>
+    <div class="victim-notice">&#9888; あなたは今、<br>攻撃されています</div>
+  </div>
+  <div id="stepNav" class="step-nav"></div>
+  <div id="victimContent"></div>
+  <div class="next-area">
+    <button class="next-btn" id="nextBtn" onclick="nextStep()">次へ &#8594;</button>
+  </div>
+</div>
+</div>
+
+<!-- SEC 3: 結果 -->
+<div class="section" id="sec-3">
+<div class="container" style="padding-top:32px;">
+  <div class="result-hero fade-in" id="resultHero"></div>
+  <div class="learn-list fade-in" id="learnList"></div>
+  <button class="restart-btn" onclick="restart()">&#8592; 最初からやり直す</button>
+</div>
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:24px 0;text-align:center;font-size:11px;color:var(--sub);background:var(--surface);margin-top:40px;">
+  &#128274; Security Awareness Training | Business Email Compromise Module<br>
+  <span style="font-size:10px;color:#aab8c8;">このシミュレーターは教育・研修目的のみに使用してください。実際の攻撃行為は違法です。</span>
+</footer>
+
+<script>
+var SEL = {};
+var VSTEPS = [];
+var VIDX = 0;
+
+function toggleHCard(card) {
+  var id = card.dataset.id;
+  var c = card.dataset.c || 'green';
+  var cls = 'sel-' + c;
+  ['sel-green','sel-red','sel-amber','sel-blue'].forEach(function(x){ card.classList.remove(x); });
+  if (SEL[id]) { delete SEL[id]; }
+  else { SEL[id] = true; card.classList.add(cls); }
+  updateHUI();
+}
+
+function updateHUI() {
+  var profit = 0;
+  Object.keys(SEL).forEach(function(id) {
+    var el = document.querySelector('[data-id="'+id+'"]');
+    if (el) profit += parseInt(el.dataset.profit)||0;
+  });
+  var am = document.getElementById('pmAmount');
+  am.textContent = '\u00a5' + profit.toLocaleString();
+  am.classList.remove('count-anim'); void am.offsetWidth; am.classList.add('count-anim');
+  document.getElementById('pmFill').style.width = Math.min(profit/10000000*100,100)+'%';
+  var box = document.getElementById('selBox');
+  box.querySelectorAll('.sel-tag').forEach(function(e){e.remove();});
+  var none = document.getElementById('selNone');
+  var keys = Object.keys(SEL);
+  if (!keys.length) { none.style.display=''; }
+  else {
+    none.style.display='none';
+    keys.forEach(function(id) {
+      var el = document.querySelector('[data-id="'+id+'"]');
+      if (!el) return;
+      var t = document.createElement('span'); t.className='sel-tag'; t.textContent=el.dataset.label; box.appendChild(t);
+    });
+  }
+  var btn = document.getElementById('execBtn');
+  var hint = document.getElementById('execHint');
+  if (keys.length) { btn.disabled=false; hint.textContent=keys.length+'個の手法を選択中'; }
+  else { btn.disabled=true; hint.textContent='※ 少なくとも1つの手法を選択してください'; }
+}
+
+function goSection(n) {
+  for (var i=0;i<4;i++) {
+    document.getElementById('sec-'+i).classList.toggle('active', i===n);
+    var s=document.getElementById('stp-'+i);
+    s.classList.remove('active','done');
+    if (i<n) s.classList.add('done');
+    else if (i===n) s.classList.add('active');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildSteps() {
+  var steps = [];
+  var hasEmail = SEL['ch-email'];
+  var hasSMS = SEL['ch-sms'];
+  var hasLine = SEL['ch-line'];
+  var hasOSINT = SEL['osint'];
+  var hasPhish = SEL['phish-cred'];
+  var hasWire = SEL['goal-wire'];
+  var hasData = SEL['goal-data'];
+  var hasTake = SEL['goal-takeover'];
+  var hasMule = SEL['esc-mule'];
+  var hasCrypto = SEL['esc-crypto'];
+  if (!hasEmail && !hasSMS && !hasLine) hasEmail = true;
+  if (!hasWire && !hasData && !hasTake) hasWire = true;
+
+  if (hasOSINT) {
+    steps.push({ch:'internal',title:'攻撃者があなたの情報を収集しました',type:'recon',explain:'あなたの会社サイト・LinkedInからこれだけの情報が無料で入手できました。攻撃者はこれを使って完璧ななりすましを準備します。'});
+  }
+  if (hasPhish && hasEmail) {
+    steps.push({ch:'email',title:'IT部門を装ったフィッシングメールが届きました',type:'phish-email',explain:'送信元ドメインをよく見てください。「tanaka-shoji」ではなく「tanaka-sh0ji」（oが0）です。このリンクをクリックすると偽のログイン画面に誘導されます。'});
+    steps.push({ch:'internal',title:'偽のログイン画面が表示されました',type:'fake-login',explain:'本物のログイン画面と見分けがつきません。URLをよく見ると「sh0ji」と数字の0が使われています。ここでIDとパスワードを入力すると攻撃者に送信されます。'});
+  }
+  if (hasTake) {
+    steps.push({ch:'internal',title:'攻撃者があなたのメールアカウントに侵入しました',type:'takeover',explain:'攻撃者は今、あなたのメールを読んでいます。過去の取引内容・振込先・社員情報——すべてが攻撃者の手に渡りました。'});
+  }
+  if (hasSMS && (hasWire||hasTake)) {
+    steps.push({ch:'sms',title:'上司（CFO）を名乗るSMSが届きました',type:'sms-cfo',explain:'CFOの名前を偽装したSMSです。「他の人には言わないで」は詐欺の典型的なキーワード。本物かどうか直接確認する前に行動させようとしています。'});
+  }
+  if (hasLine && (hasWire||hasData)) {
+    steps.push({ch:'line',title:'LINEで取引先担当者からメッセージが来ました',type:'line-vendor',explain:'LINEでの口座変更依頼は非常に危険です。取引先になりすましています。「急いでいる」という演出で確認を省略させようとしています。必ず電話で直接確認が必要です。'});
+  }
+  if (hasEmail && hasWire) {
+    steps.push({ch:'email',title:'CFOを装ったメールが届きました',type:'email-wire',isTake:hasTake,explain:hasTake?'これは乗っ取られた本物のアカウントから送信されています。セキュリティシステムは「正規の送信」として検知しません。送金依頼のメールは必ず電話で直接確認してください。':'送信元ドメインをよく見てください。「sh0ji」（oが0）の偽装ドメインです。「他の人への確認不要」は詐欺の典型的なパターンです。'});
+  }
+  if (hasData && hasEmail) {
+    steps.push({ch:'email',title:'監査担当者を装ったメールが届きました',type:'email-data',explain:'「監査」「コンプライアンス」「緊急」という言葉で警戒心を下げています。社員の個人情報・給与情報を外部に送信させようとしています。このような依頼は必ず直属上司に確認してください。'});
+  }
+  if (hasData) {
+    steps.push({ch:'internal',title:'攻撃者が社員名簿を入手しました',type:'stolen-data',explain:'社員名簿が攻撃者の手に渡りました。この情報は給与振込先変更詐欺・標的型フィッシング・なりすまし詐欺に悪用される可能性があります。'});
+  }
+  if (hasWire) {
+    steps.push({ch:'internal',title:'送金処理が完了しました',type:'wire-done',explain:'攻撃者の口座へ¥3,500,000が着金しました。銀行への組戻し依頼は今すぐ行う必要があります。'});
+  }
+  if (hasWire && (hasMule||hasCrypto)) {
+    steps.push({ch:'internal',title:'攻撃者が資金を隠蔽しました',type:'laundering',useMule:hasMule,useCrypto:hasCrypto,explain:'着金から30分以内に資金が動きました。マネーミュール口座と暗号資産変換により、追跡と回収はほぼ不可能な状態です。'});
+  }
+  steps.push({ch:'internal',title:'被害が発覚しました',type:'discovery',hasWire:hasWire,hasData:hasData,explain:'発覚が遅れるほど被害は拡大します。怪しいと感じた瞬間が「対応のチャンス」です。'});
+  return steps;
+}
+
+function startVictim() {
+  VSTEPS = buildSteps(); VIDX = 0;
+  goSection(2); renderVStep();
+}
+
+function renderVStep() {
+  var step = VSTEPS[VIDX];
+  var nav = document.getElementById('stepNav');
+  nav.innerHTML = '';
+  VSTEPS.forEach(function(s,i) {
+    if (i>0) { var sep=document.createElement('span'); sep.className='snav-sep'; sep.textContent='›'; nav.appendChild(sep); }
+    var el=document.createElement('span');
+    el.className='snav-item'+(i<VIDX?' done-nav':i===VIDX?' current':'');
+    el.textContent=i+1; nav.appendChild(el);
+  });
+  document.getElementById('victimContent').innerHTML = makeCard(step);
+  document.getElementById('nextBtn').innerHTML = (VIDX>=VSTEPS.length-1)?'結果を見る &#8594;':'次へ &#8594;';
+}
+
+function nextStep() {
+  if (VIDX < VSTEPS.length-1) { VIDX++; window.scrollTo({top:0,behavior:'smooth'}); renderVStep(); }
+  else showResult();
+}
+
+function badge(ch) {
+  if (ch==='email') return '<span class="sc-source-badge badge-email">&#128231; Email</span>';
+  if (ch==='sms') return '<span class="sc-source-badge badge-sms">&#128172; SMS</span>';
+  if (ch==='line') return '<span class="sc-source-badge badge-line">&#128154; LINE</span>';
+  return '<span class="sc-source-badge badge-internal">&#9881; システム</span>';
+}
+
+function makeCard(step) {
+  var inner = '';
+  var t = step.type;
+
+  if (t==='phish-email') {
+    inner = '<div class="email-ui">'
+      +'<div class="email-toolbar"><div class="email-dot" style="background:#ff5f57"></div><div class="email-dot" style="background:#febc2e"></div><div class="email-dot" style="background:#28c840"></div></div>'
+      +'<div class="email-head">'
+      +'<div class="email-row"><span class="email-field">From:</span><span class="email-val email-spoofed">ITサポートセンター &lt;it-support@tanaka-sh0ji.co.jp&gt; &#9888; 偽装</span></div>'
+      +'<div class="email-row"><span class="email-field">To:</span><span class="email-val">hanako.suzuki@tanaka-shoji.co.jp</span></div>'
+      +'<div class="email-subj">【重要】メールシステムメンテナンスによるパスワード再設定のお願い</div>'
+      +'</div>'
+      +'<div class="email-content">鈴木様<br><br>平素よりお世話になっております。ITサポートセンターでございます。<br><br>本日深夜、メールシステムの定期メンテナンスを実施いたします。<br>セキュリティ強化のため、下記リンクよりパスワードの再設定をお願いいたします。<br><br><strong>期限：本日中</strong><br><br><div class="email-attach">&#128279; パスワード再設定はこちら → https://tanaka-sh0ji.co.jp/reset</div></div>'
+      +'<div class="email-content email-sig">ITサポートセンター<br>TEL: 03-XXXX-XXXX</div>'
+      +'</div>';
+  } else if (t==='fake-login') {
+    inner = '<div class="fake-site">'
+      +'<div class="fake-site-bar"><span>&#128274;</span><span class="fake-url">https://<span>tanaka-sh0ji</span>.co.jp/login &#9888; URLが偽物！</span></div>'
+      +'<div class="fake-site-body"><div class="fake-form">'
+      +'<div class="fake-form-title">&#127970; 田中商事 社内ポータル</div>'
+      +'<div style="font-size:12px;color:var(--sub);margin-bottom:8px;">セキュリティ強化のためパスワードを再設定してください</div>'
+      +'<input class="fake-input" type="text" value="hanako.suzuki@tanaka-shoji.co.jp" readonly>'
+      +'<input class="fake-input" type="password" value="••••••••" readonly>'
+      +'<button class="fake-btn">ログイン / パスワード変更</button>'
+      +'<div style="font-size:11px;color:var(--red);margin-top:6px;font-weight:700;">&#9888; 入力した情報はこの時点で攻撃者のサーバーへ送信されます</div>'
+      +'</div></div></div>';
+  } else if (t==='recon') {
+    inner = '<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:18px;">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:12px;">&#128269; 攻撃者が収集した情報（公開情報のみ）</div>'
+      +'<table class="doc-table"><tr><th>項目</th><th>収集した内容</th><th>入手元</th></tr>'
+      +'<tr><td>氏名・役職</td><td>鈴木 花子（経理部 主任）</td><td>会社HP</td></tr>'
+      +'<tr><td>メールアドレス</td><td>hanako.suzuki@tanaka-shoji.co.jp</td><td>LinkedIn</td></tr>'
+      +'<tr><td>上司</td><td>山田 太郎（CFO）</td><td>LinkedIn</td></tr>'
+      +'<tr><td>主要取引先</td><td>株式会社ヤマモト物流</td><td>プレスリリース</td></tr>'
+      +'<tr><td>大型案件情報</td><td>M&A検討中（3,000万規模）</td><td>業界紙記事</td></tr>'
+      +'</table></div>';
+  } else if (t==='takeover') {
+    inner = '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:24px;text-align:center;">'
+      +'<div style="font-size:40px;margin-bottom:12px;">&#128275;</div>'
+      +'<div style="font-size:15px;font-weight:900;color:var(--red);margin-bottom:8px;">メールアカウントが乗っ取られました</div>'
+      +'<div style="font-size:12px;color:var(--sub);line-height:1.8;">攻撃者は今、あなたのメールボックスを閲覧しています。<br>過去の取引履歴・振込先・社員情報・経営情報——<br>すべてが攻撃者の手に渡りました。<br><br>攻撃者はあなたの本物のアカウントを使って<br>取引先・同僚にメールを送ることができます。</div>'
+      +'</div>';
+  } else if (t==='sms-cfo') {
+    inner = '<div class="sms-ui">'
+      +'<div class="sms-header"><div class="sms-name">山田 太郎（CFO）</div><div class="sms-sub">メッセージ</div></div>'
+      +'<div class="sms-bubbles">'
+      +'<div><div class="sms-bubble">鈴木さん、今ちょっといい？急ぎで頼みたいことがあって</div><div class="sms-time">10:32</div></div>'
+      +'<div><div class="sms-bubble">メールで送ったから確認してほしい。今日中に対応お願い。<strong style="color:#ff9">他の人には言わないで</strong></div><div class="sms-time">10:33</div></div>'
+      +'</div></div>';
+  } else if (t==='line-vendor') {
+    inner = '<div class="line-ui">'
+      +'<div class="line-header"><div class="line-avatar">&#127970;</div><div class="line-name">株式会社ヤマモト物流 佐々木</div></div>'
+      +'<div class="line-messages">'
+      +'<div class="line-msg-row"><div class="line-msg-avatar">&#127970;</div><div class="line-bubble">鈴木さん、お世話になっております！<br>弊社、先月から振込先口座が変わりまして&#128522;<br>今月分からこちらにお願いできますか？</div><div class="line-time">11:05</div></div>'
+      +'<div class="line-msg-row"><div class="line-msg-avatar">&#127970;</div><div class="line-bubble">口座情報<br>銀行名：〇〇銀行 渋谷支店<br>口座番号：1234567<br>口座名義：カ）ヤマモトブツリュウ</div><div class="line-time">11:06</div></div>'
+      +'<div class="line-msg-row"><div class="line-msg-avatar">&#127970;</div><div class="line-bubble">いつものメールより早くてすみません笑<br>急いでお伝えしたくて！</div><div class="line-time">11:07</div></div>'
+      +'</div></div>';
+  } else if (t==='email-wire') {
+    var fromAddr = step.isTake
+      ? 'taro.yamada@tanaka-shoji.co.jp &#9888; 乗っ取り済み本物アカウント'
+      : 'taro.yamada@tanaka-sh0ji.co.jp &#9888; 偽装';
+    var fromCls = 'email-spoofed';
+    inner = '<div class="email-ui">'
+      +'<div class="email-toolbar"><div class="email-dot" style="background:#ff5f57"></div><div class="email-dot" style="background:#febc2e"></div><div class="email-dot" style="background:#28c840"></div></div>'
+      +'<div class="email-head">'
+      +'<div class="email-row"><span class="email-field">From:</span><span class="email-val '+fromCls+'">山田 太郎（CFO）&lt;'+fromAddr+'&gt;</span></div>'
+      +'<div class="email-row"><span class="email-field">To:</span><span class="email-val">hanako.suzuki@tanaka-shoji.co.jp</span></div>'
+      +'<div class="email-subj">【至急・機密】送金処理のお願い</div>'
+      +'</div>'
+      +'<div class="email-content">鈴木さん<br><br>お疲れ様です。山田です。<br><br>現在、M&A案件で急ぎの対応が必要となりました。<br>本件は取締役会の決定事項で、クロージング前のため<strong>極秘</strong>でお願いします。<br><br>下記口座に<strong>本日17時まで</strong>に送金処理をお願いします。<br><br>　金額：3,500,000円<br>　銀行：〇〇銀行 新宿支店<br>　口座番号：7654321<br>　名義：カ）フロンティアパートナーズ<br><br>今回は法務上の理由から<strong>他の方への確認は不要</strong>です。<br>私への連絡もメールのみでお願いします。<br><br>よろしく。</div>'
+      +'<div class="email-content email-sig">山田 太郎<br>取締役 CFO<br>田中商事株式会社</div>'
+      +'</div>';
+  } else if (t==='email-data') {
+    inner = '<div class="email-ui">'
+      +'<div class="email-toolbar"><div class="email-dot" style="background:#ff5f57"></div><div class="email-dot" style="background:#febc2e"></div><div class="email-dot" style="background:#28c840"></div></div>'
+      +'<div class="email-head">'
+      +'<div class="email-row"><span class="email-field">From:</span><span class="email-val email-spoofed">総務部長 田村 健一 &lt;k.tamura@tanaka-sh0ji.co.jp&gt; &#9888; 偽装</span></div>'
+      +'<div class="email-row"><span class="email-field">To:</span><span class="email-val">hanako.suzuki@tanaka-shoji.co.jp</span></div>'
+      +'<div class="email-subj">【緊急】年次コンプライアンス監査対応 — 社員データ送付のお願い</div>'
+      +'</div>'
+      +'<div class="email-content">鈴木さん<br><br>今週実施の外部監査対応として下記情報の提出が必要となりました。<br><br>■ 必要情報（<strong>本日中</strong>）<br>・全社員名簿（氏名・住所・電話番号・給与等級）<br>・直近3ヶ月の振込先口座一覧<br><br>監査法人より直接提出を求められているため、添付ファイルにまとめてご返信ください。<br><br>取り急ぎご対応のほどよろしくお願いします。</div>'
+      +'<div class="email-content email-sig">田村 健一<br>総務部長<br>田中商事株式会社</div>'
+      +'</div>';
+  } else if (t==='stolen-data') {
+    inner = '<div class="doc-ui">'
+      +'<div class="doc-title">&#128203; 攻撃者が入手した社員名簿（一部）</div>'
+      +'<table class="doc-table"><tr><th>氏名</th><th>部署</th><th>住所（一部）</th><th>給与等級</th><th>振込先</th></tr>'
+      +'<tr><td>鈴木 花子</td><td>経理部</td><td>東京都渋谷区〇〇</td><td>G4</td><td>〇〇銀行 ****1234</td></tr>'
+      +'<tr><td>田中 一郎</td><td>営業部</td><td>神奈川県横浜市〇〇</td><td>G5</td><td>△△銀行 ****5678</td></tr>'
+      +'<tr><td>佐藤 美咲</td><td>総務部</td><td>東京都新宿区〇〇</td><td>G3</td><td>□□銀行 ****9012</td></tr>'
+      +'<tr><td>山本 健太</td><td>IT部</td><td>千葉県船橋市〇〇</td><td>G4</td><td>〇〇銀行 ****3456</td></tr>'
+      +'<tr><td colspan="5" style="text-align:center;color:var(--sub);font-style:italic;">…他 全社員 87名分</td></tr>'
+      +'</table></div>';
+  } else if (t==='wire-done') {
+    inner = '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:24px;text-align:center;">'
+      +'<div style="font-size:40px;margin-bottom:10px;">&#128184;</div>'
+      +'<div style="font-size:13px;color:var(--sub);margin-bottom:6px;">送金完了通知</div>'
+      +'<div style="font-family:Orbitron,monospace;font-size:32px;font-weight:900;color:var(--red);">&#165;3,500,000</div>'
+      +'<div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.7;">振込先：カ）フロンティアパートナーズ<br>〇〇銀行 新宿支店 7654321<br><strong style="color:var(--red);">→ この口座は攻撃者のマネーミュール口座です</strong></div>'
+      +'</div>';
+  } else if (t==='laundering') {
+    inner = '<div style="background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:8px;padding:20px;">'
+      +'<div style="font-size:13px;font-weight:900;color:var(--blue);margin-bottom:14px;">&#127970; 資金追跡タイムライン</div>'
+      +'<div style="display:flex;flex-direction:column;gap:10px;">'
+      +(step.useMule?'<div style="display:flex;align-items:center;gap:10px;font-size:12px;"><span style="background:var(--red);color:#fff;padding:2px 8px;border-radius:4px;font-weight:700;min-width:50px;text-align:center;">+0分</span><span>着金確認 → 即座に8つの中継口座へ分散送金</span></div>':'')
+      +(step.useMule?'<div style="display:flex;align-items:center;gap:10px;font-size:12px;"><span style="background:var(--amber);color:#fff;padding:2px 8px;border-radius:4px;font-weight:700;min-width:50px;text-align:center;">+30分</span><span>全額が別々の口座へ — 追跡が極めて困難に</span></div>':'')
+      +(step.useCrypto?'<div style="display:flex;align-items:center;gap:10px;font-size:12px;"><span style="background:var(--blue);color:#fff;padding:2px 8px;border-radius:4px;font-weight:700;min-width:50px;text-align:center;">+2時間</span><span>ビットコインに変換 → 匿名ウォレットへ</span></div>':'')
+      +(step.useCrypto?'<div style="display:flex;align-items:center;gap:10px;font-size:12px;"><span style="background:#555;color:#fff;padding:2px 8px;border-radius:4px;font-weight:700;min-width:50px;text-align:center;">+4時間</span><span>Monero（追跡不能コイン）に変換完了</span></div>':'')
+      +'<div style="display:flex;align-items:center;gap:10px;font-size:12px;"><span style="background:#333;color:#fff;padding:2px 8px;border-radius:4px;font-weight:700;min-width:50px;text-align:center;">+17日後</span><span style="color:var(--red);font-weight:700;">被害発覚。警察へ届出。回収はほぼ不可能。</span></div>'
+      +'</div></div>';
+  } else if (t==='discovery') {
+    inner = '<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:20px;">'
+      +'<div style="font-size:14px;font-weight:900;color:var(--amber);margin-bottom:14px;">&#9888; 被害が発覚した経緯</div>'
+      +(step.hasWire?'<div style="font-size:12px;margin-bottom:8px;padding:8px 12px;background:#fff;border-radius:6px;border:1px solid var(--amber-bd);">&#128184; <strong>送金詐欺：</strong>翌月、本物の取引先から「入金がない」と連絡が来て発覚。すでに17日が経過。</div>':'')
+      +(step.hasData?'<div style="font-size:12px;margin-bottom:8px;padding:8px 12px;background:#fff;border-radius:6px;border:1px solid var(--amber-bd);">&#128203; <strong>情報漏洩：</strong>社員の個人情報が闇サイトに出回っていることが判明。87名全員への通知が必要に。</div>':'')
+      +'<div style="font-size:12px;margin-top:10px;color:var(--sub);line-height:1.7;">→ 警察・銀行への届出<br>→ 個人情報保護委員会への報告義務<br>→ 社員・取引先への謝罪・説明<br>→ 再発防止策の策定</div>'
+      +'</div>';
+  }
+
+  return '<div class="scenario-card fade-in">'
+    +'<div class="sc-header">'+badge(step.ch)+'<div style="font-size:13px;font-weight:700;">'+step.title+'</div>'
+    +'<div class="sc-time">'+( VIDX+1)+' / '+VSTEPS.length+'</div></div>'
+    +'<div class="sc-body"><div class="sc-attack-label">// 攻撃シナリオ進行中</div>'
+    +inner
+    +'<div class="explain-bar"><div class="explain-icon">&#128161;</div><div>'+step.explain+'</div></div>'
+    +'</div></div>';
+}
+
+function showResult() {
+  var hasWire = SEL['goal-wire'];
+  var hasData = SEL['goal-data'];
+  var hasTake = SEL['goal-takeover'];
+  var hasMule = SEL['esc-mule'];
+  var hasCrypto = SEL['esc-crypto'];
+
+  var dmg = '';
+  if (hasWire) dmg+='<div class="damage-box"><div class="damage-label">不正送金額</div><div class="damage-val">&#165;3,500,000</div><div class="damage-note">回収できる確率: 約7%</div></div>';
+  if (hasData) dmg+='<div class="damage-box"><div class="damage-label">漏洩した社員数</div><div class="damage-val" style="font-size:28px;">87名</div><div class="damage-note">氏名・住所・給与情報</div></div>';
+  if (hasTake) dmg+='<div class="damage-box"><div class="damage-label">アカウント侵害期間</div><div class="damage-val" style="font-size:18px;color:var(--amber);">不明</div><div class="damage-note">いつから監視されていたか不明</div></div>';
+  if (hasMule||hasCrypto) dmg+='<div class="damage-box"><div class="damage-label">資金回収可能性</div><div class="damage-val" style="color:var(--green);font-size:18px;">ほぼ0%</div><div class="damage-note">暗号資産変換後は追跡不能</div></div>';
+  if (!dmg) dmg='<div class="damage-box"><div class="damage-label">準備フェーズのみ</div><div class="damage-val" style="font-size:16px;color:var(--green);">偵察完了</div><div class="damage-note">実行フェーズが加わると被害が発生</div></div>';
+
+  document.getElementById('resultHero').innerHTML =
+    '<div class="result-title">&#128680; シミュレーション完了</div>'
+    +'<div class="result-sub">攻撃者の視点 → 被害者の体験を通じて学んだことを確認してください</div>'
+    +'<div class="damage-grid">'+dmg+'</div>'
+    +'<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:14px;font-size:12px;color:var(--red);line-height:1.7;">'
+    +'&#9888; これはすべて<strong>メール1通・SMS1件・LINEメッセージ1つ</strong>から始まりました。<br>'
+    +'攻撃者は「利益があるから攻撃する」——その利益を生み出さないのが私たちの役割です。'
+    +'</div>';
+
+  var learns = [
+    '&#128680; 「急いで」「秘密に」「今すぐ」が届いたら立ち止まる——詐欺の三大キーワード',
+    '&#128222; 送金依頼・口座変更は必ず電話（既知の番号）で本人確認する',
+    '&#128269; メールの送信元ドメインを必ず確認する（表示名ではなくアドレス部分）'
+  ];
+  if (hasWire) learns.push('&#128184; 振込処理は2名以上の承認フローを設ける。1人では完結させない');
+  if (hasData) learns.push('&#128203; 社員名簿・個人情報の送付依頼は、必ず上司に確認してから対応する');
+  if (hasTake) learns.push('&#128273; 多要素認証（MFA）を全アカウントに設定する——最も効果的な防御策');
+  if (hasMule||hasCrypto) learns.push('&#9201; 被害に気づいたら銀行へ「今すぐ」電話。1時間の差が回収率を左右する');
+  learns.push('&#128242; SMS・LINEでの口座変更・送金依頼は100%詐欺と疑う');
+  learns.push('&#127891; 定期的なセキュリティ研修と模擬フィッシング訓練を実施する');
+  learns.push('&#128172; 迷ったら必ず上司・セキュリティ担当者に相談する文化を作る');
+
+  document.getElementById('learnList').innerHTML =
+    '<div class="learn-title">// 今日から実践できる防御策</div>'
+    + learns.map(function(l){ return '<div class="learn-item">'+l+'</div>'; }).join('');
+
+  goSection(3);
+}
+
+function restart() {
+  SEL={}; VSTEPS=[]; VIDX=0;
+  document.querySelectorAll('.hcard').forEach(function(c){ c.classList.remove('sel-green','sel-red','sel-amber','sel-blue'); });
+  updateHUI(); goSection(0);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURITY THREAT SIMULATOR</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div id="simulator-container">
+    <section id="intro-screen" class="screen">
+        <div class="hacker-bg-layer">
+            <i class="fas fa-user-secret"></i>
+        </div>
+        <header><h1>SECURITY THREAT SIMULATOR</h1></header>
+        <div class="intro-content"><p id="intro-text"></p></div>
+        <div class="footer-btn">
+            <button class="primary-btn hidden" id="to-alert-btn" onclick="showFakeAlert()">シミュレーション開始</button>
+        </div>
+    </section>
+
+    <section id="alert-screen" class="screen hidden alert-overlay">
+        <div class="fake-window">
+            <div class="ms-header"><i class="fab fa-microsoft"></i> Microsoft Windows Security</div>
+            <div class="alert-content">
+                <h2 class="blink-red">重大な脅威が検出されました</h2>
+                <div class="error-code">エラーコード: 0x80244017 / 脅威: Trojan.Spyware.Banker</div>
+                <p>あなたのPCはスパイウェアに感染しています。<br>個人情報流出を防ぐため、直ちにサポートへ連絡してください。</p>
+                <div class="phone-num">050-XXXX-XXXX</div>
+                <button class="call-btn" onclick="startGame()">
+                    <i class="fas fa-phone-volume"></i> 今すぐ電話をかける
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="main-game" class="screen hidden">
+        <header>
+            <div id="turn-badge">PROGRESS: <span id="progress-percent">0</span>%</div>
+            <h2>SUPPORT SCAM SESSION</h2>
+        </header>
+
+        <div id="status-display-row">
+            <div class="status-group">
+                <span><i class="fas fa-exclamation-triangle"></i> 危険度レベル</span>
+                <span id="crisis-level" class="value safe">LEVEL 1</span>
+            </div>
+            <div class="status-group">
+                <span><i class="fas fa-desktop"></i> PC状態</span>
+                <span id="pc-status" class="value safe">SECURE</span>
+            </div>
+        </div>
+        
+        <div class="gauge-container">
+            <div class="gauge"><div id="gauge-fill" class="gauge-fill"></div></div>
+        </div>
+
+        <div id="interaction-grid">
+            <div class="column-left">
+                <div class="visual-icon-box">
+                    <i class="fas fa-user" style="color: #00d4ff;"></i>
+                    <p>YOU</p>
+                </div>
+                <div id="player-status-text" class="blinking-text">Waiting for your action...</div>
+                <div id="choices-area"></div>
+            </div>
+            
+            <div class="column-center">
+                <div id="dialogue-panel">
+                    <div class="bubble hacker-bubble"><p id="scenario-text"></p></div>
+                    <div class="bubble player-bubble hidden" id="player-bubble"><p id="player-response-text"></p></div>
+                </div>
+            </div>
+
+            <div class="column-right">
+                <div class="visual-icon-box hacker-box">
+                    <i class="fas fa-user-secret" style="color: #ff3e3e;"></i>
+                    <p>HACKER</p>
+                </div>
+                
+                <div id="screen-monitor" class="monitor-off">
+                    <div id="fake-eventvwr" class="fake-tool hidden">
+                        <div class="tool-header">イベント ビューアー</div>
+                        <div class="tool-body">
+                            <div class="log-row error"><i class="fas fa-times-circle"></i> Error: Kernel-Power</div>
+                            <div class="log-row error"><i class="fas fa-times-circle"></i> Critical: System</div>
+                            <div class="log-row error"><i class="fas fa-times-circle"></i> Error: AppModel</div>
+                            <div class="log-row error"><i class="fas fa-times-circle"></i> Error: 0x80004005</div>
+                        </div>
+                    </div>
+                    <div id="fake-cmd-tree" class="fake-tool hidden">
+                        <div class="tool-header">C:\Windows\System32\cmd.exe</div>
+                        <div class="tool-body terminal-text" id="tree-output"></div>
+                    </div>
+                    <div id="fake-cmd-netstat" class="fake-tool hidden">
+                        <div class="tool-header">Network Statistics</div>
+                        <div class="tool-body terminal-text" id="netstat-output"></div>
+                    </div>
+                    <div id="remote-overlay" class="fake-tool hidden">
+                        <div class="remote-warning">
+                            <i class="fas fa-network-wired"></i><br>REMOTE CONNECTED<br>Target: AnyDesk
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="explanation-container">
+            <div class="toggle-header">
+                <div class="toggle-label">
+                    <i class="fas fa-book-open"></i> 攻撃手法の技術解説
+                    <span class="toggle-sub">（IPA「サポート詐欺レポート」準拠）</span>
+                </div>
+                <div class="toggle-control">
+                    <span class="off-text">OFF</span>
+                    <label class="switch">
+                        <input type="checkbox" id="desc-toggle" onchange="toggleDescription()">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="on-text">ON</span>
+                </div>
+            </div>
+            <div id="description-panel" class="hidden-desc">
+                <p id="description-text"></p>
+            </div>
+        </div>
+    </section>
+
+    <section id="result-area" class="screen hidden">
+        <div class="result-container">
+            <header class="result-header">
+                <h2>AFTER-ACTION REPORT</h2>
+                <div id="final-verdict-badge" class="verdict-badge"></div>
+            </header>
+            
+            <div class="stats-summary">
+                <div class="stat-box damage">
+                    <div class="stat-icon"><i class="fas fa-yen-sign"></i></div>
+                    <div class="stat-label">総被害額</div>
+                    <div class="stat-value" id="res-money">0</div>
+                </div>
+                <div class="stat-box security">
+                    <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="stat-label">セキュリティ状態</div>
+                    <div class="stat-value" id="res-security">UNKNOWN</div>
+                </div>
+            </div>
+
+            <div class="result-details-grid">
+                <div class="detail-card player-loss">
+                    <h3><i class="fas fa-biohazard"></i> あなたが被った損害</h3>
+                    <ul id="player-damage" class="detail-list"></ul>
+                </div>
+                <div class="detail-card hacker-gain">
+                    <h3><i class="fas fa-user-secret"></i> ハッカーが得たもの</h3>
+                    <ul id="hacker-benefit" class="detail-list"></ul>
+                </div>
+            </div>
+
+            <div id="post-scam-checklist" class="action-plan">
+                <h3><i class="fas fa-clipboard-check"></i> 緊急対応チェックリスト</h3>
+                <ul>
+                    <li><strong><i class="fas fa-wifi"></i> ネットワーク遮断:</strong> Wi-Fiを切り、LANケーブルを直ちに抜いてください。</li>
+                    <li><strong><i class="fas fa-key"></i> パスワード変更:</strong> 感染していない別のスマホ等から、全サービスのパスワードを変更してください。</li>
+                    <li><strong><i class="fas fa-phone"></i> 通報・相談:</strong> 警察相談専用電話またはIPAへ連絡してください。</li>
+                    <li><strong><i class="fas fa-hdd"></i> 初期化:</strong> 専門知識がない場合、PCを初期化しバックアップから復元するのが確実です。</li>
+                </ul>
+            </div>
+            <button class="retry-btn pulsate-btn" onclick="location.reload()">シミュレーションを終了して再開</button>
+        </div>
+    </section>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
