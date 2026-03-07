@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1008,7 +1008,7 @@ body {
   <div class="tag">マモール株式会社 / SOC CONSOLE</div>
   <div id="theme-toggle" onclick="toggleTheme()">
     <span class="toggle-icon">🌙</span>
-    <div class="toggle-track" id="toggle-track"><div class="toggle-thumb"></div></div>
+    <div class="toggle-track on" id="toggle-track"><div class="toggle-thumb"></div></div>
     <span class="toggle-icon">☀️</span>
   </div>
   <div class="kpi-strip">
@@ -2257,7 +2257,6 @@ function endGame(choice) {
         <li><b>フィッシング教育</b> — 類似ドメイン・マクロ有効ファイルへの注意を全社員に徹底する</li>
       </ul>
     </div>
-    ${buildScoreBadge(score, MAX_SCORE, grade)}
     <button class="btn-retry" onclick="location.reload()">▶ もう一度プレイする</button>
   `;
 }
