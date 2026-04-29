@@ -75,7 +75,7 @@
         }
 
         .logo-text {
-            font-size: 1rem;
+            font-size: 1.15rem;
             font-weight: 600;
             color: var(--text);
             line-height: 1.2;
@@ -83,7 +83,7 @@
 
         .logo-sub {
             display: block;
-            font-size: 0.68rem;
+            font-size: 0.95rem;
             font-weight: 400;
             color: var(--text-dim);
             margin-top: 1px;
@@ -92,7 +92,7 @@
         .header-tag {
             background: var(--teal-light);
             color: var(--teal);
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 500;
             padding: 0.3rem 0.8rem;
             border-radius: 20px;
@@ -117,7 +117,7 @@
         }
 
         .hero-eyebrow {
-            font-size: 0.72rem;
+            font-size: 0.85rem;
             font-weight: 500;
             color: var(--blue);
             letter-spacing: 0.15em;
@@ -138,7 +138,7 @@
         }
 
         .hero-title {
-            font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            font-size: clamp(1.85rem, 4vw, 2.75rem);
             font-weight: 700;
             line-height: 1.4;
             color: var(--text);
@@ -151,7 +151,7 @@
         }
 
         .hero-desc {
-            font-size: 0.9rem;
+            font-size: 1.05rem;
             color: var(--text-mid);
             line-height: 1.9;
             font-weight: 300;
@@ -176,14 +176,14 @@
         }
 
         .stat-num {
-            font-size: 2rem;
+            font-size: 2.3rem;
             font-weight: 700;
             color: var(--blue);
             line-height: 1;
         }
 
         .stat-label {
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             color: var(--text-dim);
             margin-top: 0.3rem;
             line-height: 1.4;
@@ -219,7 +219,7 @@
         }
 
         .notice p {
-            font-size: 0.83rem;
+            font-size: 0.97rem;
             color: var(--text-mid);
             line-height: 1.75;
         }
@@ -238,7 +238,7 @@
         }
 
         .section-head h2 {
-            font-size: 0.8rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-mid);
             letter-spacing: 0.1em;
@@ -246,7 +246,7 @@
         }
 
         .section-badge {
-            font-size: 0.68rem;
+            font-size: 0.95rem;
             font-weight: 500;
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
@@ -331,7 +331,7 @@
         }
 
         .risk-badge {
-            font-size: 0.65rem;
+            font-size: 0.78rem;
             font-weight: 600;
             padding: 0.25rem 0.6rem;
             border-radius: 20px;
@@ -349,14 +349,14 @@
         }
 
         .card-title {
-            font-size: 1rem;
+            font-size: 1.15rem;
             font-weight: 600;
             color: var(--text);
             line-height: 1.4;
         }
 
         .card-desc {
-            font-size: 0.83rem;
+            font-size: 0.97rem;
             color: var(--text-mid);
             line-height: 1.85;
             font-weight: 300;
@@ -372,12 +372,12 @@
         }
 
         .card-tag {
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             color: var(--text-dim);
         }
 
         .card-btn {
-            font-size: 0.8rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--card-color, var(--blue));
             display: flex;
@@ -422,12 +422,12 @@
         }
 
         footer p {
-            font-size: 0.75rem;
+            font-size: 0.88rem;
             color: var(--text-dim);
         }
 
         .footer-internal {
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             color: var(--text-dim);
             background: var(--surface2);
             padding: 0.25rem 0.75rem;
@@ -511,10 +511,18 @@
     <!-- ACTIVE MODULES -->
     <div class="section-head">
         <h2>体験できるシミュレーター</h2>
-        <span class="section-badge badge-blue">6 件公開中</span>
+        <span class="section-badge badge-blue">7 件公開中</span>
     </div>
 
-    <div class="grid">
+    <!-- 社員向け -->
+    <div class="section-head" style="margin-top:1.5rem;">
+        <h2 style="font-size:0.9rem; color:var(--text); font-weight:600; letter-spacing:0.05em; text-transform:none;">
+            👤 社員向け
+        </h2>
+        <span class="section-badge badge-blue">5 件</span>
+    </div>
+
+    <div class="grid" style="margin-bottom:2.5rem;">
 
         <!-- Card 1 -->
         <a class="card" target="_blank" href="support-scam/index.html" style="--card-color:#c94040; --card-bg:#faeaea;">
@@ -560,28 +568,6 @@
         </a>
 
         <!-- Card 3 -->
-        <a class="card" target="_blank" href="ransomware.html" style="--card-color:#c94040; --card-bg:#faeaea;">
-            <div class="card-top">
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/>
-                        <path d="M8 21h8M12 17v4"/>
-                        <path d="M9 8l2 2 4-4"/>
-                    </svg>
-                </div>
-                <span class="risk-badge risk-high">注意レベル：最高</span>
-            </div>
-            <div>
-                <div class="card-title">ランサムウェア体験</div>
-                <div class="card-desc">ファイルが暗号化され、お金を要求される画面が現れるシナリオを再現。感染後に実際どんな状態になるのか、安全な環境で体験できます。</div>
-            </div>
-            <div class="card-footer">
-                <span class="card-tag">MODULE 03</span>
-                <span class="card-btn">体験する →</span>
-            </div>
-        </a>
-
-        <!-- Card 4 -->
         <a class="card" target="_blank" href="bec-simulator.html" style="--card-color:#e87f1e; --card-bg:#fdf0e4;">
             <div class="card-top">
                 <div class="card-icon">
@@ -597,33 +583,12 @@
                 <div class="card-desc">取引先や上司を装い、偽の送金指示や情報提供を求めるメールの手口を体験。怪しいメールの見抜き方を確認しましょう。</div>
             </div>
             <div class="card-footer">
-                <span class="card-tag">MODULE 04</span>
+                <span class="card-tag">MODULE 03</span>
                 <span class="card-btn">体験する →</span>
             </div>
         </a>
 
-        <!-- Card 5 -->
-        <a class="card" target="_blank" href="security-simulator.html" style="--card-color:#2a9d8f; --card-bg:#e6f6f4;">
-            <div class="card-top">
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                </div>
-                <span class="risk-badge" style="background:#e6f6f4; color:#2a9d8f;">総合シミュレーション</span>
-            </div>
-            <div>
-                <div class="card-title">CYBERSIEGE — セキュリティインシデント シミュレーター</div>
-                <div class="card-desc">リスク要因と防御策を選択し、自社のセキュリティ体制を診断する総合シミュレーター。攻撃シナリオへの対応力をスコアで可視化できます。</div>
-            </div>
-            <div class="card-footer">
-                <span class="card-tag">MODULE 05</span>
-                <span class="card-btn">体験する →</span>
-            </div>
-        </a>
-
-        <!-- Card 6 -->
+        <!-- Card 4 -->
         <a class="card" target="_blank" href="pc_loss_simulation.html" style="--card-color:#6c5fc7; --card-bg:#f0eefb;">
             <div class="card-top">
                 <div class="card-icon">
@@ -641,12 +606,12 @@
                 <div class="card-desc">社用PCを紛失した際に取るべき対応手順を体験するシミュレーター。初動対応の遅れが引き起こすリスクと、正しい報告・対処の流れを学べます。</div>
             </div>
             <div class="card-footer">
-                <span class="card-tag">MODULE 06</span>
+                <span class="card-tag">MODULE 04</span>
                 <span class="card-btn">体験する →</span>
             </div>
         </a>
 
-        <!-- Card 7 -->
+        <!-- Card 5 -->
         <a class="card" target="_blank" href="cafe_security_sim.html" style="--card-color:#e87f1e; --card-bg:#fdf0e4;">
             <div class="card-top">
                 <div class="card-icon">
@@ -663,6 +628,61 @@
             <div>
                 <div class="card-title">カフェ・リモートワークの罠</div>
                 <div class="card-desc">カフェや公共の場でのリモートワーク中に潜むセキュリティリスクを体験。のぞき見・フリーWi-Fi・画面の見られ方など、日常に潜む危険を実感できます。</div>
+            </div>
+            <div class="card-footer">
+                <span class="card-tag">MODULE 05</span>
+                <span class="card-btn">体験する →</span>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- 情報システム部門向け -->
+    <div class="section-head">
+        <h2 style="font-size:0.9rem; color:var(--text); font-weight:600; letter-spacing:0.05em; text-transform:none;">
+            🖥️ 情報システム部門向け
+        </h2>
+        <span class="section-badge" style="background:#e6f6f4; color:#2a9d8f;">2 件</span>
+    </div>
+
+    <div class="grid">
+
+        <!-- Card 6 -->
+        <a class="card" target="_blank" href="ransomware.html" style="--card-color:#c94040; --card-bg:#faeaea;">
+            <div class="card-top">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                        <path d="M9 8l2 2 4-4"/>
+                    </svg>
+                </div>
+                <span class="risk-badge risk-high">注意レベル：最高</span>
+            </div>
+            <div>
+                <div class="card-title">ランサムウェア体験</div>
+                <div class="card-desc">ファイルが暗号化され、お金を要求される画面が現れるシナリオを再現。感染後に実際どんな状態になるのか、安全な環境で体験できます。</div>
+            </div>
+            <div class="card-footer">
+                <span class="card-tag">MODULE 06</span>
+                <span class="card-btn">体験する →</span>
+            </div>
+        </a>
+
+        <!-- Card 7 -->
+        <a class="card" target="_blank" href="security-simulator.html" style="--card-color:#2a9d8f; --card-bg:#e6f6f4;">
+            <div class="card-top">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                </div>
+                <span class="risk-badge" style="background:#e6f6f4; color:#2a9d8f;">総合シミュレーション</span>
+            </div>
+            <div>
+                <div class="card-title">CYBERSIEGE — セキュリティインシデント シミュレーター</div>
+                <div class="card-desc">リスク要因と防御策を選択し、自社のセキュリティ体制を診断する総合シミュレーター。攻撃シナリオへの対応力をスコアで可視化できます。</div>
             </div>
             <div class="card-footer">
                 <span class="card-tag">MODULE 07</span>
