@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カフェ・リモートワークの罠</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F0EC;
+  --card:#FFFFFF;
+  --border:#DDD8D0;
+  --text:#1C1C1C;
+  --muted:#787066;
+  --red:#C93030;
+  --red-bg:#FDF0F0;
+  --amber:#A06010;
+  --amber-bg:#FDF5E6;
+  --neon:#00E5A0;
+  --dark:#18181E;
+}
+html,body{height:100%;font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:16px}
+
+/* ===== TOP PAGE ===== */
+#page-top{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:48px 24px;text-align:center}
+.top-logo{font-size:72px;margin-bottom:28px}
+.top-badge{display:inline-block;background:var(--dark);color:var(--neon);font-size:13px;font-weight:700;letter-spacing:.14em;padding:6px 18px;border-radius:30px;margin-bottom:20px;text-transform:uppercase}
+.top-h{font-size:clamp(24px,4.5vw,40px);font-weight:700;color:var(--dark);line-height:1.25;margin-bottom:14px}
+.top-sub{font-size:clamp(15px,2vw,18px);color:var(--muted);line-height:1.8;max-width:580px;margin:0 auto 36px}
+
+.start-btn{background:var(--dark);color:var(--neon);border:none;border-radius:16px;padding:20px 60px;font-size:19px;font-weight:700;cursor:pointer;letter-spacing:.04em;position:relative;overflow:visible;transition:transform .15s;box-shadow:0 0 0 0 rgba(0,229,160,0)}
+.start-btn:hover{transform:scale(1.04)}
+.start-btn::after{content:'';position:absolute;inset:-3px;border-radius:18px;border:2px solid var(--neon);animation:neonGlow 2.2s ease-in-out infinite;pointer-events:none}
+@keyframes neonGlow{0%,100%{opacity:.4;box-shadow:0 0 8px 2px rgba(0,229,160,.25)}50%{opacity:1;box-shadow:0 0 22px 6px rgba(0,229,160,.55)}}
+.top-note{margin-top:18px;font-size:13px;color:var(--muted)}
+
+/* ===== SIM PAGE ===== */
+#page-sim{display:none;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:700;color:var(--dark)}
+.topbar-sub{font-size:13px;color:var(--muted)}
+.dots-row{display:flex;gap:6px;margin-left:auto}
+.dot{width:26px;height:6px;border-radius:3px;background:var(--border);transition:background .35s}
+.dot.done{background:var(--red)}.dot.active{background:var(--amber)}
+
+.sim-body{display:grid;grid-template-columns:1fr 280px;flex:1;min-height:0}
+
+/* LEFT */
+.left-col{display:flex;flex-direction:column;background:#E8F2F8;border-right:1px solid var(--border);overflow:hidden}
+
+.scene-header{padding:16px 20px 12px;background:rgba(255,255,255,.9);border-bottom:1px solid rgba(200,210,220,.5);flex-shrink:0}
+.scene-tag{font-size:12px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.scene-name{font-size:22px;font-weight:700;color:var(--dark);line-height:1.2;transition:opacity .3s,transform .4s}
+.scene-name.hiding{opacity:0;transform:translateX(24px)}
+.scene-name.showing{opacity:1;transform:translateX(0)}
+
+/* ---- SCENE VISUAL ---- */
+.scene-visual{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0;padding:20px}
+
+/* laptop */
+.laptop-wrap{position:relative;width:320px;flex-shrink:0}
+.laptop-screen-outer{background:#1A1A2A;border-radius:12px 12px 0 0;padding:8px;box-shadow:0 8px 32px rgba(0,0,0,.28);position:relative}
+.laptop-screen-inner{border-radius:6px;overflow:hidden;height:190px;background:#111;display:flex;align-items:center;justify-content:center;position:relative}
+.laptop-base{height:14px;background:#CCCCCC;border-radius:0 0 6px 6px;margin:0 -2px;position:relative}
+.laptop-base::after{content:'';display:block;width:60px;height:5px;background:#BBB;border-radius:0 0 4px 4px;margin:0 auto}
+
+/* screen content */
+.screen-content{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px;color:white;transition:background .5s}
+.screen-idle{background:linear-gradient(135deg,#0D2840,#1A3A5C)}
+.screen-file{background:linear-gradient(135deg,#0D2840,#1A3A5C)}
+.screen-meeting{background:linear-gradient(135deg,#0A1A30,#152840)}
+.screen-warning{background:linear-gradient(135deg,#2A0A0A,#4A1010)}
+.screen-usb{background:linear-gradient(135deg,#0D2840,#1A3A5C)}
+.screen-lock{background:#1A1A2A}
+
+/* person */
+.person-wrap{position:absolute;bottom:20px;left:50%;transform:translateX(-200px);transition:opacity .6s,transform .6s}
+.person-wrap.hidden{opacity:0;transform:translateX(-300px)}
+.person-svg{width:80px;height:120px}
+
+/* speech */
+.speech-zone{background:rgba(255,255,255,.96);border-top:1px solid var(--border);padding:16px 20px;flex-shrink:0}
+.speech-lbl{font-size:12px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.speech-txt{font-size:15px;color:var(--dark);line-height:1.8;min-height:60px}
+.cursor{display:inline-block;width:2px;height:1em;background:var(--dark);vertical-align:text-bottom;animation:blink .65s step-end infinite;margin-left:1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* action button */
+.action-zone{padding:14px 20px 18px;background:rgba(255,255,255,.96);border-top:1px solid var(--border);flex-shrink:0}
+.action-btn{width:100%;padding:16px 20px;font-size:16px;font-weight:700;border:none;border-radius:12px;background:var(--dark);color:var(--neon);cursor:pointer;font-family:inherit;letter-spacing:.03em;position:relative;animation:btnPulse 2.8s ease-in-out infinite;transition:transform .12s,opacity .2s}
+.action-btn:hover{transform:scale(1.02)}
+.action-btn:disabled{opacity:.4;cursor:default;animation:none}
+.action-btn::after{content:'';position:absolute;inset:-2px;border-radius:14px;border:2px solid var(--neon);animation:neonGlow 2.8s ease-in-out infinite;pointer-events:none}
+.action-btn:disabled::after{display:none}
+@keyframes btnPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,229,160,0)}50%{box-shadow:0 0 18px 4px rgba(0,229,160,.3)}}
+
+/* RIGHT */
+.right-col{display:flex;flex-direction:column;background:#F8F6F2;border-left:1px solid var(--border)}
+.right-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.right-title{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.log-scroll{flex:1;overflow-y:auto;padding:14px 14px;display:flex;flex-direction:column;gap:10px}
+.log-empty{font-size:14px;color:var(--muted);opacity:.5;text-align:center;padding:24px 0}
+.log-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s}
+.log-item.show{opacity:1;transform:translateY(0)}
+.log-item.latest{border-color:var(--red);background:var(--red-bg)}
+.log-num{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.log-item.latest .log-num{color:var(--red)}
+.log-txt{font-size:14px;color:var(--dark);line-height:1.55}
+.log-item.latest .log-txt{color:#8A1A1A}
+
+/* ===== INCIDENT PAGE ===== */
+#page-inc{display:none;min-height:100vh;background:#F2F0EC}
+.inc-topbar{display:flex;align-items:center;gap:14px;padding:14px 24px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.inc-badge{background:var(--dark);color:white;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px}
+.inc-dots-row{display:flex;gap:5px;margin-left:auto}
+.inc-content{max-width:860px;margin:0 auto;padding:28px 24px}
+.inc-title{font-size:26px;font-weight:700;color:var(--dark);margin-bottom:20px;line-height:1.3}
+
+/* incident visual */
+.inc-visual{border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:24px;background:white}
+.inc-visual svg{display:block;width:100%}
+
+/* info blocks — card grid matching summary style */
+.info-blocks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.ib{border-radius:12px;padding:18px 20px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.ib.span2{grid-column:1/-1}
+.ib-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+.ib-val{font-size:15px;line-height:1.7}
+
+.ib.neutral{background:var(--card);border:1px solid var(--border)}
+.ib.neutral .ib-lbl{color:var(--muted)}
+.ib.neutral .ib-val{color:var(--dark)}
+
+.ib.attack{background:#FBF0F0;border:1px solid #E8AAAA}
+.ib.attack .ib-lbl{color:#8A1818}
+.ib.attack .ib-val{color:#6A1010;font-weight:700;font-size:16px}
+
+.ib.danger{background:#FEF5F5;border:1px solid #EEBABA;border-left:4px solid var(--red)}
+.ib.danger .ib-lbl{color:#A02020}
+.ib.danger .ib-val{color:#7A1818}
+
+.ib.amber{background:#FDF8EE;border:1px solid #E0C878;border-left:4px solid #C07820}
+.ib.amber .ib-lbl{color:#7A4A08}
+.ib.amber .ib-val{color:#5A3206}
+
+.inc-nav{display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid var(--border);margin-top:4px}
+.inc-counter{font-size:14px;color:var(--muted)}
+.nxt-btn{background:var(--dark);color:var(--neon);border:none;border-radius:10px;padding:14px 28px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;position:relative;letter-spacing:.03em}
+.nxt-btn::after{content:'';position:absolute;inset:-2px;border-radius:12px;border:2px solid var(--neon);animation:neonGlow 2.2s ease-in-out infinite;pointer-events:none}
+
+/* ===== SUMMARY PAGE ===== */
+#page-sum{display:none;min-height:100vh;background:#F2F0EC;padding:36px 24px}
+.sum-inner{max-width:820px;margin:0 auto}
+.sum-hdr{text-align:center;margin-bottom:32px}
+.sum-title{font-size:30px;font-weight:700;color:var(--dark);margin-bottom:8px}
+.sum-sub{font-size:16px;color:var(--muted)}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.sum-scene{font-size:12px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.sum-cname{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:8px;line-height:1.3}
+.sum-dmg{font-size:14px;color:#8A1A1A;line-height:1.6}
+.sum-tech{margin-top:10px;background:#FDF0F0;border-radius:6px;padding:8px 12px;font-size:13px;color:#9A2020;line-height:1.45}
+.tips-box{background:#EAF4E2;border:1px solid #B8D898;border-radius:12px;padding:22px 24px;margin-bottom:22px}
+.tips-title{font-size:18px;font-weight:700;color:#1C4208;margin-bottom:14px}
+.tips-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.tips-list li{font-size:15px;color:#2A5810;line-height:1.7;padding-left:22px;position:relative}
+.tips-list li::before{content:"✓";position:absolute;left:0;color:#3A7820;font-weight:700}
+.restart-btn{width:100%;padding:16px;background:var(--dark);color:var(--neon);border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;position:relative;letter-spacing:.03em}
+.restart-btn::after{content:'';position:absolute;inset:-2px;border-radius:14px;border:2px solid var(--neon);animation:neonGlow 2.2s ease-in-out infinite;pointer-events:none}
+
+/* overlay */
+#overlay{position:fixed;inset:0;background:#18181E;z-index:200;pointer-events:none;opacity:0;transition:opacity .35s}
+#overlay.on{opacity:1;pointer-events:all}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .4s ease forwards}
+</style>
+</head>
+<body>
+<div id="overlay"></div>
+
+<!-- TOP -->
+<div id="page-top">
+  <div class="top-logo">☕</div>
+  <div class="top-badge">Security Awareness Simulation</div>
+  <div class="top-h">カフェ・リモートワークの罠<br>ある日のサイバーセキュリティ体験</div>
+  <div class="top-sub" style="margin-bottom:44px">何気ない日常の選択が、深刻なセキュリティインシデントへとつながる。<br>6つのシーンを通じて、カフェでのリモートワーク中に潜む攻撃のリスクを体験してください。</div>
+  <button class="start-btn" onclick="startSim()">体験する →</button>
+  <div class="top-note">所要時間：約5〜10分 ／ 全6シーン</div>
+</div>
+
+<!-- SIM -->
+<div id="page-sim">
+  <div class="topbar">
+    <div><div class="topbar-title">カフェ・リモートワークの罠</div><div class="topbar-sub">セキュリティ体験シミュレーター</div></div>
+    <div class="dots-row" id="dots"></div>
+  </div>
+  <div class="sim-body">
+    <div class="left-col">
+      <div class="scene-header">
+        <div class="scene-tag" id="scene-tag">オープニング</div>
+        <div class="scene-name showing" id="scene-name">今日はカフェで仕事</div>
+      </div>
+      <div class="scene-visual" id="scene-visual">
+        <!-- laptop -->
+        <div class="laptop-wrap" id="laptop-wrap">
+          <div class="laptop-screen-outer">
+            <div class="laptop-screen-inner" id="screen-inner">
+              <div class="screen-content screen-idle" id="screen-content"></div>
+            </div>
+          </div>
+          <div class="laptop-base"></div>
+        </div>
+        <!-- person -->
+        <div class="person-wrap" id="person-wrap">
+          <svg class="person-svg" viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg">
+            <!-- head -->
+            <circle cx="40" cy="22" r="18" fill="#F5C890" stroke="#DDA060" stroke-width="1"/>
+            <!-- hair -->
+            <ellipse cx="40" cy="10" rx="18" ry="10" fill="#5A3A1A"/>
+            <!-- body -->
+            <rect x="22" y="38" width="36" height="42" fill="#4A70B0" rx="5"/>
+            <!-- left arm -->
+            <rect x="6" y="40" width="16" height="32" fill="#4A70B0" rx="4"/>
+            <rect x="4" y="68" width="14" height="8" fill="#F5C890" rx="3"/>
+            <!-- right arm -->
+            <rect x="58" y="40" width="16" height="32" fill="#4A70B0" rx="4"/>
+            <rect x="62" y="68" width="14" height="8" fill="#F5C890" rx="3"/>
+            <!-- legs -->
+            <rect x="24" y="78" width="14" height="34" fill="#2A2A4A" rx="3"/>
+            <rect x="42" y="78" width="14" height="34" fill="#2A2A4A" rx="3"/>
+            <!-- shoes -->
+            <rect x="22" y="108" width="16" height="10" fill="#1A1A1A" rx="3"/>
+            <rect x="40" y="108" width="16" height="10" fill="#1A1A1A" rx="3"/>
+          </svg>
+        </div>
+      </div>
+      <div class="speech-zone">
+        <div class="speech-lbl">あなたの心の声</div>
+        <div class="speech-txt"><span id="speech-text"></span><span class="cursor" id="cursor" style="display:none"></span></div>
+      </div>
+      <div class="action-zone">
+        <button class="action-btn" id="action-btn" onclick="doStep()">カフェに入る →</button>
+      </div>
+    </div>
+    <div class="right-col">
+      <div class="right-header"><div class="right-title">行動履歴</div></div>
+      <div class="log-scroll" id="log-scroll">
+        <div class="log-empty" id="log-empty">まだ行動はありません</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INCIDENT -->
+<div id="page-inc">
+  <div class="inc-topbar">
+    <span class="inc-badge" id="inc-badge">シーン 1</span>
+    <span style="font-size:15px;font-weight:700;color:#444" id="inc-phase-title"></span>
+    <div class="inc-dots-row" id="inc-dots"></div>
+  </div>
+  <div class="inc-content">
+    <div class="inc-title" id="inc-title"></div>
+    <div class="inc-visual" id="inc-visual"></div>
+    <div class="info-grid" id="inc-grid"></div>
+    <div class="inc-nav">
+      <span class="inc-counter" id="inc-counter"></span>
+      <button class="nxt-btn" id="nxt-btn" onclick="nextInc()">次のシーンへ →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div id="page-sum">
+  <div class="sum-inner">
+    <div class="sum-hdr">
+      <div class="sum-title">🚩 被害まとめレポート</div>
+      <div class="sum-sub">6つの行動が招いた具体的なリスク</div>
+    </div>
+    <div class="sum-grid" id="sum-grid"></div>
+    <div class="tips-box">
+      <div class="tips-title">🛡 安全なカフェワーク 6原則</div>
+      <ul class="tips-list">
+        <li>公共Wi-Fiは使わずスマートフォンのテザリングを利用。やむを得ない場合は必ずVPN経由で接続する</li>
+        <li>離席のたびに必ず画面ロック（Windows: Win+L、Mac: Cmd+Ctrl+Q）。たとえ数秒でも例外なく</li>
+        <li>Web会議はイヤホン必須。機密情報・プロジェクト名・取引先名はカフェで口にしない</li>
+        <li>公共USBポートへの直接接続は禁止。充電専用アダプタ（データブロッカー）を常備する</li>
+        <li>機密ファイルへのアクセスは必ずVPN経由で行い、接続確認を怠らない</li>
+        <li>プライバシーフィルターを装着しビジュアルハッキングを防ぐ。座席は壁側を選ぶ</li>
+      </ul>
+    </div>
+    <button class="restart-btn" onclick="restart()">↺ もう一度体験する</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+============================================================ */
+const SCENES = [
+  {
+    tag:"オープニング", name:"今日はカフェで仕事",
+    text:"締め切りまであと数時間。気分転換に駅前の「CAFE LIBRE」に来てみた。窓際の席でコーヒーを頼んで、さあ集中するぞ。残りの資料を今日中に仕上げてみせる。",
+    btn:"カフェに入る →", log:null,
+    screen:"idle", personVisible:true
+  },
+  {
+    tag:"シーン 1", name:"ネットワークの選択",
+    text:"まずインターネットに繋がないと。Wi-Fi設定を開くと…「Cafe_Guest_Free」が飛んでる。店名と同じSSIDだし、これが公式のやつだろう。パスワードなしで繋がった。ラッキー。",
+    btn:"Free Wi-Fi に接続する",
+    log:"フリーWi-Fi「Cafe_Guest_Free」に接続した",
+    screen:"wifi", personVisible:true
+  },
+  {
+    tag:"シーン 2", name:"短時間の離席",
+    text:"コーヒーをカウンターに取りに行くか。すぐ隣だし、どうせ30秒も経たない。PCロックするの面倒だし、そのままにしていこう。財布だけ持って行くか。",
+    btn:"PCをそのままにして席を立つ",
+    log:"画面ロックせず席を離れた（1回目）",
+    screen:"idle", personVisible:false
+  },
+  {
+    tag:"シーン 3", name:"重要ファイルへのアクセス",
+    text:"よし作業再開。社内サーバーから「プロジェクト秘匿資料_最終版.xlsx」を開かないと。VPN？まあHTTPSだから暗号化されてるだろう。繋ぐの手間だし、そのまま開いてしまおう。",
+    btn:"VPNなしでファイルを開く",
+    log:"VPNを通さず社内の機密ファイルを開いた",
+    screen:"file", personVisible:true
+  },
+  {
+    tag:"シーン 4", name:"Web会議の開始",
+    text:"あ、部長からWeb会議のコールだ。イヤホンがカバンの奥に埋まってる……探すのも時間の無駄か。小声で話せばカフェの喧騒でかき消されるだろう。スピーカーで参加しちゃおう。",
+    btn:"スピーカーで会議に参加する",
+    log:"スピーカー・生声でWeb会議に参加した",
+    screen:"meeting", personVisible:true
+  },
+  {
+    tag:"シーン 5", name:"再びの離席",
+    text:"ちょっとお手洗いへ。さっき席を外したときも何もなかったし、今回も大丈夫だろう。資料も開きっぱなしだけど、5分くらいで戻るから。ロックは……まあいいか。",
+    btn:"また画面ロックせず席を立つ",
+    log:"画面ロックせず席を離れた（2回目）",
+    screen:"warning", personVisible:false
+  },
+  {
+    tag:"シーン 6", name:"バッテリーの補充",
+    text:"まずい、バッテリーが20%を切った。充電器は持ってきたのに電源タップが見当たらない。あ、壁にUSBの充電ポートがある！これを使えば直接充電できるじゃないか。",
+    btn:"公共USBポートに接続して充電する",
+    log:"公共USBポートに直接接続して充電した",
+    screen:"usb", personVisible:true
+  }
+];
+
+const INCIDENTS = [
+  {
+    scene:"シーン 1", title:"偽Wi-Fiへの接続（イビルツイン攻撃）",
+    action:"フリーWi-Fi「Cafe_Guest_Free」に接続",
+    attack:"イビルツイン攻撃 / 中間者攻撃（MitM）",
+    what:"攻撃者が同名SSIDで設置した偽アクセスポイントに接続してしまった。電波を強くした偽APに端末が自動接続するため、利用者は気づかない。",
+    damage:"以降の全通信が攻撃者のサーバーを経由し、IDとパスワードを含む認証情報が盗まれる。",
+    detail:"偽APはSSLストリッピング攻撃も併用することで、HTTPS通信すら平文に変換して傍受できる。VPNなしでは通信内容は丸見えの状態となる。",
+    svg: incSvgWifi
+  },
+  {
+    scene:"シーン 2", title:"画面ロックなしでの離席（BadUSB攻撃）",
+    action:"画面ロックせず席を立った",
+    attack:"物理侵害 / BadUSB攻撃",
+    what:"無施錠のPCに数秒アクセスできれば十分。攻撃者はUSBメモリに見せかけたBadUSBデバイスをPCに挿入し、自動スクリプトを実行する。",
+    damage:"キーボードデバイスとして認識するBadUSBにより、バックドアが数秒以内に設置される。以降、遠隔操作が可能になる。",
+    detail:"BadUSBはマルウェアをダウンロード・実行するコマンドをミリ秒単位で自動打鍵する。ロック画面さえなければ持ち主が戻る前に完了する。",
+    svg: incSvgBadUSB
+  },
+  {
+    scene:"シーン 3", title:"VPNなしでの機密ファイルアクセス",
+    action:"VPNを通さずファイルを開いた",
+    attack:"パケットスニッフィング / セッションハイジャック",
+    what:"シーン1で偽APに接続済みのため、全通信が攻撃者に丸見えの状態。その状態で機密ファイルを開いた。",
+    damage:"機密ファイルの内容・ファイル名・社内サーバーのURL・認証トークンが平文で流出する。",
+    detail:"攻撃者はWireshark等のツールで通信を記録・解析し、認証トークンを窃取してセッションを乗っ取ることもできる。HTTPSも偽APにより剥奪される場合がある。",
+    svg: incSvgSniff
+  },
+  {
+    scene:"シーン 4", title:"オープンスペースでのWeb会議",
+    action:"スピーカー・生声で会議に参加",
+    attack:"ショルダーハッキング / ソーシャルエンジニアリング",
+    what:"「小声」でも静かなカフェでは数メートル先まで筒抜け。隣席の人物が意図的に会話を記録していた。",
+    damage:"プロジェクト名・取引先名・担当者名・売上数値が漏洩し、精巧な標的型フィッシングメールの材料となる。",
+    detail:"収集した情報をもとに「取引先のXX部長」を名乗るなりすましメールが送られ、追加の機密情報や送金を要求するビジネスメール詐欺（BEC）に発展する。",
+    svg: incSvgShoulder
+  },
+  {
+    scene:"シーン 5", title:"画面ロックなしでの離席（2回目）",
+    action:"再び画面ロックせず席を立った",
+    attack:"セッション乗っ取り / 物理アクセス攻撃",
+    what:"シーン2でバックドアが仕掛けられた状態での2回目の離席。攻撃者に十分な操作時間が与えられた。",
+    damage:"ログイン済みセッションを悪用したなりすまし送信・機密ファイルの外部転送が実行される。",
+    detail:"バックドアを通じた遠隔操作または直接操作により、社内システムへの不正アクセスが完了。シーン3で取得した認証情報と組み合わせて被害が拡大する。",
+    svg: incSvgSession
+  },
+  {
+    scene:"シーン 6", title:"公共USBポートでの充電（Juice Jacking）",
+    action:"壁のUSBポートに直接接続",
+    attack:"ジュースジャッキング（Juice Jacking）",
+    what:"USBには電源線とデータ転送線が共存する。攻撃者が細工した公共USBポートは充電しながら同時にデータを窃取できる。",
+    damage:"端末内のファイル・連絡先・写真・ブラウザ保存パスワード・認証トークンが自動転送される。",
+    detail:"iOSでは「このコンピュータを信頼しますか？」ダイアログが出るが、見落とすケースも多い。充電専用アダプタ（データブロッカー）を使えば物理的にデータ線を遮断できる。",
+    svg: incSvgJuice
+  }
+];
+
+/* ============================================================
+   SCREEN CONTENT RENDERERS
+============================================================ */
+function renderScreen(type) {
+  const el = document.getElementById('screen-content');
+  el.className = 'screen-content';
+  switch(type) {
+    case 'idle':
+      el.classList.add('screen-idle');
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;padding:8px 4px;gap:6px">
+          <div style="height:8px;width:70%;background:rgba(255,255,255,.2);border-radius:3px"></div>
+          <div style="height:5px;width:55%;background:rgba(255,255,255,.12);border-radius:3px"></div>
+          <div style="height:5px;width:80%;background:rgba(255,255,255,.12);border-radius:3px"></div>
+          <div style="height:5px;width:40%;background:rgba(255,255,255,.12);border-radius:3px"></div>
+        </div>`;
+      break;
+    case 'wifi':
+      el.classList.add('screen-idle');
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <svg width="70" height="54" viewBox="0 0 70 54">
+            <path d="M5 28 Q35 0 65 28" stroke="#00E5A0" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M15 38 Q35 18 55 38" stroke="#00E5A0" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M25 47 Q35 35 45 47" stroke="#00E5A0" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <circle cx="35" cy="52" r="5" fill="#00E5A0"/>
+          </svg>
+          <div style="font-size:12px;color:#00E5A0;font-weight:700;letter-spacing:.05em">接続完了</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.6);font-family:monospace">Cafe_Guest_Free</div>
+        </div>`;
+      break;
+    case 'file':
+      el.classList.add('screen-file');
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="font-size:36px">📄</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.9);font-weight:700;text-align:center;line-height:1.4">プロジェクト<br>秘匿資料_最終版.xlsx</div>
+          <div style="background:rgba(255,255,255,.12);border-radius:4px;padding:4px 10px">
+            <div style="font-size:10px;color:rgba(255,200,0,.8)">⚠ VPN未接続</div>
+          </div>
+        </div>`;
+      break;
+    case 'meeting':
+      el.classList.add('screen-meeting');
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
+          <div style="display:flex;gap:8px;justify-content:center">
+            <div style="width:48px;height:36px;background:#1E4A3A;border-radius:6px;display:flex;align-items:center;justify-content:center">
+              <div style="font-size:18px">👤</div>
+            </div>
+            <div style="width:48px;height:36px;background:#1A3A5A;border-radius:6px;display:flex;align-items:center;justify-content:center">
+              <div style="font-size:18px">👤</div>
+            </div>
+            <div style="width:48px;height:36px;background:#3A1A3A;border-radius:6px;display:flex;align-items:center;justify-content:center">
+              <div style="font-size:18px">👤</div>
+            </div>
+          </div>
+          <div style="background:rgba(231,76,60,.3);border:1px solid rgba(231,76,60,.5);border-radius:20px;padding:3px 12px">
+            <div style="font-size:11px;color:#FF9090;font-weight:700">🔴 会議中 スピーカーON</div>
+          </div>
+        </div>`;
+      break;
+    case 'warning':
+      el.classList.add('screen-warning');
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <div style="font-size:40px;animation:blink .8s step-end infinite">⚠️</div>
+          <div style="font-size:12px;color:#FF8080;font-weight:700;text-align:center;line-height:1.5">画面ロックなし<br>無防備な状態</div>
+        </div>`;
+      break;
+    case 'usb':
+      el.classList.add('screen-usb');
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <div style="font-size:14px;color:rgba(255,255,255,.6)">バッテリー残量</div>
+          <div style="width:90px;height:26px;border:2px solid rgba(255,255,255,.4);border-radius:4px;position:relative;overflow:hidden">
+            <div style="position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:5px;height:14px;background:rgba(255,255,255,.4);border-radius:0 2px 2px 0"></div>
+            <div style="width:18%;height:100%;background:#E24B4A;border-radius:2px 0 0 2px"></div>
+          </div>
+          <div style="font-size:22px;font-weight:700;color:#FF6060">18%</div>
+          <div style="font-size:11px;color:rgba(255,200,100,.8);font-weight:700">🔌 公共USB充電中</div>
+        </div>`;
+      break;
+  }
+}
+
+/* ============================================================
+   INCIDENT SVGs
+============================================================ */
+function incSvgWifi() {
+  return `<svg width="100%" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <rect width="700" height="180" fill="#F0F6FA"/>
+    <!-- PC -->
+    <rect x="40" y="30" width="160" height="120" fill="#1A2A3A" rx="8"/>
+    <rect x="50" y="40" width="140" height="90" fill="#0D1F30"/>
+    <!-- wifi icon on screen -->
+    <path d="M95 105 Q120 78 145 105" stroke="#00C080" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M105 115 Q120 95 135 115" stroke="#00C080" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M113 123 Q120 112 127 123" stroke="#00C080" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <circle cx="120" cy="128" r="4" fill="#00C080"/>
+    <rect x="60" y="130" width="120" height="12" fill="#223040" rx="6"/>
+    <!-- arrow flow -->
+    <line x1="200" y1="90" x2="290" y2="90" stroke="#C93030" stroke-width="2.5" stroke-dasharray="7,4"/>
+    <polygon points="290,84 304,90 290,96" fill="#C93030"/>
+    <text x="245" y="82" text-anchor="middle" font-size="11" fill="#C93030" font-family="sans-serif" font-weight="700">傍受</text>
+    <!-- evil AP box -->
+    <rect x="304" y="44" width="160" height="92" fill="#FDF0F0" rx="8" stroke="#C93030" stroke-width="2"/>
+    <text x="384" y="68" text-anchor="middle" font-size="13" fill="#8A1818" font-family="sans-serif" font-weight="700">偽アクセスポイント</text>
+    <text x="384" y="86" text-anchor="middle" font-size="11" fill="#A02828" font-family="sans-serif">（イビルツイン）</text>
+    <text x="384" y="104" text-anchor="middle" font-size="11" fill="#A02828" font-family="sans-serif">攻撃者が設置・管理</text>
+    <text x="384" y="122" text-anchor="middle" font-size="11" fill="#C93030" font-family="sans-serif" font-weight="700">全通信を記録</text>
+    <!-- arrow to server -->
+    <line x1="464" y1="90" x2="540" y2="90" stroke="#A06010" stroke-width="2.5"/>
+    <polygon points="540,84 554,90 540,96" fill="#A06010"/>
+    <text x="502" y="82" text-anchor="middle" font-size="11" fill="#A06010" font-family="sans-serif" font-weight="700">転送</text>
+    <!-- attacker server -->
+    <rect x="554" y="50" width="120" height="80" fill="#FDF5E6" rx="8" stroke="#D4A030" stroke-width="1.5"/>
+    <text x="614" y="80" text-anchor="middle" font-size="13" fill="#6A3808" font-family="sans-serif" font-weight="700">攻撃者</text>
+    <text x="614" y="98" text-anchor="middle" font-size="11" fill="#8A5010" font-family="sans-serif">ID/PW受信</text>
+    <text x="614" y="114" text-anchor="middle" font-size="11" fill="#8A5010" font-family="sans-serif">データ保存</text>
+  </svg>`;
+}
+
+function incSvgBadUSB() {
+  return `<svg width="100%" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <rect width="700" height="180" fill="#F5F2EE"/>
+    <!-- unlocked laptop -->
+    <rect x="200" y="25" width="300" height="130" fill="#1A2A3A" rx="8"/>
+    <rect x="212" y="35" width="276" height="100" fill="#2A0808"/>
+    <text x="350" y="88" text-anchor="middle" font-size="28" font-family="sans-serif">⚠️</text>
+    <text x="350" y="112" text-anchor="middle" font-size="13" fill="#FF8080" font-family="sans-serif" font-weight="700">画面ロックなし</text>
+    <rect x="220" y="155" width="260" height="10" fill="#999" rx="5"/>
+    <!-- attacker figure left -->
+    <circle cx="80" cy="65" r="22" fill="#2A2A2A" stroke="#555" stroke-width="1"/>
+    <rect x="60" y="85" width="40" height="50" fill="#1A1A1A" rx="5"/>
+    <rect x="40" y="88" width="20" height="36" fill="#1A1A1A" rx="4"/>
+    <rect x="100" y="88" width="20" height="36" fill="#1A1A1A" rx="4"/>
+    <!-- USB device -->
+    <rect x="48" y="118" width="24" height="12" fill="#444" rx="2"/>
+    <rect x="52" y="122" width="16" height="6" fill="#222" rx="1"/>
+    <!-- arrow -->
+    <line x1="112" y1="120" x2="196" y2="100" stroke="#C93030" stroke-width="2.5"/>
+    <polygon points="195,94 205,102 194,108" fill="#C93030"/>
+    <text x="150" y="104" text-anchor="middle" font-size="11" fill="#C93030" font-family="sans-serif" font-weight="700">USB挿入</text>
+    <!-- result box right -->
+    <rect x="510" y="30" width="165" height="120" fill="#FDF0F0" rx="8" stroke="#C93030" stroke-width="2"/>
+    <text x="592" y="56" text-anchor="middle" font-size="13" fill="#8A1818" font-family="sans-serif" font-weight="700">被害</text>
+    <text x="592" y="76" text-anchor="middle" font-size="12" fill="#A02020" font-family="sans-serif">バックドア設置</text>
+    <text x="592" y="96" text-anchor="middle" font-size="12" fill="#A02020" font-family="sans-serif">遠隔操作可能に</text>
+    <text x="592" y="116" text-anchor="middle" font-size="12" fill="#A02020" font-family="sans-serif">キー入力記録</text>
+    <line x1="500" y1="90" x2="508" y2="90" stroke="#C93030" stroke-width="2.5"/>
+    <polygon points="506,84 518,90 506,96" fill="#C93030"/>
+  </svg>`;
+}
+
+function incSvgSniff() {
+  return `<svg width="100%" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <rect width="700" height="180" fill="#F0F6FA"/>
+    <!-- PC with file open -->
+    <rect x="30" y="25" width="180" height="130" fill="#1A2A3A" rx="8"/>
+    <rect x="42" y="35" width="156" height="100" fill="#0D1F30"/>
+    <text x="120" y="75" text-anchor="middle" font-size="24" font-family="sans-serif">📄</text>
+    <text x="120" y="98" text-anchor="middle" font-size="10" fill="#7AC" font-family="sans-serif">秘匿資料.xlsx</text>
+    <rect x="60" y="106" width="120" height="14" fill="#FF8C00" rx="4" opacity=".25"/>
+    <text x="120" y="116" text-anchor="middle" font-size="10" fill="#FFC060" font-family="sans-serif" font-weight="700">VPN未接続</text>
+    <rect x="50" y="155" width="140" height="8" fill="#999" rx="4"/>
+    <!-- sniff box center -->
+    <line x1="210" y1="90" x2="295" y2="90" stroke="#C93030" stroke-width="2.5" stroke-dasharray="7,4"/>
+    <polygon points="294,84 308,90 294,96" fill="#C93030"/>
+    <rect x="308" y="40" width="180" height="100" fill="#FDF0F0" rx="8" stroke="#C93030" stroke-width="2"/>
+    <text x="398" y="66" text-anchor="middle" font-size="13" fill="#8A1818" font-family="sans-serif" font-weight="700">パケット傍受</text>
+    <text x="398" y="86" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">認証トークン取得</text>
+    <text x="398" y="104" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">ファイル内容を読取</text>
+    <text x="398" y="122" text-anchor="middle" font-size="11" fill="#C93030" font-family="sans-serif" font-weight="700">平文データ丸見え</text>
+    <!-- to attacker -->
+    <line x1="488" y1="90" x2="556" y2="90" stroke="#A06010" stroke-width="2.5"/>
+    <polygon points="555,84 568,90 555,96" fill="#A06010"/>
+    <rect x="568" y="40" width="110" height="100" fill="#FDF5E6" rx="8" stroke="#D4A030" stroke-width="1.5"/>
+    <text x="623" y="70" text-anchor="middle" font-size="13" fill="#6A3808" font-family="sans-serif" font-weight="700">攻撃者</text>
+    <text x="623" y="90" text-anchor="middle" font-size="11" fill="#8A5010" font-family="sans-serif">機密情報</text>
+    <text x="623" y="108" text-anchor="middle" font-size="11" fill="#8A5010" font-family="sans-serif">窃取完了</text>
+    <text x="245" y="80" text-anchor="middle" font-size="11" fill="#C93030" font-family="sans-serif" font-weight="700">傍受</text>
+  </svg>`;
+}
+
+function incSvgShoulder() {
+  return `<svg width="100%" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <rect width="700" height="180" fill="#FEFAF0"/>
+    <!-- person speaking -->
+    <circle cx="100" cy="65" r="22" fill="#F5C890" stroke="#DDA060" stroke-width="1"/>
+    <rect x="80" y="85" width="40" height="50" fill="#4A70B0" rx="5"/>
+    <rect x="60" y="88" width="20" height="36" fill="#4A70B0" rx="4"/>
+    <rect x="100" y="88" width="20" height="36" fill="#4A70B0" rx="4"/>
+    <!-- sound waves -->
+    <path d="M132 60 Q150 40 132 80" stroke="#C93030" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M144 50 Q170 30 144 90" stroke="#C93030" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".6"/>
+    <path d="M157 44 Q192 20 157 96" stroke="#C93030" stroke-width="2" fill="none" stroke-linecap="round" opacity=".35"/>
+    <!-- info box -->
+    <rect x="200" y="30" width="200" height="120" fill="white" rx="8" stroke="#D4A030" stroke-width="1.5"/>
+    <text x="300" y="54" text-anchor="middle" font-size="13" fill="#6A3808" font-family="sans-serif" font-weight="700">漏洩した情報</text>
+    <text x="300" y="76" text-anchor="middle" font-size="12" fill="#4A2808" font-family="sans-serif">・プロジェクト名</text>
+    <text x="300" y="96" text-anchor="middle" font-size="12" fill="#4A2808" font-family="sans-serif">・取引先名・担当者名</text>
+    <text x="300" y="116" text-anchor="middle" font-size="12" fill="#4A2808" font-family="sans-serif">・売上数値・スケジュール</text>
+    <text x="300" y="136" text-anchor="middle" font-size="12" fill="#C93030" font-family="sans-serif" font-weight="700">→ 標的型攻撃の材料に</text>
+    <!-- eavesdropper -->
+    <circle cx="570" cy="65" r="22" fill="#2A2A2A" stroke="#555" stroke-width="1"/>
+    <rect x="550" y="85" width="40" height="50" fill="#1A1A1A" rx="5"/>
+    <rect x="530" y="88" width="20" height="36" fill="#1A1A1A" rx="4"/>
+    <rect x="590" y="88" width="20" height="36" fill="#1A1A1A" rx="4"/>
+    <!-- ear -->
+    <text x="538" y="72" font-size="18" font-family="sans-serif">👂</text>
+    <!-- memo -->
+    <rect x="498" y="110" width="80" height="50" fill="#FFFFF0" rx="5" stroke="#C8C090" stroke-width="1"/>
+    <rect x="504" y="118" width="68" height="3" fill="#888" rx="1"/>
+    <rect x="504" y="125" width="55" height="3" fill="#888" rx="1"/>
+    <rect x="504" y="132" width="62" height="3" fill="#888" rx="1"/>
+    <rect x="504" y="139" width="48" height="3" fill="#888" rx="1"/>
+    <!-- arrow from info to eavesdropper -->
+    <line x1="400" y1="90" x2="525" y2="90" stroke="#C93030" stroke-width="2" stroke-dasharray="6,4"/>
+    <polygon points="524,84 538,90 524,96" fill="#C93030"/>
+  </svg>`;
+}
+
+function incSvgSession() {
+  return `<svg width="100%" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <rect width="700" height="180" fill="#FFF8F5"/>
+    <!-- hacked laptop -->
+    <rect x="200" y="20" width="300" height="140" fill="#2A0808" rx="8"/>
+    <rect x="212" y="32" width="276" height="108" fill="#3A0A0A"/>
+    <!-- X marks -->
+    <line x1="240" y1="55" x2="300" y2="115" stroke="#E24B4A" stroke-width="4"/>
+    <line x1="300" y1="55" x2="240" y2="115" stroke="#E24B4A" stroke-width="4"/>
+    <text x="380" y="90" text-anchor="middle" font-size="26" font-family="sans-serif">⚠️</text>
+    <text x="380" y="115" text-anchor="middle" font-size="12" fill="#FF8080" font-family="sans-serif" font-weight="700">侵害済み</text>
+    <rect x="220" y="160" width="260" height="8" fill="#999" rx="4"/>
+    <!-- attacker left -->
+    <circle cx="80" cy="60" r="22" fill="#2A2A2A" stroke="#555" stroke-width="1"/>
+    <rect x="60" y="80" width="40" height="50" fill="#1A1A1A" rx="5"/>
+    <rect x="40" y="83" width="20" height="36" fill="#1A1A1A" rx="4"/>
+    <rect x="100" y="83" width="20" height="36" fill="#1A1A1A" rx="4"/>
+    <!-- arrow attacker to laptop -->
+    <line x1="118" y1="90" x2="196" y2="90" stroke="#C93030" stroke-width="2.5"/>
+    <polygon points="195,84 208,90 195,96" fill="#C93030"/>
+    <text x="157" y="80" text-anchor="middle" font-size="10" fill="#C93030" font-family="sans-serif" font-weight="700">遠隔操作</text>
+    <!-- arrow laptop to target right -->
+    <line x1="500" y1="90" x2="568" y2="90" stroke="#C93030" stroke-width="2.5"/>
+    <polygon points="567,84 580,90 567,96" fill="#C93030"/>
+    <!-- damage list -->
+    <rect x="580" y="25" width="108" height="130" fill="#FDF0F0" rx="8" stroke="#C93030" stroke-width="1.5"/>
+    <text x="634" y="50" text-anchor="middle" font-size="12" fill="#8A1818" font-family="sans-serif" font-weight="700">被害</text>
+    <text x="634" y="70" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">なりすまし</text>
+    <text x="634" y="88" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">メール送信</text>
+    <text x="634" y="106" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">ファイル</text>
+    <text x="634" y="124" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">外部転送</text>
+  </svg>`;
+}
+
+function incSvgJuice() {
+  return `<svg width="100%" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <rect width="700" height="180" fill="#F0F6FA"/>
+    <!-- laptop -->
+    <rect x="30" y="25" width="180" height="130" fill="#1A2A3A" rx="8"/>
+    <rect x="42" y="35" width="156" height="100" fill="#0D1F30"/>
+    <!-- battery on screen -->
+    <rect x="85" y="58" width="66" height="28" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2.5" rx="4"/>
+    <rect x="151" y="66" width="6" height="12" fill="rgba(255,255,255,.4)" rx="2"/>
+    <rect x="89" y="62" width="12" height="20" fill="#E24B4A" rx="2"/>
+    <text x="120" y="104" text-anchor="middle" font-size="13" fill="#FF6060" font-family="sans-serif" font-weight="700">18%</text>
+    <text x="120" y="120" text-anchor="middle" font-size="10" fill="rgba(255,200,100,.8)" font-family="sans-serif">充電中 🔌</text>
+    <rect x="50" y="155" width="140" height="8" fill="#999" rx="4"/>
+    <!-- cable -->
+    <path d="M210 110 Q290 110 340 90" stroke="#E24B4A" stroke-width="3" fill="none" stroke-dasharray="8,4"/>
+    <!-- evil USB port -->
+    <rect x="340" y="50" width="60" height="100" fill="#555" rx="6" stroke="#888" stroke-width="1"/>
+    <rect x="350" y="64" width="40" height="16" fill="#333" rx="2"/>
+    <rect x="350" y="84" width="40" height="16" fill="#333" rx="2"/>
+    <rect x="350" y="104" width="40" height="16" fill="#E24B4A" rx="2" opacity=".7"/>
+    <text x="370" y="140" text-anchor="middle" font-size="10" fill="#CCC" font-family="sans-serif">USB</text>
+    <!-- data flow box -->
+    <rect x="420" y="30" width="180" height="120" fill="#FDF0F0" rx="8" stroke="#C93030" stroke-width="2"/>
+    <text x="510" y="56" text-anchor="middle" font-size="13" fill="#8A1818" font-family="sans-serif" font-weight="700">窃取されるデータ</text>
+    <text x="510" y="76" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">・ファイル・写真・連絡先</text>
+    <text x="510" y="94" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">・保存パスワード</text>
+    <text x="510" y="112" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">・認証トークン</text>
+    <text x="510" y="130" text-anchor="middle" font-size="11" fill="#A02020" font-family="sans-serif">・ブラウザ履歴・Cookie</text>
+    <!-- arrow -->
+    <line x1="400" y1="90" x2="418" y2="90" stroke="#C93030" stroke-width="2.5"/>
+    <polygon points="416,84 430,90 416,96" fill="#C93030"/>
+  </svg>`;
+}
+
+/* ============================================================
+   STATE & CORE
+============================================================ */
+let simStep = 0, incStep = 0;
+const logItems = [];
+let typeTimer = null;
+
+function show(id) {
+  ['page-top','page-sim','page-inc','page-sum'].forEach(pid => {
+    const el = document.getElementById(pid);
+    if(!el) return;
+    el.style.display = pid===id ? (pid==='page-sim'?'flex':'block') : 'none';
+  });
+}
+
+function fade(cb) {
+  const ov = document.getElementById('overlay');
+  ov.classList.add('on');
+  setTimeout(()=>{ cb(); setTimeout(()=>ov.classList.remove('on'), 50); }, 360);
+}
+
+function buildDots(containerId, total, current, doneCol, activeCol) {
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = '';
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div');
+    d.className='dot';
+    d.style.background = i<current ? doneCol : i===current ? activeCol : '#DDD8D0';
+    el.appendChild(d);
+  }
+}
+
+function typeWrite(text, onDone) {
+  if(typeTimer){ clearInterval(typeTimer); typeTimer=null; }
+  const txt=document.getElementById('speech-text');
+  const cur=document.getElementById('cursor');
+  txt.textContent='';
+  cur.style.display='inline-block';
+  let i=0;
+  typeTimer=setInterval(()=>{
+    txt.textContent+=text[i]; i++;
+    if(i>=text.length){ clearInterval(typeTimer); typeTimer=null; cur.style.display='none'; if(onDone) onDone(); }
+  }, 26);
+}
+
+/* ============================================================
+   SIM
+============================================================ */
+function startSim() {
+  fade(()=>{ show('page-sim'); simStep=0; logItems.length=0; renderScene(); });
+}
+
+function renderScene() {
+  const s = SCENES[simStep];
+  const btn = document.getElementById('action-btn');
+  btn.disabled = true;
+
+  buildDots('dots', SCENES.length, simStep, '#C93030', '#A06010');
+
+  // title transition
+  const nameEl = document.getElementById('scene-name');
+  const tagEl  = document.getElementById('scene-tag');
+  nameEl.classList.remove('showing'); nameEl.classList.add('hiding');
+  setTimeout(()=>{
+    tagEl.textContent  = s.tag;
+    nameEl.textContent = s.name;
+    nameEl.classList.remove('hiding'); nameEl.classList.add('showing');
+  }, 280);
+
+  btn.textContent = s.btn;
+  renderScreen(s.screen);
+
+  // person visibility
+  const pw = document.getElementById('person-wrap');
+  if(s.personVisible){ pw.classList.remove('hidden'); } else { pw.classList.add('hidden'); }
+
+  refreshLog();
+  setTimeout(()=> typeWrite(s.text, ()=>{ btn.disabled=false; }), 320);
+}
+
+function refreshLog() {
+  const scroll = document.getElementById('log-scroll');
+  const empty  = document.getElementById('log-empty');
+  if(logItems.length===0){ if(empty) empty.style.display=''; return; }
+  if(empty) empty.style.display='none';
+  scroll.innerHTML='';
+  logItems.forEach((t,i)=>{
+    const el=document.createElement('div');
+    const isLatest = i===logItems.length-1;
+    el.className='log-item'+(isLatest?' latest':'');
+    el.innerHTML=`<div class="log-num">行動 ${i+1}</div><div class="log-txt">${t}</div>`;
+    scroll.appendChild(el);
+    requestAnimationFrame(()=> el.classList.add('show'));
+  });
+}
+
+function doStep() {
+  const s = SCENES[simStep];
+  if(s.log) logItems.push(s.log);
+  simStep++;
+  if(simStep>=SCENES.length){ fade(()=>{ incStep=0; renderInc(); show('page-inc'); }); }
+  else { renderScene(); }
+}
+
+/* ============================================================
+   INCIDENT
+============================================================ */
+function renderInc() {
+  const inc = INCIDENTS[incStep];
+  buildDots('inc-dots', INCIDENTS.length, incStep+1, '#C93030', '#C93030');
+  document.getElementById('inc-badge').textContent = inc.scene;
+  document.getElementById('inc-phase-title').textContent = 'インシデントレポート';
+  document.getElementById('inc-title').textContent = inc.title;
+  document.getElementById('inc-visual').innerHTML = inc.svg();
+  document.getElementById('inc-grid').innerHTML = `
+    <div class="info-blocks">
+      <div class="ib neutral"><div class="ib-lbl">選択した行動</div><div class="ib-val">${inc.action}</div></div>
+      <div class="ib attack"><div class="ib-lbl">攻撃手法</div><div class="ib-val">${inc.attack}</div></div>
+      <div class="ib danger span2"><div class="ib-lbl">何が起きたか</div><div class="ib-val">${inc.what}</div></div>
+      <div class="ib danger span2"><div class="ib-lbl">具体的な被害</div><div class="ib-val">${inc.damage}</div></div>
+      <div class="ib amber span2"><div class="ib-lbl">攻撃の仕組み（技術解説）</div><div class="ib-val">${inc.detail}</div></div>
+    </div>`;
+  document.getElementById('inc-counter').textContent = `インシデント ${incStep+1} / ${INCIDENTS.length}`;
+  document.getElementById('nxt-btn').textContent = incStep<INCIDENTS.length-1 ? '次のシーンへ →' : '被害まとめを見る →';
+  document.getElementById('page-inc').scrollTop = 0;
+}
+
+function nextInc() {
+  incStep++;
+  if(incStep>=INCIDENTS.length){ fade(()=>{ showSum(); show('page-sum'); }); return; }
+  fade(()=> renderInc());
+}
+
+/* ============================================================
+   SUMMARY
+============================================================ */
+function showSum() {
+  document.getElementById('sum-grid').innerHTML = INCIDENTS.map(inc=>`
+    <div class="sum-card fade-up">
+      <div class="sum-scene">${inc.scene}</div>
+      <div class="sum-cname">${inc.title}</div>
+      <div class="sum-dmg">${inc.damage}</div>
+      <div class="sum-tech">${inc.attack}</div>
+    </div>`).join('');
+}
+
+function restart() {
+  fade(()=>{ show('page-top'); simStep=0; incStep=0; logItems.length=0; });
+}
+
+/* init */
+show('page-top');
+</script>
+</body>
+</html>

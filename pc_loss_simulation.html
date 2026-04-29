@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INCIDENT // セキュリティ訓練</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:    #1a1714;
+  --ink2:   #2e2b28;
+  --ink3:   #46423d;
+  --paper:  #f7f4ef;
+  --paper2: #eeebe4;
+  --paper3: #e3dfd6;
+  --line:   #ccc8c0;
+  --smoke:  #7a746c;
+  --ash:    #4a4540;
+  --red:    #b82216;
+  --red2:   #d93020;
+  --red-bg: #fdf0ee;
+  --red-ln: #e8b8b2;
+  --amber:  #b86e08;
+  --amb-bg: #fef7e8;
+  --amb-ln: #e8c878;
+  --green:  #166638;
+  --grn-bg: #ecf8f2;
+  --grn-ln: #80ccaa;
+  --blue:   #124898;
+  --blu-bg: #ecf2fc;
+  --blu-ln: #90b8e8;
+  --r:14px; --r-sm:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;line-height:1.75;font-size:16px;}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:200;background:rgba(247,244,239,0.95);backdrop-filter:blur(14px);border-bottom:2px solid var(--line);height:62px;display:flex;align-items:center;padding:0 2rem;gap:1.4rem;}
+.hdr-logo{display:flex;align-items:center;gap:.75rem;}
+.hdr-icon{width:34px;height:34px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hdr-icon svg{display:block;}
+.hdr-wm{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.12em;color:var(--ink);line-height:1;}
+.hdr-wm span{color:var(--red);}
+.hdr-sep{width:1px;height:26px;background:var(--line);}
+.hdr-sub{font-size:.85rem;color:var(--smoke);font-weight:500;letter-spacing:.02em;}
+.hdr-badge{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:700;letter-spacing:.1em;color:var(--red);border:1.5px solid var(--red-ln);background:var(--red-bg);padding:4px 12px;border-radius:999px;}
+
+/* ── HERO ── */
+.hero{position:relative;min-height:calc(100vh - 62px);display:flex;flex-direction:column;justify-content:center;overflow:hidden;background:var(--paper);}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 65% 45%,#fce6e3 0%,var(--paper) 65%);}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:44px 44px;opacity:.4;}
+.hero-vline{position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(to bottom,transparent,var(--red) 20%,var(--red) 80%,transparent);}
+.hero-in{position:relative;z-index:2;max-width:840px;margin:0 auto;padding:4rem 2rem;}
+.hero-ey{display:flex;align-items:center;gap:.8rem;margin-bottom:1.8rem;}
+.hero-ey-bar{width:32px;height:2px;background:var(--red);}
+.hero-ey-txt{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;letter-spacing:.2em;color:var(--red);text-transform:uppercase;}
+.hero-ttl{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,10vw,7rem);letter-spacing:.04em;line-height:.92;color:var(--ink);margin-bottom:.5rem;}
+.hero-ttl .acc{color:var(--red);}
+.hero-ttl .sub{display:block;font-size:.52em;color:var(--smoke);letter-spacing:.22em;margin-bottom:.3rem;}
+.hero-tag{font-size:1.05rem;color:var(--ash);font-weight:400;margin:1.6rem 0 2.2rem;max-width:520px;line-height:1.95;letter-spacing:.01em;}
+.hero-tag strong{color:var(--ink);font-weight:700;}
+.hero-chips{display:flex;flex-wrap:wrap;gap:.8rem;margin-bottom:2.6rem;}
+.hero-chip{display:flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:500;color:var(--ash);border:1.5px solid var(--line);padding:5px 13px;border-radius:999px;background:#fff;letter-spacing:.04em;}
+.hero-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--red);}
+.tw-box{background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:1.5rem 1.8rem;margin-bottom:2.2rem;min-height:9rem;font-size:1rem;color:var(--ash);line-height:2;box-shadow:0 2px 10px rgba(0,0,0,0.05);}
+.tw-box strong{color:var(--ink);font-weight:700;}
+.tw-cur{display:inline-block;width:2px;height:1.15em;background:var(--red);margin-left:2px;vertical-align:text-bottom;animation:blink .75s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-pur{background:var(--red-bg);border:1.5px solid var(--red-ln);border-radius:var(--r-sm);padding:1.1rem 1.4rem;display:flex;gap:.9rem;align-items:flex-start;margin-bottom:2.4rem;font-size:.9rem;color:var(--ash);line-height:1.7;}
+.hero-pur strong{color:var(--ink);}
+.hero-pur-ic{font-size:1.1rem;flex-shrink:0;margin-top:2px;}
+.btn-start-row{opacity:0;transition:opacity .65s ease;}
+.btn-start{display:inline-flex;align-items:center;gap:1rem;background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);padding:1.1rem 2.4rem;font-family:'Noto Sans JP',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .2s ease;box-shadow:0 4px 20px rgba(184,34,22,.22);}
+.btn-start:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(184,34,22,.32);}
+.btn-start .arr{transition:transform .2s;}
+.btn-start:hover .arr{transform:translateX(4px);}
+
+/* ── SIM AREA ── */
+.sim-outer{background:var(--paper);min-height:100vh;}
+.sim-main{max-width:780px;margin:0 auto;padding:2.8rem 1.5rem 5rem;}
+
+/* ── PROGRESS ── */
+.prog{display:flex;align-items:center;gap:1rem;margin-bottom:2.2rem;}
+.prog-steps{display:flex;gap:5px;flex:1;}
+.prog-step{flex:1;height:4px;border-radius:999px;background:var(--paper3);transition:background .3s;}
+.prog-step.done{background:var(--ink2);}
+.prog-step.active{background:var(--red);}
+.prog-lbl{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--smoke);letter-spacing:.08em;white-space:nowrap;}
+
+/* ── CARD ── */
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:1.4rem;box-shadow:0 2px 14px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.04);animation:sup .38s cubic-bezier(.16,1,.3,1) both;}
+@keyframes sup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.ci{padding:2rem 2.2rem;}
+
+/* ── SCENE META ── */
+.smeta{display:flex;align-items:center;gap:.65rem;margin-bottom:1.1rem;}
+.sstep{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;color:var(--smoke);letter-spacing:.1em;}
+.stag{font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:3px 10px;border-radius:999px;}
+.t-go  {background:var(--grn-bg);color:var(--green);border:1.5px solid var(--grn-ln);}
+.t-warn{background:var(--amb-bg);color:var(--amber);border:1.5px solid var(--amb-ln);}
+.t-bad {background:var(--red-bg);color:var(--red);  border:1.5px solid var(--red-ln);}
+.t-info{background:var(--blu-bg);color:var(--blue); border:1.5px solid var(--blu-ln);}
+.t-neu {background:var(--paper2);color:var(--ash);  border:1.5px solid var(--line);}
+
+/* ── SCENE HEADING ── */
+.sh{font-size:1.65rem;font-weight:900;line-height:1.28;letter-spacing:-.02em;color:var(--ink);margin-bottom:1.1rem;}
+.sh.sm{font-size:1.2rem;}
+.sbody{font-size:1rem;color:var(--ash);line-height:1.9;}
+.sbody p+p{margin-top:.8rem;}
+.sbody strong{color:var(--ink);font-weight:700;}
+.divider{border:none;border-top:1.5px solid var(--line);margin:1.4rem 0;}
+
+/* ── TIMER ── */
+.tmr{background:var(--ink);padding:.7rem 2rem;display:flex;align-items:center;gap:1rem;}
+.tmr-lbl{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.12em;white-space:nowrap;}
+.tmr-trk{flex:1;height:4px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;}
+.tmr-fill{height:100%;border-radius:999px;background:var(--red2);transition:width 1s linear;}
+.tmr-val{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;color:var(--red2);white-space:nowrap;}
+
+/* ── OPTIONS ── */
+.opt-hd{font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--smoke);margin-bottom:.9rem;}
+.opt-grid{display:flex;flex-direction:column;gap:.75rem;}
+.opt-btn{width:100%;background:var(--paper);border:2px solid var(--line);border-radius:var(--r-sm);padding:1.1rem 1.4rem;cursor:pointer;text-align:left;font-family:'Noto Sans JP',sans-serif;transition:all .16s ease;display:flex;align-items:flex-start;gap:1rem;}
+.opt-btn:hover{border-color:var(--red);background:var(--red-bg);transform:translateX(4px);box-shadow:0 3px 12px rgba(184,34,22,.12);}
+.opt-key{font-family:'JetBrains Mono',monospace;font-size:.76rem;font-weight:700;color:var(--smoke);background:var(--paper2);border:1.5px solid var(--line);width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .16s;}
+.opt-btn:hover .opt-key{background:var(--red);color:#fff;border-color:var(--red);}
+.opt-title{font-size:.97rem;font-weight:700;color:var(--ink);margin-bottom:.22rem;line-height:1.45;}
+.opt-desc{font-size:.82rem;color:var(--smoke);line-height:1.55;}
+
+/* ── CONSEQUENCE BLOCKS ── */
+.cb{border-radius:var(--r-sm);padding:1.1rem 1.3rem;margin-bottom:.8rem;display:flex;gap:.9rem;align-items:flex-start;border:1.5px solid transparent;}
+.cb.go  {background:var(--grn-bg);border-color:var(--grn-ln);}
+.cb.warn{background:var(--amb-bg);border-color:var(--amb-ln);}
+.cb.bad {background:var(--red-bg);border-color:var(--red-ln);}
+.cb.info{background:var(--blu-bg);border-color:var(--blu-ln);}
+.cb-ic{font-size:1.2rem;flex-shrink:0;}
+.cb-body strong{display:block;font-size:.88rem;font-weight:700;margin-bottom:.22rem;}
+.cb.go   .cb-body strong{color:var(--green);}
+.cb.warn .cb-body strong{color:var(--amber);}
+.cb.bad  .cb-body strong{color:var(--red);}
+.cb.info .cb-body strong{color:var(--blue);}
+.cb-body p{font-size:.86rem;color:var(--ash);line-height:1.65;}
+
+/* ── NOTIFICATION MOCK ── */
+.notif{background:var(--ink2);border-radius:var(--r-sm);padding:.9rem 1.2rem;margin-bottom:.8rem;display:flex;gap:.8rem;align-items:flex-start;border:1px solid rgba(255,255,255,.06);}
+.notif-ic{font-size:1.1rem;flex-shrink:0;}
+.notif-ttl{font-size:.8rem;font-weight:700;color:#d8d0c8;margin-bottom:.12rem;}
+.notif-txt{font-size:.8rem;color:#887e78;line-height:1.55;}
+
+/* ── TOOLTIP ── */
+.tip{position:relative;display:inline;border-bottom:2px dashed var(--blue);color:var(--blue);cursor:help;font-weight:700;}
+.tip .pop{display:none;position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%);background:var(--ink);color:#ece8e2;font-size:.78rem;font-weight:400;line-height:1.65;padding:.75rem 1rem;border-radius:9px;width:245px;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,.3);pointer-events:none;white-space:normal;}
+.tip .pop::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink);}
+.tip:hover .pop{display:block;}
+
+/* ── DAMAGE METER ── */
+.sec-hd{font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--smoke);margin-bottom:1.1rem;}
+.dmg-item{display:flex;align-items:center;gap:.9rem;margin-bottom:.6rem;}
+.dmg-lbl{font-size:.84rem;color:var(--ash);width:145px;flex-shrink:0;}
+.dmg-trk{flex:1;height:7px;background:var(--paper3);border-radius:999px;overflow:hidden;}
+.dmg-fill{height:100%;border-radius:999px;transition:width 1.1s cubic-bezier(.16,1,.3,1);}
+.d1{background:#b82216;width:0;} .d2{background:#c96808;width:0;}
+.d3{background:#6e38a8;width:0;} .d4{background:#1248a0;width:0;} .d5{background:#186040;width:0;}
+.dmg-val{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--smoke);width:36px;text-align:right;}
+
+/* ── SCORE ── */
+.score-box{border-radius:var(--r-sm);padding:1.8rem;text-align:center;margin:1.3rem 0;}
+.score-box.go {background:var(--grn-bg);border:2px solid var(--grn-ln);}
+.score-box.bad{background:var(--red-bg);border:2px solid var(--red-ln);}
+.score-grade{font-family:'Bebas Neue',sans-serif;font-size:4.5rem;line-height:1;margin-bottom:.35rem;}
+.score-box.go  .score-grade{color:var(--green);}
+.score-box.bad .score-grade{color:var(--red);}
+.score-desc{font-size:.9rem;color:var(--ash);}
+
+/* ── TIMELINE ── */
+.tl{padding:.5rem 0;}
+.tl-item{display:flex;gap:1.1rem;padding-bottom:1.1rem;position:relative;}
+.tl-item:not(:last-child)::after{content:'';position:absolute;left:13px;top:28px;bottom:0;width:2px;background:var(--line);}
+.tl-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0;z-index:1;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.1);}
+.td-bad {background:var(--red-bg);color:var(--red);}
+.td-warn{background:var(--amb-bg);color:var(--amber);}
+.td-go  {background:var(--grn-bg);color:var(--green);}
+.tl-time{font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:700;color:var(--smoke);margin-bottom:.12rem;}
+.tl-txt{font-size:.88rem;color:var(--ash);line-height:1.6;}
+.tl-txt strong{color:var(--ink);}
+
+/* ── MEASURES ── */
+.meas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin:1.1rem 0;}
+.meas-card{background:var(--paper);border:2px solid var(--line);border-radius:var(--r-sm);padding:1.2rem 1.1rem;transition:all .18s ease;}
+.meas-card:hover{border-color:var(--green);background:var(--grn-bg);transform:translateY(-2px);box-shadow:0 6px 20px rgba(22,102,56,.1);}
+.meas-ic{font-size:1.8rem;margin-bottom:.55rem;}
+.meas-nm{font-size:.92rem;font-weight:700;color:var(--ink);margin-bottom:.22rem;line-height:1.3;}
+.meas-chip{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--grn-bg);color:var(--green);border:1px solid var(--grn-ln);margin-bottom:.5rem;}
+.meas-desc{font-size:.8rem;color:var(--ash);line-height:1.65;}
+.meas-foot{background:var(--ink);border-radius:var(--r-sm);padding:1.2rem 1.5rem;display:flex;gap:.9rem;align-items:flex-start;margin-top:1.1rem;}
+.meas-foot-ic{font-size:1.2rem;flex-shrink:0;}
+.meas-foot-txt{color:rgba(255,255,255,.5);font-size:.85rem;line-height:1.7;}
+.meas-foot-txt strong{color:rgba(255,255,255,.9);}
+
+/* ── BUTTONS ── */
+.btn-p{display:inline-flex;align-items:center;gap:.55rem;background:var(--ink);color:#fff;border:none;border-radius:var(--r-sm);padding:.9rem 1.9rem;font-family:'Noto Sans JP',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;transition:all .18s ease;}
+.btn-p:hover{background:var(--ink2);transform:translateY(-1px);box-shadow:0 5px 16px rgba(0,0,0,.2);}
+.btn-o{display:inline-flex;align-items:center;gap:.55rem;background:transparent;color:var(--ink);border:2px solid var(--line);border-radius:var(--r-sm);padding:.9rem 1.9rem;font-family:'Noto Sans JP',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;transition:all .18s ease;}
+.btn-o:hover{border-color:var(--ink);background:var(--paper2);}
+.btn-row{display:flex;gap:.85rem;flex-wrap:wrap;margin-top:1.6rem;}
+
+/* ── CHOICE RECORD ── */
+.cr{background:var(--paper2);border:1.5px solid var(--line);border-radius:var(--r-sm);padding:1.1rem 1.4rem;margin:1.1rem 0;}
+.cr-hd{font-family:'JetBrains Mono',monospace;font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);margin-bottom:.6rem;}
+.cr-item{display:flex;align-items:baseline;gap:.55rem;font-size:.86rem;color:var(--ash);margin-bottom:.25rem;}
+.cr-step{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--smoke);white-space:nowrap;font-weight:700;}
+
+.hidden{display:none !important;}
+
+@media(max-width:600px){
+  .hero-ttl{font-size:3.4rem;}
+  .hero-in{padding:3rem 1.2rem;}
+  .sim-main{padding:1.8rem 1rem 3rem;}
+  .meas-grid{grid-template-columns:1fr 1fr;}
+  .dmg-lbl{width:110px;font-size:.78rem;}
+  .sh{font-size:1.35rem;}
+  .ci{padding:1.5rem 1.4rem;}
+  .hdr-sub{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-icon">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 1.5L2.5 4v5c0 3.5 2.8 6.3 6.5 7.4 3.7-1.1 6.5-3.9 6.5-7.4V4L9 1.5z" fill="white" opacity=".9"/>
+        <path d="M6 9l2.2 2.2 3.8-4" stroke="#b82216" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="hdr-wm">SEC<span>TRAIN</span></span>
+  </div>
+  <div class="hdr-sep"></div>
+  <span class="hdr-sub">セキュリティ体験ポータル</span>
+  <span class="hdr-badge">SCENARIO 03</span>
+</header>
+
+<div id="app">
+
+<!-- ═══ SCENE 0 — ヒーロー ═══ -->
+<div id="scene-0">
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-vline"></div>
+  <div class="hero-in">
+    <div class="hero-ey">
+      <div class="hero-ey-bar"></div>
+      <span class="hero-ey-txt">Incident Response Training</span>
+    </div>
+    <h1 class="hero-ttl">
+      <span class="sub">CASE FILE —</span>
+      LOST <span class="acc">DEVICE</span>
+    </h1>
+    <p class="hero-tag">
+      帰宅途中の電車で、あなたは<strong>社用PCを置き忘れた。</strong><br>
+      3つの分岐点。あなたの判断が、会社の命運を分ける。
+    </p>
+    <div class="hero-chips">
+      <span class="hero-chip"><span class="dot"></span>想定プレイ時間：約5分</span>
+      <span class="hero-chip"><span class="dot"></span>選択ステップ：3</span>
+      <span class="hero-chip"><span class="dot"></span>難易度：★★☆</span>
+    </div>
+    <div class="tw-box"><span id="tw-text"></span><span class="tw-cur" id="tw-cur"></span></div>
+    <div class="hero-pur">
+      <span class="hero-pur-ic">🎯</span>
+      <div><strong>訓練の目的 —</strong> インシデント発生時に「まず会社に連絡する」ことがなぜ最優先なのかを、選択と結果を通じて体験します。報告の遅れが被害をどう拡大させるか、リアルなタイムラインで確認してください。</div>
+    </div>
+    <div class="btn-start-row" id="start-btn-row">
+      <button class="btn-start" onclick="goScene(1)">シミュレーションを開始する <span class="arr">→</span></button>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ═══ SCENE 1 — 最初の選択 ═══ -->
+<div id="scene-1" class="hidden">
+<div class="sim-outer"><div class="sim-main">
+  <div class="prog">
+    <div class="prog-steps">
+      <div class="prog-step active"></div><div class="prog-step"></div><div class="prog-step"></div><div class="prog-step"></div>
+    </div>
+    <span class="prog-lbl">STEP 1 / 4</span>
+  </div>
+  <div class="card">
+    <div class="tmr"><span class="tmr-lbl">RESPONSE WINDOW</span><div class="tmr-trk"><div class="tmr-fill" id="timer1" style="width:100%"></div></div><span class="tmr-val" id="timer1-val">60秒</span></div>
+    <div class="ci">
+      <div class="smeta"><span class="sstep">STEP 01</span><span class="stag t-neu">最初の判断</span></div>
+      <h2 class="sh">気づいた——今すぐ、何をする？</h2>
+      <div class="sbody">
+        <p>ホームに降り立った瞬間、カバンがないことに気づいた。時刻は<strong>19:47</strong>。電車はすでに発車した。社用PCが入ったカバンが、あの車両の網棚に残っている。</p>
+        <p>PCには顧客情報・社内システムのアクセスキー・未公開の営業資料が入っている。スマートフォンを取り出し、次の行動を選ぶ。</p>
+      </div>
+      <hr class="divider">
+      <div class="opt-hd">あなたはどうする？</div>
+      <div class="opt-grid">
+        <button class="opt-btn" onclick="choose(1,'A')"><span class="opt-key">A</span><div><div class="opt-title">上司 / 情報セキュリティ担当にすぐ電話する</div><div class="opt-desc">会社に状況を報告し、指示を仰ぐ ——【推奨行動】</div></div></button>
+        <button class="opt-btn" onclick="choose(1,'B')"><span class="opt-key">B</span><div><div class="opt-title">終点駅の遺失物センターに電話する</div><div class="opt-desc">鉄道会社の遺失物担当に連絡し、返却を待つ</div></div></button>
+        <button class="opt-btn" onclick="choose(1,'C')"><span class="opt-key">C</span><div><div class="opt-title">とりあえず帰宅し、翌朝に会社へ報告する</div><div class="opt-desc">一晩様子を見て、翌日の朝に上司へ伝える</div></div></button>
+        <button class="opt-btn" onclick="choose(1,'D')"><span class="opt-key">D</span><div><div class="opt-title">見つかるかもしれないので、しばらく黙っておく</div><div class="opt-desc">PCが戻れば報告しなくても済むかもしれない</div></div></button>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ SCENE 2 — 第2の選択 ═══ -->
+<div id="scene-2" class="hidden">
+<div class="sim-outer"><div class="sim-main">
+  <div class="prog">
+    <div class="prog-steps">
+      <div class="prog-step done"></div><div class="prog-step active"></div><div class="prog-step"></div><div class="prog-step"></div>
+    </div>
+    <span class="prog-lbl">STEP 2 / 4</span>
+  </div>
+  <div class="card"><div class="ci" id="s2-result"></div></div>
+  <div class="card" id="s2-choice-card">
+    <div class="ci" id="s2-choice-inner"></div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ SCENE 3 — 第3の選択 ═══ -->
+<div id="scene-3" class="hidden">
+<div class="sim-outer"><div class="sim-main">
+  <div class="prog">
+    <div class="prog-steps">
+      <div class="prog-step done"></div><div class="prog-step done"></div><div class="prog-step active"></div><div class="prog-step"></div>
+    </div>
+    <span class="prog-lbl">STEP 3 / 4</span>
+  </div>
+  <div class="card"><div class="ci" id="s3-result"></div></div>
+  <div class="card">
+    <div class="ci">
+      <div class="smeta"><span class="sstep">STEP 03</span><span class="stag t-neu">対外対応の判断</span></div>
+      <h2 class="sh">紛失から3日後——<br>転売が発覚した。どう対応する？</h2>
+      <div class="sbody" id="s3-context"></div>
+      <hr class="divider">
+      <div class="opt-hd">会社としての対応方針を選ぶ</div>
+      <div class="opt-grid">
+        <button class="opt-btn" onclick="choose(3,'A')"><span class="opt-key">A</span><div><div class="opt-title">速やかに公式謝罪文を公開し、情報開示を行う</div><div class="opt-desc">公式サイト・プレスリリースで事実・被害範囲・対応策を公表する</div></div></button>
+        <button class="opt-btn" onclick="choose(3,'B')"><span class="opt-key">B</span><div><div class="opt-title">被害範囲の全容が判明するまで公表を控える</div><div class="opt-desc">社内調査を優先し、公表は後回しにする</div></div></button>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ SCENE 4 — 結果 ═══ -->
+<div id="scene-4" class="hidden">
+<div class="sim-outer"><div class="sim-main">
+  <div class="prog">
+    <div class="prog-steps">
+      <div class="prog-step done"></div><div class="prog-step done"></div><div class="prog-step done"></div><div class="prog-step active"></div>
+    </div>
+    <span class="prog-lbl">RESULT</span>
+  </div>
+  <div class="card"><div class="ci" id="s4-result"></div></div>
+  <div class="card">
+    <div class="ci">
+      <div class="smeta"><span class="stag t-bad">発生した被害</span></div>
+      <h2 class="sh sm">インシデントがもたらしたもの</h2>
+      <div class="sec-hd" style="margin-top:1.2rem;">被害スコア（あなたの選択による）</div>
+      <div class="dmg-item"><span class="dmg-lbl">情報漏えいリスク</span><div class="dmg-trk"><div class="dmg-fill d1" id="d1"></div></div><span class="dmg-val" id="d1v">—</span></div>
+      <div class="dmg-item"><span class="dmg-lbl">炎上・SNS拡散</span><div class="dmg-trk"><div class="dmg-fill d2" id="d2"></div></div><span class="dmg-val" id="d2v">—</span></div>
+      <div class="dmg-item"><span class="dmg-lbl">社会的信用低下</span><div class="dmg-trk"><div class="dmg-fill d3" id="d3"></div></div><span class="dmg-val" id="d3v">—</span></div>
+      <div class="dmg-item"><span class="dmg-lbl">社内管理コスト増</span><div class="dmg-trk"><div class="dmg-fill d4" id="d4"></div></div><span class="dmg-val" id="d4v">—</span></div>
+      <div class="dmg-item"><span class="dmg-lbl">当事者への処分</span><div class="dmg-trk"><div class="dmg-fill d5" id="d5"></div></div><span class="dmg-val" id="d5v">—</span></div>
+      <hr class="divider">
+      <div class="sec-hd">インシデントタイムライン</div>
+      <div class="tl" id="timeline"></div>
+      <hr class="divider">
+      <div class="sec-hd">この訓練の学び</div>
+      <div id="learnings"></div>
+      <hr class="divider">
+      <div class="sec-hd">こんな対策をしていると被害が軽減されます</div>
+      <p style="font-size:.88rem;color:var(--smoke);margin-bottom:1.1rem;">事前の技術的対策があれば、紛失しても情報漏えいリスクを大幅に低減できます。</p>
+      <div class="meas-grid">
+        <div class="meas-card"><div class="meas-ic">🔐</div><div class="meas-nm">BitLocker 暗号化</div><span class="meas-chip">データ保護</span><div class="meas-desc">Windows 標準搭載のディスク暗号化機能。正規認証なしではデータを読み取れない状態にします。HDDを取り出されても情報は保護されます。</div></div>
+        <div class="meas-card"><div class="meas-ic">🖥️</div><div class="meas-nm">シンクライアント</div><span class="meas-chip">データ非保存</span><div class="meas-desc">業務データをPC本体に保存せずサーバー側で処理する仕組み。端末を紛失してもデータが入っておらず、情報漏えいが原理的に起きません。</div></div>
+        <div class="meas-card"><div class="meas-ic">🔑</div><div class="meas-nm">BIOS パスワード</div><span class="meas-chip">起動ロック</span><div class="meas-desc">OS より前の段階でパスワードを要求します。外部媒体からの起動も阻止でき、BitLocker と組み合わせると二重の防壁になります。</div></div>
+        <div class="meas-card"><div class="meas-ic">👁️</div><div class="meas-nm">生体認証（顔・指紋）</div><span class="meas-chip">本人確認</span><div class="meas-desc">Windows Hello による顔・指紋認証。「本人しか解除できない」ため、第三者がログインしようとしても突破できません。</div></div>
+        <div class="meas-card"><div class="meas-ic">📡</div><div class="meas-nm">リモートワイプ（MDM）</div><span class="meas-chip">遠隔消去</span><div class="meas-desc">Microsoft Intune などの MDM ツールで管理されたPCは、紛失後もネットワーク経由でデータ消去が可能。今回のシミュレーションでも登場した最後の砦です。</div></div>
+        <div class="meas-card"><div class="meas-ic">🔒</div><div class="meas-nm">スクリーンロック 自動設定</div><span class="meas-chip">物理対策</span><div class="meas-desc">一定時間操作がない場合に自動ロック。「たまたまロック解除状態だった」というリスクをゼロにします。</div></div>
+      </div>
+      <div class="meas-foot">
+        <span class="meas-foot-ic">💡</span>
+        <div class="meas-foot-txt"><strong>対策は「重ねる」ほど効果的です。</strong><br>BitLocker 暗号化＋生体認証＋リモートワイプの3つを組み合わせることで、仮に紛失しても情報漏えいリスクをほぼゼロに近づけられます。自分のPCにこれらが有効か、今すぐ確認しましょう。</div>
+      </div>
+      <div class="btn-row" style="margin-top:2rem;">
+        <button class="btn-p" onclick="restart()">🔄 最初からやり直す</button>
+        <button class="btn-o" onclick="showChoices()">📋 選択を確認する</button>
+      </div>
+    </div>
+  </div>
+  <div class="card hidden" id="choice-modal">
+    <div class="ci">
+      <div class="smeta"><span class="stag t-info">選択の記録</span></div>
+      <h2 class="sh sm" style="margin-bottom:1rem;">あなたが選んだ選択肢</h2>
+      <div id="choice-list"></div>
+      <div class="btn-row"><button class="btn-o" onclick="hideChoices()">閉じる</button></div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+</div><!-- /#app -->
+
+<script>
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+const state = { choices: {} };
+const CL = {
+  1:{ A:'上司・セキュリティ担当に即電話', B:'遺失物センターに連絡', C:'翌朝に会社へ報告', D:'しばらく黙って様子を見る' },
+  2:{ A:'リモートワイプを即実施', B:'遺失物確認を優先してワイプを待つ', C:'正直に報告し処分を受け入れる', D:'「PC盗難に遭った」と虚偽報告する' },
+  3:{ A:'速やかに公式謝罪・情報開示', B:'被害全容判明まで公表を控える' }
+};
+let tmrInt = null;
+
+function goScene(n){
+  document.querySelectorAll('#app>div').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('scene-'+n).classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===1) startTimer();
+}
+
+function startTimer(){
+  if(tmrInt) clearInterval(tmrInt);
+  let s=60;
+  const f=document.getElementById('timer1'), v=document.getElementById('timer1-val');
+  tmrInt=setInterval(()=>{
+    s--; if(s<=0){clearInterval(tmrInt);s=0;}
+    f.style.width=(s/60*100)+'%';
+    f.style.background=s<15?'#d93020':s<30?'#c96808':'#b82216';
+    v.textContent=s+'秒';
+  },1000);
+}
+
+function choose(step, ch){
+  if(tmrInt){clearInterval(tmrInt);tmrInt=null;}
+  state.choices[step]=ch;
+  if(step===1) renderScene2();
+  if(step===2) renderScene3();
+  if(step===3) renderScene4();
+}
+
+// ─────────────────────────────────────────
+// SCENE 2
+// シナリオ分岐：
+//   選択Aのみ「会社から連絡あり → リモートワイプ判断」
+//   選択B〜Dは「数日後に自力で動くか / 状況が悪化」
+// ─────────────────────────────────────────
+function renderScene2(){
+  const c = state.choices[1];
+  let result='', choiceHtml='';
+
+  if(c==='A'){
+    // 正解ルート：会社がすぐ動く → ワイプ判断
+    result=`
+      <div class="smeta"><span class="stag t-go">✓ 正しい初動</span></div>
+      <h2 class="sh sm">上司に連絡しました（19:52）</h2>
+      <div class="cb go"><span class="cb-ic">✅</span><div class="cb-body"><strong>迅速な報告でインシデント対応チームが即起動</strong><p>紛失から5分以内に情報セキュリティ部門が状況を把握。リモートワイプの実施判断と、警察・鉄道会社への届出手続きが同時並行で開始されました。</p></div></div>`;
+    choiceHtml=`
+      <div class="smeta"><span class="sstep">STEP 02</span><span class="stag t-neu">次の判断</span></div>
+      <h2 class="sh">セキュリティ部門から<br>確認の電話が来た。どうする？</h2>
+      <div class="sbody">
+        <p>情報セキュリティ部門から折り返し連絡が入った。「PCの<span class="tip">リモートワイプ<span class="pop">📡 リモートワイプとは？<br>ネットワーク経由で遠隔からPCのデータを完全消去する機能。紛失・盗難時に第三者がデータを閲覧できなくする、最も確実な対処法のひとつ。MDMツール（Microsoft Intuneなど）で実現します。</span></span>を今すぐ実施するか、まず遺失物センターに届け出て返却を待つか」の判断を求められている。</p>
+        <p>リモートワイプを実施するとPCのデータは完全に消去される。PCが戻ってきても、データは復元できない。</p>
+      </div>
+      <hr class="divider">
+      <div class="opt-hd">どちらを選ぶ？</div>
+      <div class="opt-grid">
+        <button class="opt-btn" onclick="choose(2,'A')"><span class="opt-key">A</span><div><div class="opt-title">今すぐリモートワイプを実施してもらう</div><div class="opt-desc">データを即消去し、情報漏えいリスクを最小化する ——【推奨行動】</div></div></button>
+        <button class="opt-btn" onclick="choose(2,'B')"><span class="opt-key">B</span><div><div class="opt-title">まず遺失物センターへ届け出て、返却を待ってから判断する</div><div class="opt-desc">PCが戻ってくる可能性があるので、ワイプはいったん保留にしたい</div></div></button>
+      </div>`;
+  } else if(c==='B'){
+    // 遺失物センターに連絡 → PCが届いていない → 翌日も届かず
+    result=`
+      <div class="smeta"><span class="stag t-warn">⚠ 不完全な初動</span></div>
+      <h2 class="sh sm">遺失物センターへ連絡しました（19:55）</h2>
+      <div class="cb warn"><span class="cb-ic">⚠️</span><div class="cb-body"><strong>PC の届け出はなく、返却の見込みも不明です</strong><p>遺失物センターへの連絡は必要な手続きですが、PCが拾得者によって持ち去られていた場合には無意味です。会社への報告を後回しにしたため、リモートワイプの準備が遅れています。</p></div></div>
+      <div class="cb bad"><span class="cb-ic">⏱️</span><div class="cb-body"><strong>翌朝（20時間後）になってもPCは届いていない</strong><p>翌朝ようやく上司へ報告。セキュリティ部門が対応を開始しましたが、すでに20時間が経過しています。この間にPCが誰かの手に渡っていた可能性を排除できません。</p></div></div>`;
+    choiceHtml=`
+      <div class="smeta"><span class="sstep">STEP 02</span><span class="stag t-neu">翌朝・会社から連絡</span></div>
+      <h2 class="sh">翌朝、上司から問い合わせが来た。<br>どう対応する？</h2>
+      <div class="sbody">
+        <p>翌朝9時、上司から「昨日のうちに連絡がなかったのはなぜか。PCはどうなっているか」と問われた。遺失物センターにはまだ届いていない。セキュリティ部門がリモートワイプを提案しているが、PCが戻ってくるかもしれないという気持ちもある。</p>
+      </div>
+      <hr class="divider">
+      <div class="opt-hd">どう対応する？</div>
+      <div class="opt-grid">
+        <button class="opt-btn" onclick="choose(2,'A')"><span class="opt-key">A</span><div><div class="opt-title">今からでもリモートワイプを実施してもらう</div><div class="opt-desc">遅れたが、データ保護を最優先にする ——【推奨行動】</div></div></button>
+        <button class="opt-btn" onclick="choose(2,'B')"><span class="opt-key">B</span><div><div class="opt-title">「もう少し待てばPCが届くかも」と様子見を続ける</div><div class="opt-desc">遺失物センターに届く可能性を信じてワイプを保留する</div></div></button>
+      </div>`;
+  } else if(c==='C'){
+    // 翌朝報告ルート → 会社に報告はする（ただし遅い）→ ワイプ判断なし、状況が悪化している
+    result=`
+      <div class="smeta"><span class="stag t-bad">✕ 重大な遅延</span></div>
+      <h2 class="sh sm">翌朝、出社して報告しました（約14時間後）</h2>
+      <div class="cb bad"><span class="cb-ic">🚨</span><div class="cb-body"><strong>14時間以上、会社はインシデントを把握できていませんでした</strong><p>この間、PCは拾得者の手元にあった可能性があります。紛失から時間が経てば経つほど、データへのアクセスリスクは高まります。翌朝の報告では、すでに初動対応のチャンスを逸しています。</p></div></div>
+      <div class="notif"><span class="notif-ic">📱</span><div><div class="notif-ttl">🔔 翌朝 出社前 7:12 — SNS に投稿が出始めた</div><div class="notif-txt">「電車の網棚に会社のシールが貼ったPCが…どうしよう」という投稿が拡散し始めている。出社してから知ることになる。</div></div></div>`;
+    choiceHtml=`
+      <div class="smeta"><span class="sstep">STEP 02</span><span class="stag t-neu">上司への説明</span></div>
+      <h2 class="sh">上司に報告した。<br>「なぜすぐ連絡しなかった？」と問われた。</h2>
+      <div class="sbody">
+        <p>上司は「なぜ昨晩すぐに連絡しなかったのか。その間に何があったかわからない」と厳しい表情だ。セキュリティ部門はすぐにリモートワイプを実施したいと言っているが、「どうせもう手遅れかもしれない」という気持ちもある。</p>
+      </div>
+      <hr class="divider">
+      <div class="opt-hd">次の行動を選ぶ</div>
+      <div class="opt-grid">
+        <button class="opt-btn" onclick="choose(2,'A')"><span class="opt-key">A</span><div><div class="opt-title">今からでもリモートワイプを実施してもらう</div><div class="opt-desc">遅れたが、データ保護のためにできることをする ——【推奨行動】</div></div></button>
+        <button class="opt-btn" onclick="choose(2,'B')"><span class="opt-key">B</span><div><div class="opt-title">「もう遅い。様子を見ましょう」と何もしない</div><div class="opt-desc">ワイプしても意味がないかもしれないと判断する</div></div></button>
+      </div>`;
+  } else {
+    // 黙っていたルート → 数日後に第三者から発覚
+    result=`
+      <div class="smeta"><span class="stag t-bad">✕ 最悪の選択</span></div>
+      <h2 class="sh sm">報告しないまま3日が経過しました</h2>
+      <div class="cb bad"><span class="cb-ic">🚨</span><div class="cb-body"><strong>インシデントを隠蔽することは、就業規則違反です</strong><p>インシデント発生の事実を知りながら報告を怠ることは、多くの企業で懲戒処分の対象となります。自分で報告するより、第三者から発覚した場合の方が処分は格段に重くなります。</p></div></div>
+      <div class="notif"><span class="notif-ic">📱</span><div><div class="notif-ttl">🔔 3日後 — 取引先から会社本部へ直接連絡</div><div class="notif-txt">「御社の社員証・名刺が入ったPCを購入した者から連絡があった」と取引先の担当者から会社の代表番号に電話が入る。あなたの不報告も発覚する。</div></div></div>`;
+    choiceHtml=`
+      <div class="smeta"><span class="sstep">STEP 02</span><span class="stag t-neu">発覚後の対応</span></div>
+      <h2 class="sh">上司に呼ばれた。<br>どう説明する？</h2>
+      <div class="sbody">
+        <p>会社に第三者から連絡が入り、あなたのPCが転売された事実が発覚した。上司・人事・セキュリティ部門があなたを呼び出している。「なぜ報告しなかったのか」を問われている。</p>
+      </div>
+      <hr class="divider">
+      <div class="opt-hd">どう説明する？</div>
+      <div class="opt-grid">
+        <button class="opt-btn" onclick="choose(2,'C')"><span class="opt-key">A</span><div><div class="opt-title">正直に「報告を怠った」と認め、謝罪する</div><div class="opt-desc">事実をすべて話し、処分を受け入れる ——【唯一の誠実な対応】</div></div></button>
+        <button class="opt-btn" onclick="choose(2,'D')"><span class="opt-key">B</span><div><div class="opt-title">「PCを盗まれた」と虚偽の説明をする</div><div class="opt-desc">置き忘れではなく盗難だったと言い張る</div></div></button>
+      </div>`;
+  }
+
+  document.getElementById('s2-result').innerHTML = result;
+  document.getElementById('s2-choice-inner').innerHTML = choiceHtml;
+  goScene(2);
+}
+
+// ─────────────────────────────────────────
+// SCENE 3
+// ─────────────────────────────────────────
+function renderScene3(){
+  const c1=state.choices[1], c2=state.choices[2];
+  let result='', context='';
+
+  if(c2==='A'){
+    // ワイプ実施 → データは守られたが、転売自体は起きている
+    result=`
+      <div class="smeta"><span class="stag t-go">✓ データ保護に成功</span></div>
+      <h2 class="sh sm">リモートワイプを実施しました</h2>
+      <div class="cb go"><span class="cb-ic">🔒</span><div class="cb-body"><strong>PCのデータは完全に消去されました</strong><p>ネットワーク経由でリモートワイプが完了。PCが第三者の手に渡っていたとしても、データへのアクセスは不可能になりました。情報漏えいのリスクは大幅に低減されています。</p></div></div>
+      <div class="cb info"><span class="cb-ic">📡</span><div class="cb-body"><strong>リモートワイプとは？</strong><p>ネットワーク（インターネット）を通じて<strong>遠隔からPCのデータを完全消去できる機能</strong>です。Microsoft Intune や Jamf などのMDM（端末管理ツール）で実現します。PCが手元になくても実行できるため、紛失・盗難時に最も確実な対処法のひとつです。</p></div></div>`;
+    context=`<p>リモートワイプによりデータは守られました。しかし、PCが紛失したこと自体は社外に漏れ始めています。<strong>紛失から3日後</strong>、フリマサイトでPCが転売されていることを取引先が発見し、会社に連絡が入りました。</p><p>会社として、どう対外対応を行うかの判断が求められています。</p>`;
+  } else if(c2==='B'){
+    // ワイプ保留 → 3日後に転売発覚、データ漏えいの可能性大
+    result=`
+      <div class="smeta"><span class="stag t-bad">✕ 最悪のタイミング</span></div>
+      <h2 class="sh sm">ワイプを保留したまま3日が経過しました</h2>
+      <div class="cb bad"><span class="cb-ic">🛒</span><div class="cb-body"><strong>フリマサイトでPCが転売されていることが発覚</strong><p>遺失物センターへは届け出がありませんでした。PCは拾得者によってフリマサイトに出品・販売されており、購入者が起動・ログインした可能性があります。この時点でリモートワイプを実施しても、すでにデータが閲覧・コピーされていた可能性は否定できません。</p></div></div>
+      <div class="cb warn"><span class="cb-ic">⚠️</span><div class="cb-body"><strong>72時間以上、データが危険にさらされていました</strong><p>ワイプを迷っている間に、PCのデータが第三者に渡るリスクが現実のものとなりました。「戻ってくるかもしれない」という期待がリスク判断を狂わせました。</p></div></div>`;
+    context=`<p><strong>紛失から3日後</strong>、取引先からの連絡でPCがフリマサイトで転売されたことが判明しました。購入者がPCを起動してデータを閲覧した可能性があります。</p><p>SNS上でも「会社のPCを買ったら中に顧客情報らしきものが…」という投稿が拡散し始めています。会社として対外的な対応方針を決める必要があります。</p>`;
+  } else if(c2==='C'){
+    // 正直報告ルート
+    result=`
+      <div class="smeta"><span class="stag t-warn">⚠ 遅れたが誠実な対応</span></div>
+      <h2 class="sh sm">正直に報告し、謝罪しました</h2>
+      <div class="cb warn"><span class="cb-ic">🗣️</span><div class="cb-body"><strong>報告の遅れは処分対象ですが、隠蔽よりはるかにましです</strong><p>事実をすべて話したことで、会社はようやく正確な状況を把握できました。セキュリティ部門がリモートワイプを即実施。ただし、すでに3日間が経過しており、データが閲覧されていた可能性があります。</p></div></div>
+      <div class="cb bad"><span class="cb-ic">⚖️</span><div class="cb-body"><strong>あなたへの処分は確定です</strong><p>報告義務違反として懲戒処分の手続きが開始されました。ただし、虚偽報告をした場合よりは処分が軽くなる可能性があります。</p></div></div>`;
+    context=`<p>あなたへの処分手続きが進む中、会社として対外的な対応も同時に求められています。<strong>PCは転売されており</strong>、購入者からの問い合わせが鉄道会社を通じて会社に届いています。</p><p>広報・法務チームが対応方針を検討しています。あなたの判断を伝える必要があります。</p>`;
+  } else {
+    // 虚偽報告ルート
+    result=`
+      <div class="smeta"><span class="stag t-bad">✕ 虚偽報告は重大な問題です</span></div>
+      <h2 class="sh sm">虚偽報告をしました</h2>
+      <div class="cb bad"><span class="cb-ic">🚫</span><div class="cb-body"><strong>「盗難」という虚偽報告は、新たな問題を引き起こします</strong><p>盗難届を出した場合、警察が捜査します。しかし監視カメラ映像などで「置き忘れ」だったことが判明した場合、虚偽申告として刑事責任を問われる可能性があります。問題をさらに深刻にする最悪の選択です。</p></div></div>
+      <div class="cb bad"><span class="cb-ic">⚖️</span><div class="cb-body"><strong>調査で虚偽が発覚し、処分は最大級になりました</strong><p>会社の内部調査・警察の捜査で置き忘れの事実が明らかに。報告義務違反＋虚偽報告として、懲戒解雇相当の処分が下されました。</p></div></div>`;
+    context=`<p>あなたへの処分と並行して、会社として対外的な対応も必要です。<strong>PCは転売されており</strong>、購入者が「中にデータが入っていた」と問い合わせてきています。</p><p>あなたの虚偽報告により、会社は正確な状況把握が遅れました。信用回復に向けた対応が急務です。</p>`;
+  }
+
+  document.getElementById('s3-result').innerHTML = result;
+  document.getElementById('s3-context').innerHTML = context;
+  goScene(3);
+}
+
+// ─────────────────────────────────────────
+// SCENE 4 — 結果
+// ─────────────────────────────────────────
+function renderScene4(){
+  const c1=state.choices[1], c2=state.choices[2], c3=state.choices[3];
+
+  // スコア計算
+  let d1=50,d2=50,d3=50,d4=70,d5=40;
+  if(c1==='A'){d1-=20;d5-=15;}
+  else if(c1==='B'){d1+=10;d5+=10;}
+  else if(c1==='C'){d1+=20;d2+=15;d3+=10;d5+=20;}
+  else{d1+=35;d2+=30;d3+=25;d5+=35;}
+
+  if(c2==='A'){d1-=20;}
+  else if(c2==='B'){d1+=20;d2+=10;}
+  else if(c2==='C'){d5+=5;} // 正直報告は少しだけ処分が軽い
+  else{d5+=30;d3+=20;}      // 虚偽報告は信用がさらに落ちる
+
+  if(c3==='A'){d2-=20;d3-=20;}
+  else{d2+=20;d3+=30;}
+
+  const cl=v=>Math.max(10,Math.min(100,v));
+  const sc={d1:cl(d1),d2:cl(d2),d3:cl(d3),d4:cl(d4),d5:cl(d5)};
+  const tot=Math.round((sc.d1+sc.d2+sc.d3+sc.d4+sc.d5)/5);
+  const good=tot<52;
+
+  document.getElementById('s4-result').innerHTML=`
+    <div class="smeta"><span class="stag t-neu">シミュレーション完了</span></div>
+    <h2 class="sh sm">結果レポート</h2>
+    <div class="score-box ${good?'go':'bad'}">
+      <div class="score-grade">${good?'B+':tot>70?'D':'C'}</div>
+      <div class="score-desc">${good
+        ?'初動対応は概ね適切でした。しかし、インシデント自体は発生しています。'
+        :tot>70
+          ?'対応が遅れ、被害が最大化してしまいました。初動対応の重要性を再確認してください。'
+          :'対応の遅れがいくつかの被害を拡大させました。'
+      }</div>
+    </div>
+    <div class="cb info"><span class="cb-ic">📌</span><div class="cb-body"><strong>社用PCを紛失した場合、何らかの被害は避けられません</strong><p>いずれの選択でも情報漏えいリスク・社内管理コスト増・信用低下は発生します。だからこそ、<strong>いかに速やかに会社に連絡し、被害を最小化するか</strong>が鍵になります。</p></div></div>`;
+
+  document.getElementById('timeline').innerHTML = buildTimeline(c1,c2,c3);
+  document.getElementById('learnings').innerHTML = buildLearnings(c1,c2,c3);
+  goScene(4);
+  setTimeout(()=>{aD('d1',sc.d1);aD('d2',sc.d2);aD('d3',sc.d3);aD('d4',sc.d4);aD('d5',sc.d5);},400);
+}
+
+function aD(id,v){
+  document.getElementById(id).style.width=v+'%';
+  document.getElementById(id+'v').textContent=v+'%';
+}
+
+// ─────────────────────────────────────────
+// TIMELINE  — 現実的な期間設定
+//   紛失：1日目夜
+//   転売出品：3〜5日後
+//   転売成立・購入者からの問い合わせ：1〜2週間後
+//   社内調査完了・処分：1〜2ヶ月後
+// ─────────────────────────────────────────
+function buildTimeline(c1,c2,c3){
+  const it=[];
+  it.push({cls:'td-bad',ic:'⚠️',t:'1日目 19:47',tx:'<strong>社用PCを電車の網棚に置き忘れ。</strong>電車はすでに出発済み。'});
+
+  if(c1==='A'){
+    it.push({cls:'td-go',ic:'📱',t:'1日目 19:52',tx:'<strong>上司・セキュリティ担当に連絡。</strong>インシデント対応が即起動。警察・鉄道会社への届出も開始。'});
+  } else if(c1==='B'){
+    it.push({cls:'td-warn',ic:'📞',t:'1日目 19:55',tx:'遺失物センターへ連絡。PCの届け出なし。会社への報告は翌朝まで遅延。'});
+    it.push({cls:'td-bad',ic:'📱',t:'2日目 09:00',tx:'<strong>翌朝ようやく上司へ報告。</strong>約14時間のブランクが生じた。'});
+  } else if(c1==='C'){
+    it.push({cls:'td-bad',ic:'🏠',t:'1日目 21:00',tx:'帰宅。会社への報告なし。'});
+    it.push({cls:'td-bad',ic:'📱',t:'2日目 09:00',tx:'<strong>出社後に報告。</strong>14時間の空白期間が生じた。'});
+    it.push({cls:'td-warn',ic:'📢',t:'2日目 07:12',tx:'SNS に「電車のPCが…」という投稿が出始める（出社前に発生）。'});
+  } else {
+    it.push({cls:'td-bad',ic:'🤐',t:'1〜3日目',tx:'報告なし。PCがどこにあるか不明のまま時間が経過する。'});
+    it.push({cls:'td-bad',ic:'📞',t:'4日目',tx:'<strong>取引先から会社本部へ「PCを購入した人物から連絡があった」と通報。</strong>あなたの不報告も同時に発覚。'});
+  }
+
+  if(c2==='A'){
+    it.push({cls:'td-go',ic:'🔒',t:'1〜2日目',tx:'<strong>リモートワイプ完了。</strong>PCのデータへのアクセス不能化に成功。情報漏えいリスクが大幅低下。'});
+  } else if(c2==='B'){
+    it.push({cls:'td-bad',ic:'⏳',t:'3日目',tx:'ワイプ保留中。PCがフリマサイトに出品される。この時点でリモートワイプを実施するが、すでに閲覧された可能性がある。'});
+  } else if(c2==='C'){
+    it.push({cls:'td-warn',ic:'🗣️',t:'4日目',tx:'正直に報告・謝罪。セキュリティ部門がリモートワイプを実施するが、72時間以上が経過していた。'});
+  } else {
+    it.push({cls:'td-bad',ic:'🚫',t:'4〜5日目',tx:'虚偽報告（盗難と申告）により捜査が開始。監視カメラ映像で「置き忘れ」が判明し、虚偽申告が発覚。'});
+  }
+
+  it.push({cls:'td-bad',ic:'🛍️',t:'3〜5日後',tx:'PCがフリマサイトで転売・出品される。出品ページに会社名・社員証の写真が掲載される。'});
+  it.push({cls:'td-bad',ic:'🔥',t:'5〜7日後',tx:'SNSで炎上。「あの会社のPC、フリマで買ったら顧客データが入ってた」という投稿が拡散し始める。'});
+  it.push({cls:'td-bad',ic:'📞',t:'1〜2週間後',tx:'PC購入者・取引先・メディアから問い合わせが殺到。第三者機関（個人情報保護委員会など）からも調査要請が入る。'});
+
+  if(c3==='A'){
+    it.push({cls:'td-go',ic:'📢',t:'発覚後 数日以内',tx:'<strong>公式サイトに謝罪文・被害範囲・対応策を掲載。</strong>迅速な対応と透明性が評価され、信用回復への道が開ける。'});
+  } else {
+    it.push({cls:'td-bad',ic:'🕐',t:'1〜2週間後',tx:'公表を遅らせた結果、「隠蔽ではないか」という批判がSNS・メディアで拡大。'});
+    it.push({cls:'td-bad',ic:'📰',t:'2〜3週間後',tx:'メディアが「対応の遅れ」「情報隠蔽の疑い」を報道。社会的信用が大幅に低下。'});
+  }
+
+  it.push({cls:'td-bad',ic:'📋',t:'1〜2ヶ月後',tx:'社内調査完了。PC管理ルールの全面見直し・運用コスト増大（MDM導入義務化、定期研修強化など）。'});
+  it.push({cls:'td-bad',ic:'⚖️',t:'2〜3ヶ月後',tx:'当事者に懲戒処分。管理職も監督責任として連帯処分の対象に。'});
+
+  return it.map(i=>`
+    <div class="tl-item">
+      <div class="tl-dot ${i.cls}">${i.ic}</div>
+      <div><div class="tl-time">${i.t}</div><div class="tl-txt">${i.tx}</div></div>
+    </div>`).join('');
+}
+
+function buildLearnings(c1,c2,c3){
+  return `
+    <div class="cb go"><span class="cb-ic">💡</span><div class="cb-body"><strong>【最重要】紛失に気づいたら、まず会社に連絡</strong><p>遺失物センターより先に、情報セキュリティ担当または上司への連絡が最優先です。会社が早く動けるほど、被害は小さくなります。</p></div></div>
+    <div class="cb ${c2==='A'?'go':'bad'}"><span class="cb-ic">🔒</span><div class="cb-body"><strong>リモートワイプは躊躇わず実施する</strong><p>「PCが戻るかもしれない」という期待がリスク判断を狂わせます。データ保護を最優先にし、速やかにワイプを実施してください。PCは戻ってもデータは消去されますが、それが正しい判断です。</p></div></div>
+    <div class="cb ${c3==='A'?'go':'bad'}"><span class="cb-ic">📢</span><div class="cb-body"><strong>対外的な謝罪・開示は早いほど信用を守れる</strong><p>公表の遅れは「隠蔽」と受け取られます。事実・被害範囲・対応策を速やかに公表することで、社会的信用の毀損を最小化できます。</p></div></div>
+    <div class="cb bad"><span class="cb-ic">⚖️</span><div class="cb-body"><strong>転売・被害発覚は「数日〜数週間後」に起きる</strong><p>拾得者がすぐにPCを開く場合もあれば、数日後に転売する場合もあります。だからこそ「まだ大丈夫」という判断は危険で、発見直後の即行動が求められます。</p></div></div>`;
+}
+
+// ─────────────────────────────────────────
+// TYPEWRITER
+// ─────────────────────────────────────────
+const twL=[
+  '1日目　19:47 ——',
+  '帰宅途中の電車を降りた瞬間、カバンがないことに気づく。',
+  '',
+  '中に入っていたのは、社用PC。',
+  '顧客データ、社内システムのアクセスキー、未公開の営業資料——',
+  'すべてがあの車両の網棚に残っている。',
+  '',
+  '電車はすでに出発した。',
+  'あなたには、今すぐ判断が求められている。'
+];
+function startTypewriter(){
+  const el=document.getElementById('tw-text'),cur=document.getElementById('tw-cur'),btn=document.getElementById('start-btn-row');
+  let li=0,ci=0,full='';
+  function next(){
+    if(li>=twL.length){cur.style.display='none';btn.style.opacity='1';return;}
+    const line=twL[li];
+    if(line===''){full+='\n\n';el.innerHTML=full.replace(/\n/g,'<br>');li++;ci=0;setTimeout(next,200);return;}
+    if(ci<line.length){full+=line[ci];el.innerHTML=full.replace(/\n/g,'<br>');ci++;setTimeout(next,30);}
+    else{full+='\n';el.innerHTML=full.replace(/\n/g,'<br>');li++;ci=0;setTimeout(next,360);}
+  }
+  setTimeout(next,700);
+}
+window.addEventListener('DOMContentLoaded',startTypewriter);
+
+function restart(){
+  state.choices={};
+  document.getElementById('tw-text').innerHTML='';
+  document.getElementById('tw-cur').style.display='inline-block';
+  document.getElementById('start-btn-row').style.opacity='0';
+  goScene(0);
+  setTimeout(startTypewriter,400);
+}
+function showChoices(){
+  const m=document.getElementById('choice-modal'),l=document.getElementById('choice-list');
+  let h='<div class="cr"><div class="cr-hd">選択履歴</div>';
+  for(let s=1;s<=3;s++){const c=state.choices[s];h+=`<div class="cr-item"><span class="cr-step">STEP ${s}</span><span>${c?CL[s][c]:'未選択'}</span></div>`;}
+  h+='</div>';l.innerHTML=h;m.classList.remove('hidden');m.scrollIntoView({behavior:'smooth'});
+}
+function hideChoices(){document.getElementById('choice-modal').classList.add('hidden');}
+</script>
+</body>
+</html>

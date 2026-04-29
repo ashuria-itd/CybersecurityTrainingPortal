@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アカウント乗っ取りシミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Share+Tech+Mono&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white:#ffffff;--bg:#f4f2ee;--bg2:#ede9e3;--surface:#ffffff;--surface2:#faf9f7;
+  --border:#ddd9d0;--border2:#c8c2b8;--text:#1a1814;--text2:#4a453e;--text3:#8a847a;
+  --red:#d93025;--red-light:#fde8e6;--red-mid:#f5c3be;
+  --orange:#e06c1a;--orange-light:#fef0e3;
+  --yellow:#c89600;--yellow-light:#fdf6dc;
+  --green:#1a7a40;--green-light:#e6f4ec;
+  --blue:#1a5fa8;--blue-light:#e6f0fb;
+  --purple:#6b3fa0;--purple-light:#f0eafa;
+  --mono:'Share Tech Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Syne',sans-serif;
+  --sh-sm:0 1px 4px rgba(0,0,0,0.08);
+  --sh:0 4px 16px rgba(0,0,0,0.1);
+  --sh-lg:0 12px 40px rgba(0,0,0,0.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+.app-header{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh-sm)}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-badge{background:var(--red);color:white;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:3px;letter-spacing:1px}
+.header-title{font-size:14px;font-weight:700;color:var(--text2)}
+.home-btn{padding:6px 16px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;transition:all .2s;display:none}
+.home-btn:hover{border-color:var(--border2);color:var(--text)}
+
+/* SCREENS */
+.screen{display:none}
+.screen.active{display:block}
+
+/* TITLE SCREEN */
+#screen-title{min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 40px;text-align:center;background:var(--bg);position:relative;overflow:hidden}
+.title-grid-bg{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,var(--border) 39px,var(--border) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,var(--border) 39px,var(--border) 40px);opacity:.35;pointer-events:none}
+.title-h1{font-family:var(--display);font-size:clamp(36px,7vw,76px);font-weight:800;line-height:1.0;letter-spacing:-1px;margin-bottom:12px}
+.title-h1 .accent{color:var(--red);display:block}
+.title-desc{font-size:14px;color:var(--text3);max-width:440px;margin:0 auto 28px;line-height:1.7}
+.mode-cards{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.mode-card{background:var(--white);border:2px solid var(--border);border-radius:16px;padding:22px 20px;cursor:pointer;transition:all .25s;width:170px;text-align:center;box-shadow:var(--sh-sm);position:relative;overflow:hidden}
+.mode-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;opacity:0;transition:opacity .2s}
+.mode-card.victim::after{background:linear-gradient(90deg,var(--orange),var(--red))}
+.mode-card.hacker::after{background:linear-gradient(90deg,#a00020,#c00030)}
+.mode-card.econ::after{background:linear-gradient(90deg,var(--green),#0a5a28)}
+.mode-card:hover{transform:translateY(-4px);box-shadow:var(--sh-lg);border-color:var(--border2)}
+.mode-card:hover::after{opacity:1}
+.mc-icon{font-size:36px;margin-bottom:10px;display:block}
+.mc-label{font-size:13px;font-weight:700;margin-bottom:4px}
+.mc-sub{font-size:11px;color:var(--text3)}
+.title-scroll-hint{margin-top:20px;font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;opacity:.6;animation:hintBob 2s ease-in-out infinite}
+@keyframes hintBob{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+
+/* GAME SCREEN */
+#screen-game.active{display:block;min-height:calc(100vh - 56px)}
+
+/* PROGRESS */
+.progress-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:14px 28px;position:sticky;top:56px;z-index:100}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-mode{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;border:1.5px solid}
+.progress-counter{font-size:12px;color:var(--text3);font-family:var(--mono)}
+.progress-track{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.progress-bar{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+.dots-row{display:flex;gap:5px;justify-content:center;margin-top:8px}
+.dot-pip{width:8px;height:8px;border-radius:4px;background:var(--border);transition:all .3s}
+.dot-pip.done{background:var(--border2)}
+.dot-pip.active{width:22px}
+
+/* PHASE CONTAINER */
+.phase-wrap{max-width:760px;margin:0 auto;padding:36px 24px 0}
+
+/* PHASE CARD */
+.phase-card{background:var(--white);border-radius:20px;box-shadow:var(--sh);overflow:hidden;animation:cardIn .4s cubic-bezier(.22,1,.36,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.phase-head{padding:26px 30px 22px;border-bottom:1px solid var(--border);position:relative}
+.phase-step-tag{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.step-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.phase-title{font-family:var(--display);font-size:clamp(18px,3.5vw,26px);font-weight:700;line-height:1.3}
+.phase-num-bg{position:absolute;right:24px;top:16px;font-family:var(--display);font-size:88px;line-height:1;opacity:.05;pointer-events:none}
+.phase-body{padding:26px 30px}
+.phase-desc{font-size:15px;line-height:1.9;color:var(--text2);margin-bottom:22px}
+
+/* EMAIL MOCKUP */
+.email-mock{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin:16px 0}
+.email-bar{background:var(--bg2);padding:9px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.em-dots{display:flex;gap:5px}
+.em-dot{width:10px;height:10px;border-radius:50%}
+.em-app{font-size:12px;color:var(--text3);font-weight:600;margin-left:4px}
+.email-inner{padding:14px 18px}
+.em-row{display:flex;gap:10px;margin-bottom:7px;font-size:13px}
+.em-lbl{color:var(--text3);width:55px;flex-shrink:0;font-weight:500}
+.em-val{color:var(--text)}
+.em-val.danger{color:var(--red);font-family:var(--mono);font-size:11.5px}
+.em-val.warn{color:var(--orange)}
+.em-hr{height:1px;background:var(--border);margin:10px 0}
+.em-body{font-size:13px;color:var(--text2);line-height:1.8}
+.em-cta{display:inline-block;margin-top:12px;background:#ff9900;color:white;font-size:13px;font-weight:700;padding:9px 22px;border-radius:6px;cursor:default}
+.em-phish{display:inline-flex;align-items:center;gap:5px;background:var(--red-light);border:1px solid var(--red-mid);color:var(--red);font-size:11px;font-family:var(--mono);padding:3px 9px;border-radius:4px;margin-top:8px}
+
+/* PHONE MOCKUP */
+.phone-mock{background:#1c1c1e;border-radius:34px;padding:22px 18px;max-width:320px;margin:18px auto;box-shadow:0 20px 60px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.1)}
+.phone-notch{width:96px;height:24px;background:#000;border-radius:12px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center}
+.phone-cam{width:9px;height:9px;border-radius:50%;background:#111;border:1px solid #333}
+.phone-time{text-align:center;color:white;font-size:50px;font-weight:200;letter-spacing:-2px;margin-bottom:3px}
+.phone-date{text-align:center;color:rgba(255,255,255,.65);font-size:13px;margin-bottom:18px}
+.notif-card{background:rgba(255,255,255,.14);backdrop-filter:blur(20px);border-radius:14px;padding:11px 14px;display:flex;gap:10px;margin-bottom:7px;animation:notifDrop .5s cubic-bezier(.22,1,.36,1) both;border:1px solid rgba(255,255,255,.1)}
+@keyframes notifDrop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+.notif-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.notif-txt{flex:1}
+.notif-app{font-size:10px;color:rgba(255,255,255,.55);margin-bottom:2px}
+.notif-h{font-size:13px;font-weight:600;color:white;margin-bottom:1px}
+.notif-b{font-size:11.5px;color:rgba(255,255,255,.65);line-height:1.4}
+.notif-t{font-size:10px;color:rgba(255,255,255,.35);flex-shrink:0;align-self:flex-start}
+
+/* TERMINAL */
+.terminal{background:#1e1e2e;border-radius:12px;overflow:hidden;margin:16px 0;box-shadow:var(--sh)}
+.term-bar{background:#2a2a3e;padding:9px 16px;display:flex;align-items:center;gap:7px;border-bottom:1px solid rgba(255,255,255,.05)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-name{font-size:12px;color:rgba(255,255,255,.35);margin-left:8px;font-family:var(--mono)}
+.term-body{padding:14px 18px;font-family:var(--mono);font-size:12.5px;line-height:2}
+.t-line{display:flex;gap:7px}
+.t-prompt{color:#50fa7b;flex-shrink:0}
+.t-cmd{color:#f8f8f2}
+.t-out{color:#6272a4}
+.t-ok{color:#50fa7b}
+.t-warn{color:#ffb86c}
+.t-err{color:#ff5555}
+.t-info{color:#8be9fd}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0}
+.stat-box{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center}
+.stat-v{font-family:var(--display);font-size:26px;line-height:1.1;margin-bottom:4px}
+.stat-l{font-size:11px;color:var(--text3);font-weight:500}
+
+/* INFO NOTE */
+.info-note{border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.8;display:flex;gap:10px;margin:14px 0}
+.in-icon{flex-shrink:0;font-size:15px;margin-top:2px}
+.info-note.warn{background:var(--yellow-light);border:1px solid #e8d000;color:#5a4000}
+.info-note.danger{background:var(--red-light);border:1px solid var(--red-mid);color:#7a0010}
+.info-note.tip{background:var(--blue-light);border:1px solid #a8c8f0;color:#0a3060}
+.info-note.good{background:var(--green-light);border:1px solid #a0d8b8;color:#0a4020}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0}
+.tag{padding:4px 11px;border-radius:100px;font-size:11.5px;font-weight:600;border:1.5px solid}
+.tag.red{background:var(--red-light);color:var(--red);border-color:var(--red-mid)}
+.tag.orange{background:var(--orange-light);border-color:#f0c090;color:var(--orange)}
+.tag.purple{background:var(--purple-light);border-color:#c8a8e8;color:var(--purple)}
+.tag.green{background:var(--green-light);border-color:#a0d8b8;color:var(--green)}
+.tag.blue{background:var(--blue-light);border-color:#a8c8f0;color:var(--blue)}
+
+/* RIPPLE */
+.ripple-wrap{position:relative;height:280px;display:flex;align-items:center;justify-content:center;margin:18px 0;background:var(--surface2);border-radius:16px;border:1.5px solid var(--border);overflow:hidden}
+.r-ring{position:absolute;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border:1.5px solid rgba(217,48,37,.22);animation:rRipple 3s ease-out infinite;pointer-events:none}
+.r-ring:nth-child(1){width:76px;height:76px;animation-delay:0s}
+.r-ring:nth-child(2){width:156px;height:156px;animation-delay:.9s}
+.r-ring:nth-child(3){width:256px;height:256px;animation-delay:1.8s}
+@keyframes rRipple{0%{opacity:.9;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+.r-center{position:relative;z-index:10;text-align:center;background:var(--red-light);border:2px solid var(--red-mid);border-radius:50%;width:68px;height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.r-ico{font-size:22px}
+.r-lbl{font-size:8px;font-family:var(--mono);color:var(--red)}
+.r-svc{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;animation:rFloat 3.5s ease-in-out infinite}
+.r-svc .ri{font-size:20px}
+.r-svc .rl{font-size:9px;font-family:var(--mono);background:var(--red-light);color:var(--red);padding:1px 5px;border-radius:3px;border:1px solid var(--red-mid)}
+@keyframes rFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.rs1{top:8%;left:6%}.rs2{top:6%;right:8%}.rs3{bottom:10%;left:5%}.rs4{bottom:8%;right:6%}
+.rs5{top:50%;left:2%;transform:translateY(-50%)}.rs6{top:50%;right:2%;transform:translateY(-50%)}
+.rs7{top:1%;left:38%}.rs8{bottom:1%;left:38%}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+.data-table th{background:var(--bg2);padding:10px 14px;text-align:left;font-size:11px;font-family:var(--mono);letter-spacing:1px;color:var(--text3);border-bottom:1.5px solid var(--border)}
+.data-table td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table tr:hover td{background:var(--surface2)}
+.vg{color:var(--green);font-family:var(--mono);font-weight:700}
+.vr{color:var(--red);font-family:var(--mono)}
+.v-roi{font-family:var(--mono);font-weight:700;font-size:12px;background:var(--green-light);color:var(--green);padding:2px 8px;border-radius:4px}
+
+/* BAR CHART */
+.bars{margin:16px 0}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-lbl{width:128px;font-size:12px;color:var(--text2);text-align:right;flex-shrink:0}
+.bar-track{flex:1;background:var(--bg2);border-radius:4px;height:28px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 12px;font-family:var(--mono);font-size:11px;font-weight:700;color:white;animation:bGrow .8s cubic-bezier(.34,1.2,.64,1) both;transform-origin:left;white-space:nowrap}
+@keyframes bGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* DEFENSE */
+.def-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:16px 0}
+.def-card{background:var(--surface2);border:1.5px solid var(--border);border-left:4px solid var(--green);border-radius:10px;padding:14px 16px}
+.def-i{font-size:22px;margin-bottom:8px}
+.def-t{font-size:13px;font-weight:700;color:var(--green);margin-bottom:5px}
+.def-d{font-size:12px;color:var(--text2);line-height:1.7}
+
+/* ACTION AREA — inline at bottom of content, not fixed */
+.action-area{display:flex;justify-content:center;gap:10px;padding:32px 24px 48px;max-width:760px;margin:0 auto}
+.action-area.hidden{display:none}
+.act-btn{display:flex;align-items:center;gap:10px;padding:14px 32px;border-radius:14px;border:none;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.act-btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.18);opacity:0;transition:opacity .15s}
+.act-btn:hover::after{opacity:1}
+.act-btn:active{transform:scale(.97)}
+.act-btn.primary{background:var(--text);color:white}
+.act-btn.danger{background:var(--red);color:white}
+.act-btn.orange{background:var(--orange);color:white}
+.act-btn.green{background:var(--green);color:white}
+.act-btn.back{background:var(--white);color:var(--text2);border:1.5px solid var(--border);box-shadow:var(--sh-sm);padding:15px 22px}
+.btn-arr{font-size:18px;transition:transform .2s}
+.act-btn:hover .btn-arr{transform:translateX(4px)}
+
+/* FLASH */
+.flash{display:none;position:fixed;inset:0;background:rgba(217,48,37,.07);pointer-events:none;z-index:400;animation:flashA .45s ease-out both}
+@keyframes flashA{0%{opacity:1}100%{opacity:0}}
+
+/* TYPEWRITER cursor blink on desc */
+.phase-desc::after{content:'▋';display:inline-block;animation:twCursor .7s step-end infinite;opacity:0}
+.phase-desc.typing::after{opacity:1}
+@keyframes twCursor{0%,100%{opacity:1}50%{opacity:0}}
+
+/* COMPLETE */
+.complete-card{background:var(--white);border-radius:20px;padding:44px 32px;text-align:center;box-shadow:var(--sh-lg);animation:cardIn .4s cubic-bezier(.22,1,.36,1) both;margin-top:24px}
+.comp-ico{font-size:60px;margin-bottom:14px;display:block}
+.comp-title{font-family:var(--display);font-size:30px;font-weight:700;margin-bottom:12px}
+.comp-desc{font-size:15px;color:var(--text2);line-height:1.85;margin-bottom:30px;max-width:460px;margin-left:auto;margin-right:auto}
+.comp-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.comp-btn{padding:13px 28px;border-radius:12px;border:2px solid var(--border);background:var(--white);font-family:var(--sans);font-size:14px;font-weight:700;color:var(--text);cursor:pointer;transition:all .2s}
+.comp-btn:hover{background:var(--bg2)}
+.comp-btn.filled{background:var(--text);color:white;border-color:var(--text)}
+
+/* COLOR THEMING per mode */
+.mode-victim .progress-mode{color:var(--red);border-color:var(--red-mid);background:var(--red-light)}
+.mode-victim .dot-pip.active{background:var(--red)}
+.mode-victim .dot-pip.done{background:var(--red-mid)}
+.mode-victim .progress-bar{background:linear-gradient(90deg,var(--orange),var(--red))}
+
+.mode-hacker .progress-mode{color:#8a0010;border-color:#e8a0a0;background:#fff0f0}
+.mode-hacker .dot-pip.active{background:#a00020}
+.mode-hacker .dot-pip.done{background:#e0a0a8}
+.mode-hacker .progress-bar{background:linear-gradient(90deg,#b00020,#800010)}
+
+.mode-econ .progress-mode{color:var(--green);border-color:#a0d8b8;background:var(--green-light)}
+.mode-econ .dot-pip.active{background:var(--green)}
+.mode-econ .dot-pip.done{background:#80c09a}
+.mode-econ .progress-bar{background:linear-gradient(90deg,#1a8a40,var(--green))}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+@media(max-width:600px){
+  .phase-wrap{padding:20px 14px 0}
+  .phase-head,.phase-body{padding:18px}
+  .mode-cards{gap:10px}
+  .mode-card{width:140px;padding:24px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<header class="app-header">
+  <div class="header-left">
+    <div class="header-title">セキュリティシミュレーター</div>
+  </div>
+  <button class="home-btn" id="homeBtn" onclick="goHome()">← ホームに戻る</button>
+</header>
+
+<!-- ████ TITLE ████ -->
+<div class="screen active" id="screen-title">
+  <div class="title-grid-bg"></div>
+  <h1 class="title-h1">ACCOUNT<span class="accent">TAKEOVER</span></h1>
+  <p class="title-desc">アカウントが乗っ取られると何が起きるのか。<br>視点を選んで、リアルな体験から学ぼう。</p>
+  <div class="mode-cards">
+    <div class="mode-card victim" onclick="startMode('victim')">
+      <span class="mc-icon">😰</span>
+      <div class="mc-label">被害者の体験</div>
+      <div class="mc-sub">5フェーズで追体験</div>
+    </div>
+    <div class="mode-card hacker" onclick="startMode('hacker')">
+      <span class="mc-icon">🕶️</span>
+      <div class="mc-label">攻撃者の手口</div>
+      <div class="mc-sub">6ステップ解説</div>
+    </div>
+    <div class="mode-card econ" onclick="startMode('econ')">
+      <span class="mc-icon">💰</span>
+      <div class="mc-label">攻撃の経済学</div>
+      <div class="mc-sub">なぜ攻撃するのか</div>
+    </div>
+  </div>
+  <div class="title-scroll-hint">▼ クリックしてスタート</div>
+</div>
+
+<!-- ████ GAME ████ -->
+<div class="screen" id="screen-game">
+  <div id="game-anchor" style="position:relative;top:0"></div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-top">
+      <span class="progress-mode" id="progressLabel">—</span>
+      <span class="progress-counter" id="progressCounter">1 / 1</span>
+    </div>
+    <div class="progress-track"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    <div class="dots-row" id="dotRow"></div>
+  </div>
+  <div class="phase-wrap" id="phaseWrap"></div>
+  <div class="action-area" id="actionArea"></div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+const MODES = {
+
+victim:{
+  label:'😰 被害者の体験',
+  cls:'mode-victim',
+  phases:[
+    {
+      step:'PHASE 1 — 侵害のきっかけ',
+      stepColor:'#c89600',
+      title:'フィッシングメールが届く',
+      desc:'今日、いつも使っているショッピングサイトから「不審なログインを検知した」というメールが届いた。見た目はいつものメールと全く同じだ。急いでいたこともあり、リンクをクリックしてしまった。',
+      html:`
+        <div class="email-mock">
+          <div class="email-bar">
+            <div class="em-dots"><div class="em-dot" style="background:#ff5f57"></div><div class="em-dot" style="background:#febc2e"></div><div class="em-dot" style="background:#28c840"></div></div>
+            <div class="em-app">📧 メール</div>
+          </div>
+          <div class="email-inner">
+            <div class="em-row"><div class="em-lbl">差出人</div><div class="em-val danger">security@amazon-verify-account-jp.net</div></div>
+            <div class="em-row"><div class="em-lbl">宛先</div><div class="em-val">あなた &lt;you@example.com&gt;</div></div>
+            <div class="em-row"><div class="em-lbl">件名</div><div class="em-val warn">【緊急】不審なログインを検知しました — 24時間以内にご確認ください</div></div>
+            <div class="em-hr"></div>
+            <div class="em-body">田中様<br><br>お客様のアカウントに通常と異なる場所からのログインが検知されました。お客様の安全を守るため、アカウントを一時的に制限しています。<br><br>下記ボタンより24時間以内にご本人確認をお願いいたします。確認が行われない場合、アカウントは自動的に停止されます。</div>
+            <div class="em-cta">今すぐ確認する ›</div>
+            <div><div class="em-phish">⚠️ フィッシング検出 — ドメインが公式と異なります</div></div>
+          </div>
+        </div>
+        <div class="info-note warn"><span class="in-icon">⚠️</span><div>本物のAmazonドメインは <strong>amazon.co.jp</strong>。このメールは <strong>amazon-verify-account-jp.net</strong> という全く別のドメインから送られている。急いでいるとき・疲れているとき、人はこの違いを見逃しやすい。</div></div>`,
+      action:{label:'リンクをクリックしてしまった…',icon:'🖱️',color:'orange'},
+    },
+    {
+      step:'PHASE 2 — 侵害発生（気づかない）',
+      stepColor:'#e06c1a',
+      title:'パスワードを入力してしまった',
+      desc:'偽サイトは本物と見分けがつかなかった。URLバーには鍵マークもあった。IDとパスワードを入力して送信した瞬間、その情報は攻撃者のサーバーへ転送された。しかし画面には「確認完了」と表示された。',
+      html:`
+        <div class="phone-mock">
+          <div class="phone-notch"><div class="phone-cam"></div></div>
+          <div class="phone-time">14:23</div>
+          <div class="phone-date">月曜日 3月5日</div>
+          <div class="notif-card" style="animation-delay:.2s">
+            <div class="notif-ico" style="background:#1a73e8">🔐</div>
+            <div class="notif-txt"><div class="notif-app">Chrome</div><div class="notif-h">パスワードが保存されました</div><div class="notif-b">amazon-verify-account-jp.net</div></div>
+            <div class="notif-t">今</div>
+          </div>
+        </div>
+        <div class="info-note danger"><span class="in-icon">🚨</span><div>この瞬間、攻撃者のサーバーに <strong>あなたのID・パスワードが届いた</strong>。被害者は「確認完了」と信じているが、攻撃者は<strong>即座に</strong>自動ツールで18種類のサービスへのログインを試みる。</div></div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">0秒</div><div class="stat-l">侵害から悪用開始まで</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--orange)">18件</div><div class="stat-l">自動試行されるサービス数</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">65%</div><div class="stat-l">パスワード使い回し率</div></div>
+        </div>`,
+      action:{label:'数時間後…何かがおかしい',icon:'⏩',color:'danger'},
+    },
+    {
+      step:'PHASE 3 — 侵害拡大',
+      stepColor:'#d93025',
+      title:'突然ログインできなくなった',
+      desc:'その夜、いつものようにサイトを開こうとすると「パスワードが違います」と表示された。パスワードリセットを試みると、「登録メールアドレスが変更されています」というメッセージが出た。',
+      html:`
+        <div class="phone-mock">
+          <div class="phone-notch"><div class="phone-cam"></div></div>
+          <div class="phone-time">23:47</div>
+          <div class="phone-date">月曜日 3月5日</div>
+          <div class="notif-card" style="animation-delay:.1s">
+            <div class="notif-ico" style="background:#ff9900">📦</div>
+            <div class="notif-txt"><div class="notif-app">Amazon</div><div class="notif-h">メールアドレスが変更されました</div><div class="notif-b">new-hacker@protonmail.com に変更されました</div></div>
+            <div class="notif-t">9時間前</div>
+          </div>
+          <div class="notif-card" style="animation-delay:.3s">
+            <div class="notif-ico" style="background:#4267B2">📘</div>
+            <div class="notif-txt"><div class="notif-app">Facebook</div><div class="notif-h">新しいデバイスからのログイン</div><div class="notif-b">ルーマニア・ブカレスト 14:26</div></div>
+            <div class="notif-t">9時間前</div>
+          </div>
+          <div class="notif-card" style="animation-delay:.5s">
+            <div class="notif-ico" style="background:#e60026">🏦</div>
+            <div class="notif-txt"><div class="notif-app">楽天銀行</div><div class="notif-h">ログイン通知</div><div class="notif-b">不明なデバイスからログインがありました</div></div>
+            <div class="notif-t">8時間前</div>
+          </div>
+        </div>
+        <div class="tags">
+          <span class="tag red">アカウント乗っ取り</span><span class="tag orange">個人情報閲覧済み</span><span class="tag red">住所・氏名漏洩</span><span class="tag red">銀行口座侵害</span>
+        </div>`,
+      action:{label:'被害の全容を確認する',icon:'🔍',color:'danger'},
+    },
+    {
+      step:'PHASE 4 — 金銭被害・連鎖侵害',
+      stepColor:'#6b3fa0',
+      title:'クレカ不正利用 ＆ パスワード使い回し被害',
+      desc:'翌日、クレジットカード会社から不審な取引の連絡が来た。同時に、友人たちから「あなたのLINEから変なメッセージが届いた」という連絡が相次いだ。同じパスワードを使っていた全サービスが被害を受けていた。',
+      html:`
+        <div class="ripple-wrap">
+          <div class="r-ring"></div><div class="r-ring"></div><div class="r-ring"></div>
+          <div class="r-center"><div class="r-ico">🔑</div><div class="r-lbl">漏洩PW</div></div>
+          <div class="r-svc rs1"><div class="ri">🏦</div><div class="rl">銀行</div></div>
+          <div class="r-svc rs2"><div class="ri">💳</div><div class="rl">クレカ</div></div>
+          <div class="r-svc rs3"><div class="ri">💬</div><div class="rl">LINE</div></div>
+          <div class="r-svc rs4"><div class="ri">📦</div><div class="rl">EC</div></div>
+          <div class="r-svc rs5"><div class="ri">📧</div><div class="rl">Gmail</div></div>
+          <div class="r-svc rs6"><div class="ri">🏢</div><div class="rl">社内</div></div>
+          <div class="r-svc rs7"><div class="ri">🐦</div><div class="rl">SNS</div></div>
+          <div class="r-svc rs8"><div class="ri">🎮</div><div class="rl">ゲーム</div></div>
+        </div>
+        <div class="info-note danger"><span class="in-icon">💀</span><div><strong>パスワード使い回しの代償。</strong> 1つのサービスで漏洩したパスワードが、同じパスワードを使っていた全サービスへの入り口になる。攻撃者は自動ツールで同時多発的に試行し、平均3〜4件で侵害に成功する。</div></div>
+        <div class="tags">
+          <span class="tag purple">クレカ不正利用 ¥248,000</span><span class="tag purple">銀行振込 ¥80,000</span><span class="tag red">LINE乗っ取り</span><span class="tag red">友人への詐欺メッセージ</span>
+        </div>`,
+      action:{label:'最終的な被害を見る',icon:'📊',color:'danger'},
+    },
+    {
+      step:'PHASE 5 — 長期的な影響',
+      stepColor:'#a00020',
+      title:'社会的信用と業務への影響',
+      desc:'1週間後。アカウント回復作業が続いている。だが被害はそれだけでは終わらなかった。会社のメールも同じパスワードだったことが判明し、上司から呼び出された。',
+      html:`
+        <div class="terminal">
+          <div class="term-bar"><div class="term-dot" style="background:#ff5f57"></div><div class="term-dot" style="background:#febc2e"></div><div class="term-dot" style="background:#28c840"></div><div class="term-name">被害状況サマリー — 侵害から1週間後</div></div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">▶</span><span class="t-cmd"> 金銭被害</span></div>
+            <div class="t-line"><span class="t-out">  クレジットカード不正利用         ¥248,000</span></div>
+            <div class="t-line"><span class="t-out">  銀行口座不正送金                ¥80,000</span></div>
+            <div class="t-line"><span class="t-err">  合計損失                        ¥328,000</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-prompt">▶</span><span class="t-cmd"> SNS・コミュニケーション被害</span></div>
+            <div class="t-line"><span class="t-out">  LINEから詐欺メッセージ送信数     328件</span></div>
+            <div class="t-line"><span class="t-out">  被害を受けた友人・知人           12名</span></div>
+            <div class="t-line"><span class="t-warn">  友人関係の毀損                  修復中</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-prompt">▶</span><span class="t-cmd"> 業務への影響</span></div>
+            <div class="t-line"><span class="t-err">  会社メール侵害                  確認中</span></div>
+            <div class="t-line"><span class="t-err">  社内システムへの不正アクセス     調査中</span></div>
+            <div class="t-line"><span class="t-err">  情報漏洩インシデント報告 要否    審議中</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-prompt">▶</span><span class="t-cmd"> 回復見込み</span></div>
+            <div class="t-line"><span class="t-warn">  全アカウント回復まで             3〜8週間</span></div>
+            <div class="t-line"><span class="t-warn">  信用情報修正手続き               〜3ヶ月</span></div>
+            <div class="t-line"><span class="t-err">  法的対応が必要な可能性           あり</span></div>
+          </div>
+        </div>
+        <div class="info-note tip"><span class="in-icon">💡</span><div><strong>この被害はすべて防げた。</strong> MFAを有効にしてパスワードを使い回さなければ、たとえパスワードが漏洩してもここまでの被害は起きなかった。</div></div>`,
+      isLast:true,
+      completeIcon:'📖',
+      completeTitle:'体験完了',
+      completeDesc:'1件のフィッシングが、金銭・社会的信用・業務すべてに影響を与えることを体験しました。次は「攻撃者の手口」で、なぜこの攻撃が繰り返されるのかを学びましょう。',
+    },
+  ],
+},
+
+hacker:{
+  label:'🕶️ 攻撃者の手口',
+  cls:'mode-hacker',
+  phases:[
+    {
+      step:'STEP 01 — RECONNAISSANCE',
+      stepColor:'#8a0010',
+      title:'ターゲット選定・情報収集',
+      desc:'攻撃者はまず「成功しやすいターゲット」を大量に選定する。企業名簿・SNS・過去の漏洩DBを組み合わせることで、メールアドレスと使用サービスのリストを30分以内に作成できる。',
+      html:`
+        <div class="terminal">
+          <div class="term-bar"><div class="term-dot" style="background:#ff5f57"></div><div class="term-dot" style="background:#febc2e"></div><div class="term-dot" style="background:#28c840"></div><div class="term-name">recon.sh — ターゲットリスト生成</div></div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> breach_check --domain example-corp.co.jp</span></div>
+            <div class="t-line"><span class="t-info">  Checking 23 breach databases...</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Found 1,247 leaked credentials</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Email list extracted: 1,247 addresses</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> linkedin_harvest --company "example-corp" --out targets.txt</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ 843 employees found</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Pattern: {firstname}.{lastname}@example-corp.co.jp</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> merge_dedupe targets.txt leaked_creds.txt</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Final target list: 2,090 records ready</span></div>
+            <div class="t-line"><span class="t-warn">  ⚡ Ready for phishing campaign</span></div>
+          </div>
+        </div>
+        <div class="info-note warn"><span class="in-icon">📌</span><div>これらのツールの多くは<strong>誰でも入手可能</strong>で、技術的な知識がなくても使用できる。攻撃者にとって情報収集はコスト¥0のフェーズだ。</div></div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">¥0</div><div class="stat-l">情報収集コスト</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--orange)">30分</div><div class="stat-l">ターゲットリスト作成時間</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">2,090件</div><div class="stat-l">取得したターゲット数</div></div>
+        </div>`,
+      action:{label:'フィッシングキットを準備する',icon:'🖥️',color:'danger'},
+    },
+    {
+      step:'STEP 02 — WEAPONIZE',
+      stepColor:'#a00020',
+      title:'偽サイトを15分で構築',
+      desc:'ダークウェブでは主要サービスの偽サイトを数分で構築できるキットが数千円で販売されている。SSLも自動取得でき、ブラウザの鍵マークも表示される。もはや「技術力」は不要だ。',
+      html:`
+        <div class="terminal">
+          <div class="term-bar"><div class="term-dot" style="background:#ff5f57"></div><div class="term-dot" style="background:#febc2e"></div><div class="term-dot" style="background:#28c840"></div><div class="term-name">evilginx2 — フィッシングサイト構築</div></div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> ./evilginx -p ./phishlets</span></div>
+            <div class="t-line"><span class="t-info">  Loading: amazon, google, microsoft, rakuten, line...</span></div>
+            <div class="t-line"><span class="t-prompt">:</span><span class="t-cmd"> phishlets hostname amazon amazon-account-verify.net</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Hostname set</span></div>
+            <div class="t-line"><span class="t-prompt">:</span><span class="t-cmd"> phishlets enable amazon</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ SSL certificate obtained (Let's Encrypt — FREE)</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Site live: https://amazon-account-verify.net 🔒</span></div>
+            <div class="t-line"><span class="t-warn">  ⚡ Credential harvesting: ACTIVE</span></div>
+            <div class="t-line"><span class="t-warn">  ⚡ Session cookie capture: ACTIVE</span></div>
+          </div>
+        </div>
+        <div class="info-note danger"><span class="in-icon">🔴</span><div><strong>「鍵マーク＝安全」は過去の話。</strong> 攻撃者はLet's Encryptで無料のSSL証明書を取得できる。ブラウザが「安全」と表示するフィッシングサイトが今や当たり前になっている。</div></div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">¥3,000</div><div class="stat-l">フィッシングキット購入費</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--orange)">15分</div><div class="stat-l">偽サイト構築時間</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">¥0</div><div class="stat-l">SSL証明書取得費</div></div>
+        </div>`,
+      action:{label:'5万件を一斉送信する',icon:'📨',color:'danger'},
+    },
+    {
+      step:'STEP 03 — DELIVER',
+      stepColor:'#b00020',
+      title:'数万件一斉送信 — 数の論理',
+      desc:'攻撃者は精度より量で勝負する。5万件送って1%がクリックすれば500件。そのうち30%が入力すれば150件の侵害が完成する。1件成功すれば元が取れる。これが攻撃が止まらない根本原因だ。',
+      html:`
+        <div class="terminal">
+          <div class="term-bar"><div class="term-dot" style="background:#ff5f57"></div><div class="term-dot" style="background:#febc2e"></div><div class="term-dot" style="background:#28c840"></div><div class="term-name">campaign — ライブ送信状況</div></div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> send_campaign --targets 52,000 --template amazon_urgent</span></div>
+            <div class="t-line"><span class="t-info">  Sending via botnet (3,200 nodes)...</span></div>
+            <div class="t-line"><span class="t-out">  [████████████████████] 52,000 / 52,000 sent</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-info">  Live stats (T+2h):</span></div>
+            <div class="t-line"><span class="t-out">  Delivered:            48,210  (92.7%)</span></div>
+            <div class="t-line"><span class="t-warn">  Opened:                9,644  (20.0%)</span></div>
+            <div class="t-line"><span class="t-warn">  Clicked link:            531  ( 1.1%)</span></div>
+            <div class="t-line"><span class="t-ok">  Credentials harvested:   164</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-ok">  Est. yield: ¥1,200,000 〜 ¥8,000,000</span></div>
+          </div>
+        </div>
+        <div class="info-note warn"><span class="in-icon">📊</span><div><strong>成功率1%でも「大成功」。</strong> 送信コストはほぼゼロなので、数の論理が成立する。164件の侵害から数百万〜数千万円の収益が見込める。</div></div>`,
+      action:{label:'取得した認証情報を自動悪用する',icon:'⚡',color:'danger'},
+    },
+    {
+      step:'STEP 04 — EXPLOIT',
+      stepColor:'#c00020',
+      title:'クレデンシャルスタッフィング',
+      desc:'取得した認証情報は即座に自動化ツールへ投入される。18種類のサービスに同時並行で試行され、パスワードを使い回しているサービスが次々と侵害される。人の手は一切いらない。',
+      html:`
+        <div class="terminal">
+          <div class="term-bar"><div class="term-dot" style="background:#ff5f57"></div><div class="term-dot" style="background:#febc2e"></div><div class="term-dot" style="background:#28c840"></div><div class="term-name">credstuffer.py — 並列実行中</div></div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> python credstuffer.py --input harvest.csv --services all</span></div>
+            <div class="t-line"><span class="t-info">  Loaded 164 credentials | Testing 18 services in parallel</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-out">  user@example.com :</span></div>
+            <div class="t-line"><span class="t-ok">    ✓ amazon.co.jp          LOGIN OK → Card: ****4829</span></div>
+            <div class="t-line"><span class="t-ok">    ✓ gmail.com             LOGIN OK → Contacts: 847</span></div>
+            <div class="t-line"><span class="t-ok">    ✓ rakuten-bank.co.jp    LOGIN OK → Balance: ¥284,000</span></div>
+            <div class="t-line"><span class="t-ok">    ✓ line.me               LOGIN OK → Contacts: 312</span></div>
+            <div class="t-line"><span class="t-warn">    ✗ twitter.com           BLOCKED — MFA active</span></div>
+            <div class="t-line"><span class="t-warn">    ✗ facebook.com          BLOCKED — MFA active</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-ok">  Hit rate: 4/18 (22%)  Elapsed: 43 seconds</span></div>
+          </div>
+        </div>
+        <div class="info-note tip"><span class="in-icon">💡</span><div><strong>MFAが有効なアカウントは自動でスキップされた。</strong> TwitterとFacebookはMFAが有効だったため、パスワードが漏洩していても攻撃者は侵害できなかった。</div></div>`,
+      action:{label:'収益を換金する',icon:'💰',color:'danger'},
+    },
+    {
+      step:'STEP 05 — MONETIZE',
+      stepColor:'#c83020',
+      title:'多様な換金ルートで即時収益化',
+      desc:'侵害したアカウントは複数の方法で即座に換金される。直接的な金銭窃取から情報転売まで、攻撃者は「持っているもの」を最大限に活用する。',
+      html:`
+        <table class="data-table">
+          <thead><tr><th>換金方法</th><th>対象</th><th>収益</th></tr></thead>
+          <tbody>
+            <tr><td>🏦 銀行口座から即時送金</td><td>楽天銀行 ¥284,000</td><td class="vg">¥280,000</td></tr>
+            <tr><td>🛒 クレカでギフトカード購入</td><td>Amazonカード複数枚</td><td class="vg">¥150,000</td></tr>
+            <tr><td>📊 認証情報をダークウェブで転売</td><td>164件セット</td><td class="vg">$820</td></tr>
+            <tr><td>💬 LINEでなりすまし詐欺</td><td>312人の連絡先</td><td class="vg">¥50,000〜</td></tr>
+            <tr><td>📧 メールを踏み台スパム送信</td><td>1日あたり</td><td class="vg">継続収益</td></tr>
+          </tbody>
+        </table>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-v" style="color:var(--green)">¥8,000</div><div class="stat-l">今回の総攻撃コスト</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">¥500万+</div><div class="stat-l">164件分の期待収益</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--green)">600x+</div><div class="stat-l">投資対効果（ROI）</div></div>
+        </div>`,
+      action:{label:'痕跡を消して長期潜伏する',icon:'👻',color:'danger'},
+    },
+    {
+      step:'STEP 06 — PERSIST',
+      stepColor:'#d03828',
+      title:'痕跡消去と長期潜伏',
+      desc:'換金後も攻撃者はアカウントを手放さない。バックドアを設置して再侵害できる状態を確保し、メールアカウントを静かに監視し続ける。特に企業アカウントは数ヶ月潜伏の標的になりやすい。',
+      html:`
+        <div class="terminal">
+          <div class="term-bar"><div class="term-dot" style="background:#ff5f57"></div><div class="term-dot" style="background:#febc2e"></div><div class="term-dot" style="background:#28c840"></div><div class="term-name">persist.sh — 持続的アクセス確保</div></div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> backdoor_install --account user@example.com</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Recovery email added: backup@proton.me</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Forward rule: ALL MAIL → monitor@proton.me</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ App password generated (bypasses MFA)</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> cover_tracks --wipe-history --spoof-ip</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Login history cleared</span></div>
+            <div class="t-line"><span class="t-ok">  ✓ Access logs modified</span></div>
+            <div class="t-line"><span class="t-out"> </span></div>
+            <div class="t-line"><span class="t-warn">  ⚡ Passive monitoring: ACTIVE</span></div>
+            <div class="t-line"><span class="t-warn">  ⚡ Watching: banking emails, new passwords, 2FA codes</span></div>
+            <div class="t-line"><span class="t-warn">  ⚡ Next: wait for salary deposit notification</span></div>
+          </div>
+        </div>
+        <div class="info-note danger"><span class="in-icon">👁️</span><div><strong>被害者が「回復した」と思っても、バックドアが残っている場合がある。</strong> メールの転送ルール・復旧用メールアドレス・アプリパスワードを定期的に確認することが重要。</div></div>`,
+      isLast:true,
+      completeIcon:'🕶️',
+      completeTitle:'攻撃の全容を把握',
+      completeDesc:'攻撃者がいかに低コスト・高リターンで動いているかを理解しました。次は「攻撃の経済学」で、なぜこの攻撃が止まらないのかを数字で確認しましょう。',
+    },
+  ],
+},
+
+econ:{
+  label:'💰 攻撃の経済学',
+  cls:'mode-econ',
+  phases:[
+    {
+      step:'ECONOMICS 01 — コスト構造',
+      stepColor:'#1a7a40',
+      title:'攻撃のコストはほぼゼロ',
+      desc:'ハッカーが攻撃をやめない理由はシンプルだ。必要な初期投資は数千円以下で、その後は自動化ツールがほぼ無人で動作する。労働集約的なビジネスではなく、「仕掛けて待つ」モデルだ。',
+      html:`
+        <table class="data-table">
+          <thead><tr><th>攻撃の要素</th><th>コスト</th><th>備考</th></tr></thead>
+          <tbody>
+            <tr><td>🎣 フィッシングキット（既製品）</td><td class="vr">¥0〜¥5,000</td><td>ダークウェブで購入可能</td></tr>
+            <tr><td>🌐 偽ドメイン取得</td><td class="vr">¥500〜¥2,000/年</td><td>1クリックで取得可能</td></tr>
+            <tr><td>🔒 SSL証明書</td><td class="vr">¥0</td><td>Let's Encryptで無料取得</td></tr>
+            <tr><td>📨 メール一斉送信（5万通）</td><td class="vr">¥1,000〜¥3,000</td><td>ボットネット経由</td></tr>
+            <tr><td>⚡ 自動化ツール一式</td><td class="vr">¥0</td><td>オープンソースで無料</td></tr>
+            <tr><td>⏱️ 人件費</td><td class="vr">数時間のみ</td><td>セットアップのみ、後は自動</td></tr>
+          </tbody>
+        </table>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">¥8,000</div><div class="stat-l">合計攻撃コスト（最大）</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--green)">¥500万+</div><div class="stat-l">1キャンペーン期待収益</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--green)">600x+</div><div class="stat-l">最低ROI</div></div>
+        </div>`,
+      action:{label:'収益の多様性を見る',icon:'💸',color:'green'},
+    },
+    {
+      step:'ECONOMICS 02 — 収益源',
+      stepColor:'#1a8a40',
+      title:'攻撃者の6つの収益モデル',
+      desc:'1つのアカウント侵害が、複数の収益源に同時に転換される。直接的な金銭窃取だけでなく、「情報を売る」「サービスとして貸す」という間接的な収益化が攻撃者の利益を最大化する。',
+      html:`
+        <div class="bars">
+          <div class="bar-row"><div class="bar-lbl">ランサムウェア</div><div class="bar-track"><div class="bar-fill" style="width:95%;background:linear-gradient(90deg,#c00020,#e04030);animation-delay:0s">数千万〜数億円</div></div></div>
+          <div class="bar-row"><div class="bar-lbl">BEC詐欺</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:linear-gradient(90deg,#c84010,#e06030);animation-delay:.1s">数百万〜数千万円</div></div></div>
+          <div class="bar-row"><div class="bar-lbl">クレカ不正利用</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:linear-gradient(90deg,#c87010,#e09030);animation-delay:.2s">数十万〜数百万円</div></div></div>
+          <div class="bar-row"><div class="bar-lbl">認証情報転売</div><div class="bar-track"><div class="bar-fill" style="width:38%;background:linear-gradient(90deg,#1a7a40,#2aaa60);animation-delay:.3s">数万〜数十万円</div></div></div>
+          <div class="bar-row"><div class="bar-lbl">スパム踏み台</div><div class="bar-track"><div class="bar-fill" style="width:28%;background:linear-gradient(90deg,#1a60a0,#2a80c0);animation-delay:.4s">継続収益</div></div></div>
+          <div class="bar-row"><div class="bar-lbl">ポイント窃取</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:linear-gradient(90deg,#6b3fa0,#8b5fc0);animation-delay:.5s">残高依存</div></div></div>
+        </div>
+        <div class="info-note tip"><span class="in-icon">💡</span><div><strong>収益の多様化が攻撃を持続させる。</strong> 1件のアカウント侵害から平均3〜4種類の収益を同時に得られる。攻撃者は「卸・小売・サービス」の複合ビジネスを展開している。</div></div>`,
+      action:{label:'被害の連鎖構造を見る',icon:'🔗',color:'green'},
+    },
+    {
+      step:'ECONOMICS 03 — 連鎖構造',
+      stepColor:'#1a8040',
+      title:'1件の侵害が引き起こす指数関数的拡大',
+      desc:'アカウント乗っ取りの最も恐ろしい特性は「連鎖」だ。1人のパスワード使い回しが、その人の全サービスを侵害し、さらに職場のシステムへの入り口になる。',
+      html:`
+        <div class="ripple-wrap" style="height:300px">
+          <div class="r-ring"></div><div class="r-ring"></div><div class="r-ring"></div>
+          <div class="r-center"><div class="r-ico">1件</div><div class="r-lbl">フィッシング</div></div>
+          <div class="r-svc rs1"><div class="ri">👤</div><div class="rl">個人被害</div></div>
+          <div class="r-svc rs2"><div class="ri">👨‍👩‍👧</div><div class="rl">家族被害</div></div>
+          <div class="r-svc rs3"><div class="ri">👥</div><div class="rl">友人被害</div></div>
+          <div class="r-svc rs4"><div class="ri">🏢</div><div class="rl">企業被害</div></div>
+          <div class="r-svc rs5"><div class="ri">🌐</div><div class="rl">顧客情報</div></div>
+          <div class="r-svc rs6"><div class="ri">💊</div><div class="rl">医療情報</div></div>
+          <div class="r-svc rs7"><div class="ri">🏛️</div><div class="rl">行政情報</div></div>
+          <div class="r-svc rs8"><div class="ri">📈</div><div class="rl">株価影響</div></div>
+        </div>
+        <div class="info-note danger"><span class="in-icon">⚠️</span><div><strong>実際のケース：</strong> 国内大手企業への攻撃は、1人の社員のフィッシング被害から始まり、最終的に数百万件の顧客情報漏洩と数十億円の損失に発展したケースがある。</div></div>`,
+      action:{label:'攻撃者のリスクを見る',icon:'⚖️',color:'green'},
+    },
+    {
+      step:'ECONOMICS 04 — リスク構造',
+      stepColor:'#1a9040',
+      title:'攻撃者のリスクが低い理由',
+      desc:'攻撃者にとって「捕まるリスク」は低い。国際的な管轄の問題、匿名化技術の発達、証拠収集の困難さが重なり、サイバー犯罪の検挙率は極めて低いのが現実だ。',
+      html:`
+        <table class="data-table">
+          <thead><tr><th>リスク要因</th><th>攻撃者の対策</th><th>実態</th></tr></thead>
+          <tbody>
+            <tr><td>🚔 身元特定</td><td>Tor・VPN・ボットネット経由</td><td class="vr">検挙率 約2%</td></tr>
+            <tr><td>🌍 管轄の問題</td><td>被害者と別の国から攻撃</td><td class="vr">国際協力に時間</td></tr>
+            <tr><td>💰 資産追跡</td><td>暗号資産でマネーロンダリング</td><td class="vr">追跡困難</td></tr>
+            <tr><td>🔒 証拠保全</td><td>ログ自動削除・海外サーバー</td><td class="vr">証拠収集が困難</td></tr>
+            <tr><td>⚖️ 罰則（日本）</td><td>—</td><td class="vg">最大10年懲役</td></tr>
+          </tbody>
+        </table>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-v" style="color:var(--red)">2%</div><div class="stat-l">サイバー犯罪検挙率（推計）</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--orange)">98%</div><div class="stat-l">捕まらない確率</div></div>
+          <div class="stat-box"><div class="stat-v" style="color:var(--green)">10年</div><div class="stat-l">最大懲役（不正アクセス禁止法）</div></div>
+        </div>
+        <div class="info-note warn"><span class="in-icon">⚖️</span><div><strong>「割に合わない」と感じさせることが防御の本質。</strong> 法的リスクが低い現状では、技術的な防御でコストを上げることが最も現実的な対策だ。</div></div>`,
+      action:{label:'防御の経済学を見る',icon:'🛡️',color:'green'},
+    },
+    {
+      step:'ECONOMICS 05 — 防御の投資対効果',
+      stepColor:'#1a9840',
+      title:'対策コスト vs 被害コスト',
+      desc:'防御の投資対効果を理解すると、「面倒くさい」という心理的ハードルを乗り越えられる。¥0の投資で数十万〜数百万円の被害を防げる対策がある。',
+      html:`
+        <table class="data-table">
+          <thead><tr><th>対策</th><th>コスト</th><th>防げる被害</th><th>ROI</th></tr></thead>
+          <tbody>
+            <tr><td>🔐 多要素認証（MFA）有効化</td><td class="vr">¥0・5分</td><td class="vg">侵害の99%防止</td><td class="v-roi">∞</td></tr>
+            <tr><td>🎲 パスワードマネージャー</td><td class="vr">¥0〜¥1,000/月</td><td class="vg">連鎖侵害を完全防止</td><td class="v-roi">数万x</td></tr>
+            <tr><td>👁️ ログインアラート設定</td><td class="vr">¥0・2分</td><td class="vg">早期発見で被害最小化</td><td class="v-roi">∞</td></tr>
+            <tr><td>🏫 社員セキュリティ研修</td><td class="vr">数万円/年</td><td class="vg">企業侵害（数億円）防止</td><td class="v-roi">数万x</td></tr>
+          </tbody>
+        </table>
+        <div class="def-grid">
+          <div class="def-card"><div class="def-i">🔐</div><div class="def-t">MFAを今すぐ有効に</div><div class="def-d">パスワードが漏洩しても、MFAがあれば攻撃者はログインできない。全サービスで設定を。</div></div>
+          <div class="def-card"><div class="def-i">🎲</div><div class="def-t">パスワードは使い回さない</div><div class="def-d">サービスごとに異なるランダムなパスワードを使用。パスワードマネージャーで管理する。</div></div>
+          <div class="def-card"><div class="def-i">👁️</div><div class="def-t">URLを確認する習慣</div><div class="def-d">ドメイン名を確認。正規サービスはメールのリンクからパスワード入力を求めない。</div></div>
+          <div class="def-card"><div class="def-i">🔔</div><div class="def-t">ログインアラートをON</div><div class="def-d">不審なログインを即検知。被害範囲は発見の早さに直結する。</div></div>
+        </div>`,
+      isLast:true,
+      completeIcon:'🎓',
+      completeTitle:'研修完了',
+      completeDesc:'アカウント乗っ取りの経済構造を理解しました。攻撃者にとって「割に合わない」環境を作ることが最も効果的な防御です。今日から実践できる対策を1つ選んで実行しましょう。',
+    },
+  ],
+},
+};
+
+/* ===== ENGINE ===== */
+let curMode=null, curIdx=0;
+
+function goHome(){
+  document.getElementById('screen-title').classList.add('active');
+  document.getElementById('screen-game').classList.remove('active');
+  document.getElementById('homeBtn').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startMode(mode){
+  curMode=mode; curIdx=0;
+  const gs=document.getElementById('screen-game');
+  gs.className='screen active '+MODES[mode].cls;
+  document.getElementById('screen-title').classList.remove('active');
+  document.getElementById('homeBtn').style.display='block';
+  document.getElementById('progressLabel').textContent=MODES[mode].label;
+  // Build dots
+  const dr=document.getElementById('dotRow');
+  dr.innerHTML='';
+  MODES[mode].phases.forEach(()=>{
+    const d=document.createElement('div');d.className='dot-pip';dr.appendChild(d);
+  });
+  renderPhase(0);
+  // Scroll to game screen top after short delay (let DOM render)
+  setTimeout(()=>{
+    const anchor=document.getElementById('game-anchor');
+    if(anchor){
+      const y=anchor.getBoundingClientRect().top+window.scrollY-56;
+      window.scrollTo({top:y,behavior:'smooth'});
+    }
+  },80);
+}
+
+/* ── TYPEWRITER ── */
+function typewriterEffect(el, text, speed, onDone){
+  el.textContent='';
+  el.classList.add('typing');
+  let i=0;
+  const tick=()=>{
+    if(i<text.length){
+      el.textContent+=text[i++];
+      setTimeout(tick, speed);
+    } else {
+      el.classList.remove('typing');
+      if(onDone) onDone();
+    }
+  };
+  tick();
+}
+
+function renderPhase(idx){
+  const data=MODES[curMode];
+  const ph=data.phases[idx];
+  const total=data.phases.length;
+
+  // Progress
+  document.getElementById('progressBar').style.width=((idx+1)/total*100)+'%';
+  document.getElementById('progressCounter').textContent=`${idx+1} / ${total}`;
+  document.querySelectorAll('.dot-pip').forEach((d,i)=>{
+    d.className='dot-pip'+(i<idx?' done':'')+(i===idx?' active':'');
+  });
+
+  const wrap=document.getElementById('phaseWrap');
+  const area=document.getElementById('actionArea');
+
+  const cardHTML=`
+    <div class="phase-card">
+      <div class="phase-head">
+        <div class="phase-step-tag">
+          <span class="step-dot" style="background:${ph.stepColor}"></span>
+          ${ph.step}
+        </div>
+        <div class="phase-title">${ph.title}</div>
+        <div class="phase-num-bg">${String(idx+1).padStart(2,'0')}</div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-desc" id="phaseDescEl"></div>
+        <div id="phaseHtmlMount"></div>
+      </div>
+    </div>
+  `;
+
+  if(ph.isLast){
+    wrap.innerHTML=cardHTML+`<div id="completeCardMount"></div>`;
+    area.innerHTML='';
+    area.classList.add('hidden');
+  } else {
+    wrap.innerHTML=cardHTML;
+    area.classList.remove('hidden');
+    const a=ph.action;
+    area.innerHTML=`
+      ${idx>0?`<button class="act-btn back" onclick="goPrev()">← 戻る</button>`:''}
+      <button class="act-btn ${a.color}" id="nextBtn" onclick="goNext()" style="opacity:0;pointer-events:none;transition:opacity .5s ease">
+        <span>${a.icon}</span>
+        <span>${a.label}</span>
+        <span class="btn-arr">›</span>
+      </button>`;
+  }
+
+  // Scroll to top of phase
+  const progressEl=document.getElementById('progressWrap');
+  if(progressEl){
+    const y=progressEl.getBoundingClientRect().bottom+window.scrollY-2;
+    window.scrollTo({top:y,behavior:'smooth'});
+  }
+
+  // Parse ph.html into DOM nodes and inject as hidden blocks
+  const mount=document.getElementById('phaseHtmlMount');
+  if(mount){
+    const tmp=document.createElement('div');
+    tmp.innerHTML=ph.html;
+    // Each top-level child becomes a slide block
+    const nodes=[...tmp.children];
+    nodes.forEach(node=>{
+      node.classList.add('pcb'); // phase-content-block via JS class
+      node.style.opacity='0';
+      node.style.transform='translateY(18px)';
+      node.style.transition='opacity .5s ease, transform .5s ease';
+      mount.appendChild(node);
+    });
+  }
+
+  // Re-trigger bar animations after slide-in
+  // (done inside the slide callback below)
+
+  // ── TYPEWRITER then SLIDE-IN ──
+  const descEl=document.getElementById('phaseDescEl');
+  if(descEl){
+    const descText=ph.desc;
+    const charSpeed=Math.min(28, Math.round(1200/descText.length));
+    typewriterEffect(descEl, descText, charSpeed, ()=>{
+      // slide in each block sequentially
+      const blocks=mount ? [...mount.children] : [];
+      blocks.forEach((b,i)=>{
+        setTimeout(()=>{
+          b.style.opacity='1';
+          b.style.transform='translateY(0)';
+          // re-trigger bars inside this block
+          b.querySelectorAll('.bar-fill').forEach(bf=>{
+            bf.style.animation='none';
+            void bf.offsetWidth;
+            bf.style.animation='';
+          });
+        }, 60 + i*160);
+      });
+
+      // complete card
+      if(ph.isLast){
+        const ccMount=document.getElementById('completeCardMount');
+        if(ccMount){
+          ccMount.innerHTML=`
+            <div class="complete-card" style="opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s ease">
+              <span class="comp-ico">${ph.completeIcon}</span>
+              <div class="comp-title">${ph.completeTitle}</div>
+              <p class="comp-desc">${ph.completeDesc}</p>
+              <div class="comp-btns">
+                <button class="comp-btn" onclick="startMode('${curMode}')">🔄 最初からやり直す</button>
+                <button class="comp-btn filled" onclick="goHome()">🏠 他のモードを選ぶ</button>
+              </div>
+            </div>`;
+          setTimeout(()=>{
+            const cc=ccMount.firstElementChild;
+            if(cc){cc.style.opacity='1';cc.style.transform='translateY(0)';}
+          }, 60+blocks.length*160);
+        }
+      }
+
+      // Show next button after all blocks
+      const delay=60+blocks.length*160+200;
+      setTimeout(()=>{
+        const nb=document.getElementById('nextBtn');
+        if(nb){nb.style.opacity='1';nb.style.pointerEvents='auto';}
+      }, delay);
+    });
+  }
+}
+
+function goNext(){
+  const f=document.getElementById('flash');
+  f.style.display='block';
+  setTimeout(()=>f.style.display='none',450);
+  curIdx++;
+  renderPhase(curIdx);
+}
+function goPrev(){
+  if(curIdx>0){curIdx--;renderPhase(curIdx);}
+}
+</script>
+</body>
+</html>

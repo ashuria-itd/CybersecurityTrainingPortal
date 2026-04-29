@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYBER SIEGE — セキュリティインシデント シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== DARK THEME (default) ===== */
+  [data-theme="dark"] {
+    --bg: #060a0f;
+    --panel: #0c1420;
+    --panel2: #0f1a28;
+    --border: #1a2d42;
+    --accent: #00d4ff;
+    --danger: #ff3b3b;
+    --warn: #ffb800;
+    --safe: #00e87a;
+    --text: #c8dce8;
+    --text2: #e8f2fa;
+    --muted: #4a6070;
+    --muted2: #3a5060;
+    --header-bg: rgba(6,10,15,0.92);
+    --terminal-bg: #050810;
+    --grid-color: rgba(0,212,255,0.03);
+    --glow: 0 0 20px rgba(0,212,255,0.3);
+    --glow-danger: 0 0 20px rgba(255,59,59,0.4);
+    --glow-safe: 0 0 20px rgba(0,232,122,0.3);
+    --expand-bg: #08111c;
+  }
+
+  /* ===== LIGHT THEME ===== */
+  [data-theme="light"] {
+    --bg: #eef3f8;
+    --panel: #ffffff;
+    --panel2: #f5f8fc;
+    --border: #ccdae8;
+    --accent: #0077bb;
+    --danger: #cc1a1a;
+    --warn: #b06800;
+    --safe: #007a40;
+    --text: #2a3a4a;
+    --text2: #141e28;
+    --muted: #6a8a9a;
+    --muted2: #a8c0cc;
+    --header-bg: rgba(238,243,248,0.95);
+    --terminal-bg: #111c28;
+    --grid-color: rgba(0,119,187,0.05);
+    --glow: 0 2px 14px rgba(0,119,187,0.18);
+    --glow-danger: 0 2px 14px rgba(204,26,26,0.22);
+    --glow-safe: 0 2px 14px rgba(0,122,64,0.18);
+    --expand-bg: #e8f0f8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  [data-theme="dark"] body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ===== HEADER ===== */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: background 0.35s, border-color 0.35s;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-shadow: var(--glow);
+    transition: color 0.35s;
+  }
+  .logo span { color: var(--danger); }
+
+  header .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  /* ── THEME TOGGLE ── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 10px;
+    transition: all 0.3s;
+    user-select: none;
+  }
+  .theme-toggle:hover { border-color: var(--accent); box-shadow: var(--glow); }
+
+  .toggle-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .toggle-track {
+    width: 32px; height: 18px;
+    background: var(--muted2);
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  [data-theme="light"] .toggle-track { background: var(--accent); }
+
+  .toggle-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 2px; left: 2px;
+    transition: left 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  [data-theme="light"] .toggle-thumb { left: 16px; }
+
+  .toggle-emoji { font-size: 14px; }
+
+  .pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--safe);
+    box-shadow: 0 0 8px var(--safe);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ===== SECTIONS ===== */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ===== SCREEN 1 ===== */
+  .screen-wrap { max-width: 1400px; margin: 0 auto; padding: 60px 40px; }
+
+  .screen-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+    color: var(--accent);
+    text-shadow: var(--glow);
+  }
+  .screen-desc {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 50px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .card-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .card-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .card-section-title.risk-title { color: var(--danger); }
+  .card-section-title.safe-title { color: var(--safe); }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 50px;
+  }
+
+  .card {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    border-radius: 4px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .card.risk::before  { background: radial-gradient(ellipse at top left, rgba(255,59,59,0.08), transparent 60%); }
+  .card.safe::before  { background: radial-gradient(ellipse at top left, rgba(0,232,122,0.08), transparent 60%); }
+  .card:hover { transform: translateY(-3px); }
+  .card.risk:hover  { border-color: var(--danger); box-shadow: var(--glow-danger); }
+  .card.safe:hover  { border-color: var(--safe);   box-shadow: var(--glow-safe); }
+  .card.risk:hover::before, .card.safe:hover::before { opacity: 1; }
+  .card.selected.risk { border-color: var(--danger); background: rgba(255,59,59,0.07); box-shadow: var(--glow-danger); }
+  .card.selected.safe { border-color: var(--safe);   background: rgba(0,232,122,0.07); box-shadow: var(--glow-safe); }
+
+  .card-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .card-name { font-size: 13px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .card.risk .card-name { color: var(--danger); }
+  .card.safe .card-name { color: var(--safe); }
+  .card-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+
+  .card-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .card.risk .card-badge { background: rgba(255,59,59,0.12); color: var(--danger); border: 1px solid rgba(255,59,59,0.25); }
+  .card.safe .card-badge { background: rgba(0,232,122,0.12); color: var(--safe);   border: 1px solid rgba(0,232,122,0.25); }
+  .card.selected .card-badge { display: none; }
+
+  .selected-check {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .card.selected .selected-check { display: flex; }
+  .card.selected.risk .selected-check { background: var(--danger); color: white; }
+  .card.selected.safe .selected-check { background: var(--safe); color: #060a0f; }
+
+  .start-btn {
+    display: block;
+    margin: 40px auto 0;
+    padding: 18px 60px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 6px;
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+  .start-btn:hover { background: var(--accent); color: var(--bg); box-shadow: var(--glow); }
+
+  .selection-summary {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+  }
+  .sum-item { display: flex; align-items: center; gap: 8px; }
+
+  /* ===== SCREEN 2: ATTACK ===== */
+  .attack-wrap { max-width: 900px; margin: 0 auto; padding: 60px 40px; text-align: center; }
+
+  .attack-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    letter-spacing: 8px;
+    color: var(--danger);
+    text-shadow: var(--glow-danger);
+    margin-bottom: 10px;
+    animation: glitch 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes glitch {
+    0%   { text-shadow: -2px 0 var(--danger), 2px 0 #ff0080; }
+    100% { text-shadow:  2px 0 var(--danger),-2px 0 #ff0080; }
+  }
+
+  .terminal {
+    background: #050810;
+    border: 1px solid #1a2d42;
+    border-radius: 4px;
+    padding: 24px;
+    margin: 30px auto;
+    max-width: 700px;
+    text-align: left;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    line-height: 2;
+    min-height: 300px;
+    color: #c8dce8;
+  }
+  .terminal::before {
+    content: '● ● ●';
+    display: block;
+    color: #4a6070;
+    margin-bottom: 16px;
+    font-size: 10px;
+    letter-spacing: 4px;
+  }
+
+  .terminal-line { opacity: 0; }
+  .terminal-line.show { animation: fadeIn 0.3s forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .t-red    { color: #ff3b3b; }
+  .t-green  { color: #00e87a; }
+  .t-yellow { color: #ffb800; }
+  .t-blue   { color: #00d4ff; }
+  .t-muted  { color: #4a6070; }
+
+  .progress-bar { width: 100%; height: 4px; background: var(--border); border-radius: 2px; margin: 20px 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--danger)); width: 0%; transition: width 0.5s ease; }
+
+  /* ===== SCREEN 3: RESULTS ===== */
+  .results-wrap { max-width: 1200px; margin: 0 auto; padding: 60px 40px; }
+
+  .results-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .score-circle {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  .score-number { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1; }
+  .score-label  { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); }
+  .score-A { border-color: var(--safe);   color: var(--safe);   box-shadow: var(--glow-safe); }
+  .score-B { border-color: #44cc44;       color: #44cc44; }
+  .score-C { border-color: var(--warn);   color: var(--warn); }
+  .score-D { border-color: #e07000;       color: #e07000; }
+  .score-F { border-color: var(--danger); color: var(--danger); box-shadow: var(--glow-danger); }
+
+  .damage-summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 40px; }
+  .damage-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+    transition: background 0.35s, border-color 0.35s;
+  }
+  .d-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; }
+  .d-value { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; }
+  .d-sub   { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .section-subhead {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .section-subhead small {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    font-weight: 300;
+  }
+
+  .incidents-list { margin-bottom: 40px; }
+
+  /* ── Accordion incident item ── */
+  .incident-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--danger);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    animation: slideIn 0.4s ease forwards;
+    opacity: 0;
+    transition: background 0.35s, border-color 0.35s;
+  }
+  .incident-item.mitigated { border-left-color: var(--safe); }
+
+  @keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+  }
+
+  .incident-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 18px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  .incident-header:hover { background: var(--panel2); }
+
+  .incident-icon  { font-size: 24px; }
+
+  .incident-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text2);
+  }
+  .incident-brief { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  .incident-damage { text-align: right; min-width: 110px; }
+  .dmg-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--danger);
+    letter-spacing: 1px;
+  }
+  .incident-item.mitigated .dmg-amount { color: var(--safe); }
+  .dmg-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--muted); }
+
+  /* expand button */
+  .expand-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s;
+    flex-shrink: 0;
+    line-height: 1;
+    font-family: monospace;
+  }
+  .expand-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .incident-item.expanded .expand-btn {
+    transform: rotate(45deg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* accordion body */
+  .incident-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.42s cubic-bezier(0.4,0,0.2,1);
+  }
+  .incident-item.expanded .incident-detail { max-height: 700px; }
+
+  .incident-detail-inner {
+    background: var(--expand-bg);
+    border-top: 1px solid var(--border);
+    padding: 22px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    transition: background 0.35s;
+  }
+
+  .detail-block-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .detail-block-title.atk  { color: var(--danger); border-bottom-color: rgba(255,59,59,0.25); }
+  .incident-item.mitigated .detail-block-title.atk { color: var(--muted); border-bottom-color: var(--border); }
+  .detail-block-title.def  { color: var(--safe);   border-bottom-color: rgba(0,232,122,0.25); }
+
+  .detail-text { font-size: 13px; color: var(--text); line-height: 1.85; }
+
+  .tag-row { margin-top: 12px; }
+  .tag-row-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 7px; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .dtag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 2px;
+    transition: opacity 0.2s;
+  }
+  .dtag.trigger  { background: rgba(255,59,59,0.1);  color: var(--danger); border: 1px solid rgba(255,59,59,0.22); }
+  .dtag.defense  { background: rgba(0,232,122,0.1);  color: var(--safe);   border: 1px solid rgba(0,232,122,0.22); }
+  .dtag.inactive { opacity: 0.38; }
+  .dtag.active   { font-weight: 700; }
+
+  /* Severity & mitigated badges */
+  .severity-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .sev-critical { background: rgba(255,59,59,0.14); color: var(--danger); border: 1px solid rgba(255,59,59,0.28); }
+  .sev-high     { background: rgba(255,100,0,0.14); color: #e06000;       border: 1px solid rgba(255,100,0,0.28); }
+  .sev-medium   { background: rgba(255,184,0,0.14); color: var(--warn);   border: 1px solid rgba(255,184,0,0.28); }
+  .sev-low      { background: rgba(0,232,122,0.14); color: var(--safe);   border: 1px solid rgba(0,232,122,0.28); }
+
+  .blocked-badge {
+    display: inline-block;
+    background: rgba(0,232,122,0.14);
+    color: var(--safe);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,232,122,0.28);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Radar */
+  .radar-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 30px;
+    margin-bottom: 40px;
+    transition: background 0.35s, border-color 0.35s;
+  }
+  .radar-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 4px; color: var(--accent); margin-bottom: 20px; }
+  canvas#radarChart { max-width: 360px; display: block; margin: 0 auto; }
+
+  /* Advice */
+  .advice-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 30px;
+    margin-bottom: 40px;
+    transition: background 0.35s, border-color 0.35s;
+  }
+  .advice-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 4px; color: var(--warn); margin-bottom: 20px; }
+  .advice-item { display: flex; gap: 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.75; }
+  .advice-item::before { content: '▶'; color: var(--accent); flex-shrink: 0; font-size: 10px; margin-top: 4px; }
+
+  .restart-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 16px 50px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 5px;
+    background: transparent;
+    border: 2px solid var(--muted);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+  .restart-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: var(--glow); }
+
+  /* Mini cards */
+  .selected-cards-display { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 40px; }
+  .mini-card {
+    padding: 4px 12px;
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mini-card.risk { background: rgba(255,59,59,0.1); border: 1px solid rgba(255,59,59,0.28); color: var(--danger); }
+  .mini-card.safe { background: rgba(0,232,122,0.1); border: 1px solid rgba(0,232,122,0.28); color: var(--safe); }
+
+  @media (max-width: 768px) {
+    header { padding: 12px 20px; }
+    .screen-wrap, .attack-wrap, .results-wrap { padding: 40px 20px; }
+    .screen-title { font-size: 32px; }
+    .damage-summary { grid-template-columns: 1fr; }
+    .incident-header { grid-template-columns: auto 1fr auto; }
+    .incident-damage { display: none; }
+    .incident-detail-inner { grid-template-columns: 1fr; }
+    .toggle-label { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo">CYBER<span>SIEGE</span></div>
+    <div class="subtitle">セキュリティインシデント シミュレーター v2.2</div>
+  </div>
+  <div class="header-right">
+    <button class="theme-toggle" onclick="toggleTheme()" title="ライト/ダークモード切替">
+      <span class="toggle-emoji">🌙</span>
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span class="toggle-emoji">☀️</span>
+      <span class="toggle-label" id="theme-label">LIGHT MODE</span>
+    </button>
+    <div class="pulse"></div>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted)">SYS ONLINE</span>
+  </div>
+</header>
+
+<!-- ===== SCREEN 1: CARD SELECTION ===== -->
+<div id="screen-select" class="section active page">
+  <div class="screen-wrap">
+    <div class="screen-title">環境設定</div>
+    <div class="screen-desc">// あなたのシステム環境を構成してください。リスクカードと防御カードを選択します。</div>
+
+    <div class="card-section-title risk-title">⚠ RISK FACTORS — 脆弱性・リスク要素</div>
+    <div class="cards-grid" id="risk-cards"></div>
+
+    <div class="card-section-title safe-title">🛡 DEFENSES — 防御・対策</div>
+    <div class="cards-grid" id="safe-cards"></div>
+
+    <div class="selection-summary">
+      <div class="sum-item">
+        <span style="color:var(--danger)">⚠</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:12px;">リスク: <span id="risk-count" style="color:var(--danger)">0</span></span>
+      </div>
+      <div class="sum-item">
+        <span style="color:var(--safe)">🛡</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:12px;">防御: <span id="safe-count" style="color:var(--safe)">0</span></span>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startAttack()">▶ シミュレーション開始</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: ATTACK SIMULATION ===== -->
+<div id="screen-attack" class="section page">
+  <div class="attack-wrap">
+    <div class="attack-title">UNDER ATTACK</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--muted);">// 攻撃シミュレーション実行中...</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="terminal" id="terminal"></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 3: RESULTS ===== -->
+<div id="screen-results" class="section page">
+  <div class="results-wrap">
+
+    <div class="results-header">
+      <div>
+        <div class="screen-title">INCIDENT REPORT</div>
+        <div class="screen-desc" id="result-date">// CLASSIFIED — SIMULATION RESULTS</div>
+      </div>
+      <div class="score-circle" id="score-circle">
+        <div class="score-number" id="score-number">—</div>
+        <div class="score-label">セキュリティ評価</div>
+      </div>
+    </div>
+
+    <div class="selected-cards-display" id="selected-cards-display"></div>
+
+    <div class="damage-summary">
+      <div class="damage-card">
+        <div class="d-label">総被害額</div>
+        <div class="d-value" id="total-damage" style="color:var(--danger)">¥0</div>
+        <div class="d-sub">推定損失</div>
+      </div>
+      <div class="damage-card">
+        <div class="d-label">侵害インシデント</div>
+        <div class="d-value" id="incident-count" style="color:var(--warn)">0</div>
+        <div class="d-sub">防御失敗件数</div>
+      </div>
+      <div class="damage-card">
+        <div class="d-label">信頼度スコア</div>
+        <div class="d-value" id="trust-score" style="color:var(--accent)">100</div>
+        <div class="d-sub">/ 100 ポイント</div>
+      </div>
+    </div>
+
+    <div class="section-subhead">
+      📋 INCIDENT LOG
+      <small>— ＋ボタンで攻撃詳細・対策を表示</small>
+    </div>
+    <div class="incidents-list" id="incidents-list"></div>
+
+    <div class="radar-section">
+      <div class="radar-title">📊 セキュリティレーダー</div>
+      <canvas id="radarChart" width="360" height="360"></canvas>
+    </div>
+
+    <div class="advice-section">
+      <div class="advice-title">💡 改善アドバイス</div>
+      <div id="advice-list"></div>
+    </div>
+
+    <button class="restart-btn" onclick="restart()">↺ 再スタート</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// THEME
+// ============================================================
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-label').textContent = isDark ? 'LIGHT MODE' : 'DARK MODE';
+  if (document.getElementById('screen-results').classList.contains('active')) {
+    requestAnimationFrame(drawRadar);
+  }
+}
+
+// ============================================================
+// DATA — RISK CARDS
+// ============================================================
+const RISK_CARDS = [
+  { id:'old-os',         icon:'💻', name:'古いOS使用',           desc:'Windows 7/XP など EOL済みOSを利用中。パッチ未適用の脆弱性が多数存在。' },
+  { id:'no-mfa',         icon:'🔑', name:'MFA未設定',            desc:'多要素認証が無効。パスワード漏洩時にアカウント乗っ取りリスクが極めて高い。' },
+  { id:'weak-pass',      icon:'🔓', name:'弱いパスワード',        desc:'"password123"等の推測容易なパスワードを使用。辞書攻撃に即座に陥落。' },
+  { id:'no-backup',      icon:'💾', name:'バックアップなし',      desc:'定期バックアップ未実施。ランサムウェア感染時にデータ回復不能。' },
+  { id:'public-wifi',    icon:'📡', name:'公衆WiFi使用',          desc:'暗号化されていない公衆WiFiから業務システムへアクセス。通信傍受リスク大。' },
+  { id:'shadow-it',      icon:'📱', name:'シャドーIT',            desc:'未承認のクラウドサービス・アプリを業務利用。IT部門の管理外のデータ漏洩経路。' },
+  { id:'no-patch',       icon:'🔧', name:'パッチ未適用',          desc:'重要なセキュリティパッチが数ヶ月未適用。既知の脆弱性が放置されている。' },
+  { id:'open-rdp',       icon:'🖥',  name:'RDP公開',              desc:'リモートデスクトッププロトコルをインターネットに直接公開。ブルートフォース攻撃の標的。' },
+  { id:'phishing-risk',  icon:'📧', name:'フィッシング訓練未実施', desc:'従業員へのセキュリティ教育なし。標的型メール攻撃への抵抗力が皆無。' },
+  { id:'excess-priv',    icon:'👑', name:'過剰な権限設定',        desc:'最小権限の原則違反。多くのユーザーが管理者権限を保有。侵害時の被害が拡大。' },
+  { id:'no-encrypt',     icon:'🗃',  name:'データ非暗号化',        desc:'保存データおよび転送データが平文。盗まれたデータがそのまま読み取られる。' },
+  { id:'legacy-app',     icon:'📦', name:'レガシーアプリ',        desc:'10年以上前のWebアプリ。SQLインジェクション等の古典的攻撃に脆弱。' },
+  { id:'cloud-misconfig',icon:'☁️', name:'クラウド設定ミス',      desc:'S3バケット等のクラウドストレージが公開設定になっている。' },
+  { id:'no-dlp',         icon:'📤', name:'DLPなし',               desc:'データ損失防止ツールが未導入。内部からの意図的・偶発的なデータ流出を検知できない。' },
+  { id:'usb-allowed',    icon:'🔌', name:'USB無制限使用',         desc:'USBデバイスの接続制限なし。マルウェア持ち込みや情報持ち出しが容易。' },
+  { id:'shared-admin',   icon:'🪪', name:'管理者IDの使い回し',    desc:'複数の担当者が同一の管理者IDを共有。不正アクセスの追跡・特定が不可能になる。' },
+  { id:'no-firewall',    icon:'🔥', name:'FireWall未導入',        desc:'ネットワーク境界の防御がなく、外部からの不正通信が無制限に内部ネットに到達できる状態。' },
+  { id:'unmanaged-pc',   icon:'🖱',  name:'社員PCの未管理',        desc:'IT資産台帳の未整備・セキュリティポリシー未適用のPCが社内ネットに接続。シャドーデバイスが侵入経路に。' },
+  { id:'no-antivirus',   icon:'🦠', name:'ウイルス対策ソフト未導入', desc:'社員PCにセキュリティソフトが未導入。マルウェアが侵入しても検知・駆除ができない。' },
+];
+
+// ============================================================
+// DATA — SAFE CARDS
+// ============================================================
+const SAFE_CARDS = [
+  { id:'mfa',        icon:'🛡',  name:'多要素認証(MFA)',       desc:'ログイン時に追加認証を要求。パスワード漏洩時でもアカウント保護。' },
+  { id:'edr',        icon:'🔍', name:'EDR導入',               desc:'エンドポイントの脅威をリアルタイム検知・遮断。マルウェア被害を最小化。' },
+  { id:'backup',     icon:'💿', name:'定期バックアップ',       desc:'オフラインを含む多重バックアップ。ランサムウェア被害からのデータ回復が可能。' },
+  { id:'training',   icon:'🎓', name:'セキュリティ教育',       desc:'定期的なフィッシング訓練と意識向上研修。ヒューマンエラーを大幅削減。' },
+  { id:'zero-trust', icon:'🚫', name:'ゼロトラスト',           desc:'"信頼しない・検証する"を原則とするネットワーク設計。横展開攻撃を防止。' },
+  { id:'siem',       icon:'📊', name:'SIEM/SOC',              desc:'ログの一元管理と24時間監視。インシデントの早期発見・対応を実現。' },
+  { id:'vpn',        icon:'🔐', name:'VPN/ZTNA',              desc:'すべてのリモートアクセスを暗号化トンネル経由に限定。通信傍受を防止。' },
+  { id:'patch-mgmt', icon:'⚡', name:'パッチ管理',             desc:'脆弱性情報の即時把握と迅速なパッチ適用。既知の脆弱性を排除。' },
+  { id:'waf',        icon:'🌐', name:'WAF導入',               desc:'Webアプリケーションファイアウォールでインジェクション攻撃をブロック。' },
+  { id:'dlp',        icon:'🔒', name:'DLP導入',               desc:'データ損失防止システムで機密情報の不正持ち出しを検知・遮断。' },
+  { id:'pentest',    icon:'🎯', name:'ペネトレーションテスト', desc:'定期的な侵入テストで脆弱性を事前発見。攻撃者の手法を先回りして対策。' },
+  { id:'pam',        icon:'👤', name:'特権アクセス管理',       desc:'管理者権限の厳格な管理と使用の都度承認。内部不正・侵害時の被害を限定。' },
+  { id:'firewall',   icon:'🧱', name:'FireWall導入',           desc:'ネットワーク境界でのパケットフィルタリング。不正な通信を遮断し内部を保護。' },
+  { id:'pc-mgmt',    icon:'🗂',  name:'PC資産管理・AV導入',    desc:'全社員PCをIT資産管理ツールで一元管理。ウイルス対策ソフトとポリシーを全台に適用。' },
+];
+
+// ============================================================
+// DATA — ATTACKS
+// triggers    : これらのリスクカードが1つ以上選択されていると攻撃が発生
+// mitigatedBy : これらの防御カードが1つ以上選択されていると被害ゼロ
+// ============================================================
+const ATTACKS = [
+  {
+    id:'ransomware', name:'ランサムウェア感染', icon:'🔐', severity:'critical',
+    brief:'企業ネット全体にマルウェアが拡散し業務が完全停止',
+    baseDamage:50000000, trustLoss:25,
+    triggers:['old-os','no-patch','usb-allowed','no-backup','open-rdp','no-antivirus','unmanaged-pc'],
+    mitigatedBy:['backup','edr','zero-trust','patch-mgmt','firewall','pc-mgmt'],
+    attackDetail:'感染したUSBデバイスや未パッチの脆弱性を踏み台に、ランサムウェアが企業内ネットワーク全体に急速拡散。すべてのファイルサーバーとデータベースが暗号化され業務が完全停止。攻撃者は数千万円の身代金を要求。復号キーを受け取っても完全復旧の保証はなく、平均復旧期間は3週間以上。',
+    countermeasure:'【EDR】マルウェアの異常な挙動をリアルタイム検知し感染初期に隔離。【バックアップ】オフラインバックアップから業務データを完全復旧。【パッチ管理】感染経路となった既知の脆弱性を事前に閉鎖。【ゼロトラスト】ネットワークのセグメント化で感染拡大を阻止。',
+  },
+  {
+    id:'account-takeover', name:'アカウント乗っ取り', icon:'👤', severity:'high',
+    brief:'管理者アカウント奪取によりクラウドデータが流出',
+    baseDamage:15000000, trustLoss:20,
+    triggers:['no-mfa','weak-pass','phishing-risk','shared-admin'],
+    mitigatedBy:['mfa','training','zero-trust','pam'],
+    attackDetail:'クレデンシャルスタッフィング攻撃とフィッシングメールの組み合わせにより、管理者アカウントが乗っ取られる。攻撃者はクラウドストレージにアクセスし顧客情報・財務データ・知的財産を外部に転送。その後アカウントを変更し正規管理者を締め出す。',
+    countermeasure:'【MFA】パスワードが漏洩しても第二認証によりログインをブロック。【セキュリティ教育】フィッシングメールの見分け方を訓練し報告体制を整備。【ゼロトラスト】不審なログイン元からのアクセスを自動遮断し最小権限を強制。',
+  },
+  {
+    id:'data-breach', name:'個人情報大規模漏洩', icon:'📋', severity:'critical',
+    brief:'顧客100万件の個人情報がダークウェブに流出',
+    baseDamage:80000000, trustLoss:35,
+    triggers:['no-encrypt','cloud-misconfig','legacy-app','no-dlp'],
+    mitigatedBy:['dlp','waf','zero-trust','siem'],
+    attackDetail:'クラウドストレージの誤設定を攻撃者が発見。平文で保存されていた顧客の氏名・住所・クレジットカード情報・医療情報が一括流出。個人情報保護法に基づく当局への報告義務が発生し、クラス訴訟の可能性も生じる。',
+    countermeasure:'【DLP】大量データの外部転送を即時検知・遮断。【WAF】不審なクローリングや大量アクセスをブロック。【SIEM】異常なデータ転送パターンをアラート。【暗号化（データ非暗号化リスクを排除）】漏洩しても内容を解読不能に。',
+  },
+  {
+    id:'phishing', name:'標的型フィッシング攻撃', icon:'🎣', severity:'high',
+    brief:'経営層偽装メールで認証情報が詐取され複数アカウント侵害',
+    baseDamage:8000000, trustLoss:15,
+    triggers:['phishing-risk','no-mfa','excess-priv'],
+    mitigatedBy:['training','mfa','siem'],
+    attackDetail:'CEOや取締役になりすました巧妙なスピアフィッシングメール。偽のVPNログイン画面に誘導し認証情報を詐取。過剰な管理者権限を持つ複数アカウントが侵害され、社内システム・財務システムへのアクセスが可能な状態に。社内メールを悪用した横展開攻撃も発生。',
+    countermeasure:'【セキュリティ教育】送信元確認・URLホバー確認の訓練と即時報告フローを整備。【MFA】認証情報が盗まれても追加認証でアクセス阻止。【SIEM】不審なログインパターンを検知し自動警告。',
+  },
+  {
+    id:'supply-chain', name:'サプライチェーン攻撃', icon:'⛓', severity:'critical',
+    brief:'利用ソフトの更新プログラムにマルウェアが混入し長期潜伏',
+    baseDamage:120000000, trustLoss:30,
+    triggers:['old-os','no-patch','legacy-app'],
+    mitigatedBy:['edr','siem','zero-trust','pentest'],
+    attackDetail:'信頼された外部ソフトウェアの正規アップデートにバックドアが仕込まれる（SolarWinds型攻撃）。正規プロセスに偽装するため従来のウイルス対策で検知困難。平均潜伏期間280日。その間、攻撃者は内部ネットワークを探索し機密情報を継続的に窃取。',
+    countermeasure:'【EDR】プロセスの異常な振る舞いをAIで検知。正規ツールへの不審な注入を発見。【SIEM】長期的なログ分析で潜伏型攻撃の痕跡を発見。【ゼロトラスト】感染端末の横展開を最小化。【ペネトレーションテスト】定期的な侵入テストで潜伏中の攻撃者を発見。',
+  },
+  {
+    id:'insider-threat', name:'内部不正・情報持ち出し', icon:'🕵️', severity:'high',
+    brief:'不満を持つ元従業員が退職前に機密設計図を外部転送',
+    baseDamage:30000000, trustLoss:20,
+    triggers:['shadow-it','usb-allowed','excess-priv','no-dlp','shared-admin'],
+    mitigatedBy:['dlp','pam','siem','zero-trust'],
+    attackDetail:'退職を控えた従業員が過剰な権限を悪用し、機密の設計図・顧客リスト・ソースコードを個人クラウドやUSBに転送。在職中に収集した情報を競合他社に売却。内部犯行のため証拠収集・立証が困難。営業秘密侵害として民事・刑事訴訟に発展するケースも。',
+    countermeasure:'【DLP】大量ファイルの外部転送・USB書き込みをリアルタイム検知・遮断。【PAM】退職予定者の権限を即時縮小する運用フロー整備。【SIEM】業務外時間のアクセスや大量ダウンロードをアラート。',
+  },
+  {
+    id:'mitm', name:'中間者攻撃(MitM)', icon:'📡', severity:'medium',
+    brief:'公衆WiFiで通信を傍受し業務認証情報を窃取',
+    baseDamage:5000000, trustLoss:10,
+    triggers:['public-wifi','no-encrypt'],
+    mitigatedBy:['vpn','mfa'],
+    attackDetail:'カフェや空港の公衆WiFiに攻撃者が偽のアクセスポイントを設置（Evil Twin攻撃）。HTTPで通信している業務システムへのログインを傍受。セッションCookieを盗用してなりすましログインを実行。数時間の攻撃で複数の被害者から認証情報を一斉収集。',
+    countermeasure:'【VPN/ZTNA】全通信を暗号化トンネル経由に強制。傍受されてもデータを解読不能に。【MFA】セッションを盗まれても再認証で不正アクセスをブロック。',
+  },
+  {
+    id:'sql-injection', name:'SQLインジェクション', icon:'💉', severity:'high',
+    brief:'Webフォームへの不正SQL注入でデータベース全体が流出',
+    baseDamage:20000000, trustLoss:25,
+    triggers:['legacy-app','no-patch'],
+    mitigatedBy:['waf','pentest'],
+    attackDetail:'10年以上前のWebアプリのログインフォームに悪意あるSQL文を注入。入力値のサニタイジングが不十分なため、データベースへの完全なアクセス権を取得。全顧客テーブル・パスワードハッシュ・決済情報がCSV形式で一括ダウンロードされ、ダークウェブへの転売が確認される。',
+    countermeasure:'【WAF】悪意あるSQLパターンをリアルタイム検知・遮断。【ペネトレーションテスト】定期的なコードレビューとSQLiテストで脆弱箇所を事前発見・修正。',
+  },
+  {
+    id:'rdp-bruteforce', name:'RDPブルートフォース攻撃', icon:'🔨', severity:'high',
+    brief:'公開RDPポートへの自動攻撃でパスワードを突破し管理者権限を奪取',
+    baseDamage:25000000, trustLoss:20,
+    triggers:['open-rdp','weak-pass','no-mfa','no-firewall'],
+    mitigatedBy:['mfa','vpn','zero-trust','firewall'],
+    attackDetail:'インターネットに直接公開されたRDPポート(3389)にボットネットを使った自動パスワード総当たり攻撃。弱いパスワードを数分で突破。管理者権限でリモートデスクトップ接続に成功した攻撃者は、ランサムウェアの展開・バックドアの設置・横展開を開始。',
+    countermeasure:'【MFA】パスワードが突破されても追加認証でログインを阻止。【VPN/ZTNA】RDPをインターネットから直接到達不能にし、VPN経由のみに限定。【ゼロトラスト】接続元IP・デバイス・時間帯による継続的な検証。',
+  },
+  {
+    id:'cloud-data-exposure', name:'クラウドデータ公開漏洩', icon:'☁️', severity:'critical',
+    brief:'S3バケットの設定ミスで業務データが数ヶ月間インターネット公開',
+    baseDamage:40000000, trustLoss:28,
+    triggers:['cloud-misconfig','no-dlp'],
+    mitigatedBy:['siem','pentest','dlp'],
+    attackDetail:'クラウドストレージのアクセス権が誤ってパブリックに設定されたまま放置。契約書・従業員個人情報・財務報告・未公開製品仕様書が世界中から閲覧可能な状態に。セキュリティリサーチャーが発見し通報するまで、悪意ある第三者による大量ダウンロードが確認された。',
+    countermeasure:'【SIEM】クラウドの設定変更とアクセスログを常時監視。異常なアクセスを即時アラート。【ペネトレーションテスト/CSPM】クラウド設定の定期的な監査で誤設定を早期発見。【DLP】機密情報の大量アクセスを検知。',
+  },
+  {
+    id:'apt', name:'APT（高度持続的脅威）', icon:'🎯', severity:'critical',
+    brief:'国家支援型ハッカーが1年間潜伏し機密R&D情報を継続窃取',
+    baseDamage:200000000, trustLoss:40,
+    triggers:['no-patch','excess-priv','no-backup','old-os','no-firewall','unmanaged-pc'],
+    mitigatedBy:['zero-trust','siem','edr','pentest','firewall'],
+    attackDetail:'ゼロデイ脆弱性を悪用して初期侵入に成功した国家支援型ハッカーグループ。正規の管理ツールのみを使用してレーダーを避けながら（Living off the Land）、R&D部門の特権アカウントを奪取。設計図・特許出願前の技術情報を12ヶ月間にわたり少量ずつ外部に送出。',
+    countermeasure:'【ゼロトラスト】特権アカウントの横展開と異常アクセスを継続検証。【SIEM】長期的なベースライン分析で微妙な異常を検出。【EDR】正規ツールの悪用パターン（LOLBaS）を検知。【ペネトレーションテスト】定期的なレッドチーム演習で潜伏攻撃者を発見。',
+  },
+  {
+    id:'ddos', name:'DDoS攻撃', icon:'🌊', severity:'medium',
+    brief:'大規模ボットネットによりWebサービスが72時間停止',
+    baseDamage:10000000, trustLoss:12,
+    triggers:['no-patch','legacy-app'],
+    mitigatedBy:['waf','siem'],
+    attackDetail:'100万台以上のIoTデバイスで構成されたボットネットから毎秒数テラビットのトラフィックが集中。レガシーなWebサーバーはキャパシティを瞬時に超過しサービスが完全停止。ECサイトは72時間の売上機会を喪失。競合他社が同期間にシェアを獲得し顧客の長期流出が発生。',
+    countermeasure:'【WAF/CDN】DDoS緩和機能付きのCDNでトラフィックを分散・吸収。レート制限で悪意あるリクエストを遮断。【SIEM】攻撃の早期検知と自動スケールアップ指示でダウンタイムを最小化。',
+  },
+  {
+    id:'admin-id-abuse', name:'管理者ID悪用・不正操作', icon:'🪪', severity:'high',
+    brief:'共有管理者IDを利用した不正操作が発覚するも犯人特定が不能',
+    baseDamage:18000000, trustLoss:22,
+    triggers:['shared-admin','excess-priv','no-mfa'],
+    mitigatedBy:['pam','mfa','siem'],
+    attackDetail:'複数の担当者が同一の管理者IDとパスワードを共有していたため、退職者や外部委託先を含む関係者全員がシステムへの完全アクセス権を持ち続けていた。財務システムのデータが改ざんされ、数千万円規模の架空発注が行われたが、共有IDのため操作ログからは犯人を特定できず。フォレンジック調査にも多額のコストが発生。',
+    countermeasure:'【PAM（特権アクセス管理）】管理者IDを個人ごとに発行し、使用都度の申請・承認・自動失効を徹底。共有アカウントを廃止。【MFA】管理者ログインに多要素認証を必須化し、なりすましを防止。【SIEM】管理者権限の操作を全ログで監視し、異常な時間帯・場所からのアクセスを即時アラート。',
+  },
+  {
+    id:'network-intrusion', name:'ネットワーク不正侵入', icon:'🔥', severity:'critical',
+    brief:'FireWall不在で外部から内部ネットへ直接侵入し基幹システムを制圧',
+    baseDamage:60000000, trustLoss:30,
+    triggers:['no-firewall','unmanaged-pc','open-rdp'],
+    mitigatedBy:['firewall','zero-trust','siem','vpn'],
+    attackDetail:'FireWallが未導入のため、インターネットから企業の内部ネットワークへ直接アクセスできる状態。攻撃者はポートスキャンで開放ポートを発見し、脆弱なサービスを踏み台に基幹サーバーへ侵入。管理対象外のPCを踏み台にしてActiveDirectoryサーバーの管理者権限を奪取。社内システム全体が制圧され、業務停止と機密情報の全量流出が発生。',
+    countermeasure:'【FireWall】インターネットと内部ネットワークの境界にFireWallを設置し、不要なポートへの通信を全遮断。許可リストベースの通信制御を実施。【ゼロトラスト】内部ネットワーク内でも通信を検証し横展開を防止。【SIEM】異常な通信パターンを検知しリアルタイムでアラート。',
+  },
+  {
+    id:'malware-spread', name:'マルウェア社内感染拡大', icon:'🦠', severity:'critical',
+    brief:'ウイルス対策未導入PCから社内ネット全体にマルウェアが急速蔓延',
+    baseDamage:35000000, trustLoss:26,
+    triggers:['no-antivirus','unmanaged-pc','no-patch','no-firewall'],
+    mitigatedBy:['pc-mgmt','edr','firewall','patch-mgmt'],
+    attackDetail:'ウイルス対策ソフトが未導入の社員PCがフィッシングメールの添付ファイルを開封。マルウェアが実行されたが検知ゼロ。管理されていない複数のPCが同様の状態だったため、ネットワーク経由でマルウェアが急速に蔓延。最終的に社内の80%以上のPCが感染し、ファイルサーバー・会計システム・顧客管理DBが暗号化された。全PCの初期化・再インストールに3週間を要した。',
+    countermeasure:'【PC資産管理・AV導入】全社員PCをIT資産管理ツールに登録し、ウイルス対策ソフトを一括展開・強制適用。定義ファイルの自動更新を義務化。【EDR】次世代型エンドポイント保護で振る舞い検知によりゼロデイマルウェアも検知。【FireWall】感染PCからの不審な外部通信を遮断し情報流出を防止。',
+  },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let selectedCards = new Set();
+
+// ============================================================
+// CARD INIT
+// ============================================================
+function initCards() {
+  const riskGrid = document.getElementById('risk-cards');
+  const safeGrid = document.getElementById('safe-cards');
+  RISK_CARDS.forEach(c => riskGrid.appendChild(makeCard(c, 'risk')));
+  SAFE_CARDS.forEach(c => safeGrid.appendChild(makeCard(c, 'safe')));
+}
+
+function makeCard(card, type) {
+  const el = document.createElement('div');
+  el.className = `card ${type}`;
+  el.id = `card-${card.id}`;
+  el.innerHTML = `
+    <span class="card-badge">${type === 'risk' ? 'RISK' : 'DEFENSE'}</span>
+    <div class="selected-check">✓</div>
+    <span class="card-icon">${card.icon}</span>
+    <div class="card-name">${card.name}</div>
+    <div class="card-desc">${card.desc}</div>
+  `;
+  el.onclick = () => toggleCard(card.id, el);
+  return el;
+}
+
+function toggleCard(id, el) {
+  if (selectedCards.has(id)) { selectedCards.delete(id); el.classList.remove('selected'); }
+  else                       { selectedCards.add(id);    el.classList.add('selected'); }
+  updateCounts();
+}
+
+function updateCounts() {
+  let r = 0, s = 0;
+  RISK_CARDS.forEach(c => { if (selectedCards.has(c.id)) r++; });
+  SAFE_CARDS.forEach(c => { if (selectedCards.has(c.id)) s++; });
+  document.getElementById('risk-count').textContent = r;
+  document.getElementById('safe-count').textContent = s;
+}
+
+// ============================================================
+// ATTACK SIMULATION
+// ============================================================
+function startAttack() {
+  showScreen('screen-attack');
+  const terminal = document.getElementById('terminal');
+  terminal.innerHTML = '';
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = '0%';
+
+  // Only attacks triggered by selected risk cards
+  let activeAttacks = ATTACKS.filter(a => a.triggers.some(t => selectedCards.has(t)));
+  // Fallback if no risk cards selected — 2 medium severity attacks
+  if (activeAttacks.length === 0) {
+    activeAttacks = ATTACKS.filter(a => a.severity === 'medium').slice(0, 2);
+  }
+
+  const lines = [
+    { text: '<span class="t-blue">[SYSTEM]</span> ターゲットシステムのスキャンを開始...', delay: 300 },
+    { text: '<span class="t-muted">[INFO]</span> 開放ポートの検索中...', delay: 700 },
+    { text: '<span class="t-yellow">[WARN]</span> 脆弱なサービスを検出: ' + detectedServices(), delay: 1200 },
+    { text: '<span class="t-red">[ALERT]</span> 攻撃準備完了。攻撃ベクターを選定中...', delay: 2000 },
+    { text: '', delay: 2500 },
+  ];
+
+  activeAttacks.forEach((attack, i) => {
+    const base = 2800 + i * 1800;
+    const mitigated = attack.mitigatedBy.some(m => selectedCards.has(m));
+    lines.push({ text: `<span class="t-red">[ATTACK ${i+1}/${activeAttacks.length}]</span> <span style="color:#ff8080">${attack.name}</span> を実行中...`, delay: base });
+    lines.push(mitigated
+      ? { text: '<span class="t-green">  ✓ BLOCKED</span> 防御システムが攻撃を検知・遮断', delay: base + 600 }
+      : { text: '<span class="t-red">  ✗ SUCCESS</span> <span class="t-muted">侵害成功 — 被害が発生しています</span>', delay: base + 600 });
+  });
+
+  const totalDelay = 2800 + activeAttacks.length * 1800;
+  lines.push({ text: '', delay: totalDelay + 200 });
+  lines.push({ text: '<span class="t-blue">[SYSTEM]</span> インシデントレポートを生成中...', delay: totalDelay + 500 });
+
+  lines.forEach((line, idx) => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'terminal-line show';
+      div.innerHTML = line.text;
+      terminal.appendChild(div);
+      terminal.scrollTop = terminal.scrollHeight;
+      fill.style.width = `${Math.min(100, (idx + 1) / lines.length * 100)}%`;
+    }, line.delay);
+  });
+
+  setTimeout(() => showResults(activeAttacks), totalDelay + 2000);
+}
+
+function detectedServices() {
+  const sv = [];
+  if (selectedCards.has('open-rdp'))   sv.push('RDP:3389');
+  if (selectedCards.has('old-os'))     sv.push('SMBv1');
+  if (selectedCards.has('legacy-app')) sv.push('HTTP:80(unpatched)');
+  if (selectedCards.has('no-encrypt')) sv.push('FTP:21');
+  if (!sv.length) sv.push('HTTPS:443');
+  return `<span class="t-yellow">${sv.join(', ')}</span>`;
+}
+
+// ============================================================
+// RESULTS
+// ============================================================
+function showResults(activeAttacks) {
+  showScreen('screen-results');
+
+  let totalDamage = 0, totalTrustLoss = 0, incidentCount = 0;
+  const items = activeAttacks.map(attack => {
+    // 防御カードが1つでもマッチ → 被害ゼロ・信頼損失ゼロ
+    const mitigated = attack.mitigatedBy.some(m => selectedCards.has(m));
+    const damage    = mitigated ? 0 : attack.baseDamage;
+    const trust     = mitigated ? 0 : attack.trustLoss;
+    totalDamage    += damage;
+    totalTrustLoss += trust;
+    if (!mitigated) incidentCount++;
+    return { attack, mitigated, damage, trust };
+  });
+
+  const trustScore = Math.max(0, 100 - totalTrustLoss);
+
+  // Grade
+  let grade, gradeClass;
+  if      (trustScore >= 90) { grade='A'; gradeClass='score-A'; }
+  else if (trustScore >= 75) { grade='B'; gradeClass='score-B'; }
+  else if (trustScore >= 55) { grade='C'; gradeClass='score-C'; }
+  else if (trustScore >= 35) { grade='D'; gradeClass='score-D'; }
+  else                       { grade='F'; gradeClass='score-F'; }
+
+  document.getElementById('score-number').textContent = grade;
+  document.getElementById('score-circle').className   = `score-circle ${gradeClass}`;
+  document.getElementById('result-date').textContent  = `// REPORT GENERATED: ${new Date().toLocaleString('ja-JP')}`;
+  document.getElementById('total-damage').textContent = totalDamage === 0 ? '¥0' : `¥${totalDamage.toLocaleString()}`;
+  document.getElementById('incident-count').textContent = incidentCount;
+  document.getElementById('trust-score').textContent    = trustScore;
+
+  // Selected cards tags
+  const cardDisplay = document.getElementById('selected-cards-display');
+  cardDisplay.innerHTML = '';
+  [...selectedCards].forEach(id => {
+    const risk = RISK_CARDS.find(c => c.id === id);
+    const safe = SAFE_CARDS.find(c => c.id === id);
+    const card = risk || safe;
+    if (!card) return;
+    const el = document.createElement('div');
+    el.className = `mini-card ${risk ? 'risk' : 'safe'}`;
+    el.innerHTML = `${card.icon} ${card.name}`;
+    cardDisplay.appendChild(el);
+  });
+
+  // Incident list (accordion)
+  const list = document.getElementById('incidents-list');
+  list.innerHTML = '';
+
+  items.forEach(({ attack, mitigated, damage }, i) => {
+    const sevLabel = { critical:'CRITICAL', high:'HIGH', medium:'MEDIUM', low:'LOW' }[attack.severity];
+
+    const triggerTags = attack.triggers.map(t => {
+      const card = RISK_CARDS.find(c => c.id === t);
+      if (!card) return '';
+      const active = selectedCards.has(t);
+      return `<span class="dtag trigger ${active ? 'active' : 'inactive'}">${card.icon} ${card.name}${active ? ' ✓' : ''}</span>`;
+    }).join('');
+
+    const defenseTags = attack.mitigatedBy.map(d => {
+      const card = SAFE_CARDS.find(c => c.id === d);
+      if (!card) return '';
+      const active = selectedCards.has(d);
+      return `<span class="dtag defense ${active ? 'active' : 'inactive'}">${card.icon} ${card.name}${active ? ' ✓' : ''}</span>`;
+    }).join('');
+
+    const el = document.createElement('div');
+    el.className = `incident-item ${mitigated ? 'mitigated' : ''}`;
+    el.id = `inc-${i}`;
+    el.style.animationDelay = `${i * 0.12}s`;
+
+    el.innerHTML = `
+      <div class="incident-header" onclick="toggleInc(${i})">
+        <div class="incident-icon">${attack.icon}</div>
+        <div>
+          <div class="incident-name">
+            ${mitigated ? '<span class="blocked-badge">✓ BLOCKED</span>' : ''}
+            ${attack.name}
+            <span class="severity-badge sev-${attack.severity}">${sevLabel}</span>
+          </div>
+          <div class="incident-brief">${attack.brief}</div>
+        </div>
+        <div class="incident-damage">
+          <div class="dmg-amount">${mitigated ? '¥0' : '¥' + damage.toLocaleString()}</div>
+          <div class="dmg-label">${mitigated ? '被害なし' : '推定損失'}</div>
+        </div>
+        <button class="expand-btn" title="詳細・対策を表示">＋</button>
+      </div>
+      <div class="incident-detail">
+        <div class="incident-detail-inner">
+          <div>
+            <div class="detail-block-title atk">⚡ 攻撃シナリオ詳細</div>
+            <div class="detail-text">${attack.attackDetail}</div>
+            <div class="tag-row">
+              <div class="tag-row-label">トリガーとなるリスク要素（太字＝今回選択中）</div>
+              <div class="tag-list">${triggerTags}</div>
+            </div>
+          </div>
+          <div>
+            <div class="detail-block-title def">🛡 対策・防御方法</div>
+            <div class="detail-text">${attack.countermeasure}</div>
+            <div class="tag-row">
+              <div class="tag-row-label">有効な防御カード（太字＝今回選択中）</div>
+              <div class="tag-list">${defenseTags}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+
+  drawRadar();
+  buildAdvice();
+}
+
+function toggleInc(i) {
+  document.getElementById(`inc-${i}`).classList.toggle('expanded');
+}
+
+// ============================================================
+// RADAR CHART
+// ============================================================
+function drawRadar() {
+  const canvas = document.getElementById('radarChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2, R = 120;
+  const labels = ['認証セキュリティ','データ保護','ネットワーク','エンドポイント','人的要因','事業継続性'];
+  const n = labels.length;
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+  const gridColor  = isLight ? 'rgba(160,190,210,0.55)' : 'rgba(26,45,66,0.8)';
+  const labelColor = isLight ? 'rgba(40,60,80,0.85)'    : 'rgba(200,220,232,0.8)';
+  const dataFill   = isLight ? 'rgba(0,119,187,0.13)'   : 'rgba(0,212,255,0.14)';
+  const dataStroke = isLight ? 'rgba(0,119,187,0.85)'   : 'rgba(0,212,255,0.85)';
+  const dotColor   = isLight ? '#0077bb'                : '#00d4ff';
+
+  const sc = [
+    // 認証セキュリティ
+    (selectedCards.has('mfa'))  ? 0.92 : ((selectedCards.has('no-mfa')||selectedCards.has('weak-pass')||selectedCards.has('shared-admin')) ? 0.15 : 0.5),
+    // データ保護
+    (selectedCards.has('dlp'))  ? 0.88 : ((selectedCards.has('no-encrypt')||selectedCards.has('cloud-misconfig')||selectedCards.has('no-dlp')) ? 0.18 : 0.5),
+    // ネットワーク
+    (selectedCards.has('vpn')||selectedCards.has('waf')||selectedCards.has('firewall')) ? 0.88 : ((selectedCards.has('open-rdp')||selectedCards.has('public-wifi')||selectedCards.has('no-firewall')) ? 0.12 : 0.5),
+    // エンドポイント
+    (selectedCards.has('edr')||selectedCards.has('patch-mgmt')||selectedCards.has('pc-mgmt')) ? 0.92 : ((selectedCards.has('old-os')||selectedCards.has('no-patch')||selectedCards.has('no-antivirus')||selectedCards.has('unmanaged-pc')) ? 0.12 : 0.5),
+    // 人的要因
+    (selectedCards.has('training')) ? 0.88 : ((selectedCards.has('phishing-risk')||selectedCards.has('excess-priv')) ? 0.18 : 0.5),
+    // 事業継続性
+    (selectedCards.has('backup'))   ? 0.92 : (selectedCards.has('no-backup') ? 0.10 : 0.5),
+  ];
+
+  const pt = (i, r) => {
+    const a = Math.PI * 2 * i / n - Math.PI / 2;
+    return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+  };
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  for (let ring=1; ring<=4; ring++) {
+    ctx.beginPath();
+    for (let i=0; i<n; i++) { const p=pt(i, R*ring/4); i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); }
+    ctx.closePath(); ctx.strokeStyle=gridColor; ctx.lineWidth=1; ctx.stroke();
+  }
+  // Axes
+  for (let i=0; i<n; i++) {
+    const p=pt(i,R); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(p.x,p.y);
+    ctx.strokeStyle=gridColor; ctx.lineWidth=1; ctx.stroke();
+  }
+  // Data
+  ctx.beginPath();
+  for (let i=0; i<n; i++) { const p=pt(i,R*sc[i]); i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); }
+  ctx.closePath(); ctx.fillStyle=dataFill; ctx.fill();
+  ctx.strokeStyle=dataStroke; ctx.lineWidth=2; ctx.stroke();
+  // Dots
+  for (let i=0; i<n; i++) {
+    const p=pt(i,R*sc[i]);
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fillStyle=dotColor; ctx.fill();
+  }
+  // Labels
+  ctx.font='11px "Noto Sans JP"'; ctx.fillStyle=labelColor; ctx.textAlign='center';
+  for (let i=0; i<n; i++) { const p=pt(i,R+26); ctx.fillText(labels[i],p.x,p.y+4); }
+}
+
+// ============================================================
+// ADVICE
+// ============================================================
+function buildAdvice() {
+  const list = document.getElementById('advice-list');
+  list.innerHTML = '';
+  const advices = [];
+
+  if (!selectedCards.has('mfa'))           advices.push('多要素認証(MFA)を全アカウントに導入してください。アカウント乗っ取りリスクを90%以上低減できます。');
+  if (selectedCards.has('shared-admin'))   advices.push('管理者IDの共有は即刻廃止し、担当者ごとに個人IDを発行してください。操作ログの追跡・監査に不可欠です。PAM（特権アクセス管理）ツールの導入も強く推奨します。');
+  if (selectedCards.has('no-firewall'))    advices.push('FireWallを早急に導入してください。内部ネットワークへの不正アクセスを防ぐ最低限の境界防御であり、未導入はすべての攻撃リスクを増大させます。');
+  if (selectedCards.has('no-antivirus')||selectedCards.has('unmanaged-pc')) advices.push('全社員PCにウイルス対策ソフトを導入し、IT資産管理ツールで一元管理してください。管理外のPCは攻撃者の最良の侵入経路です。');
+  if (selectedCards.has('old-os')||selectedCards.has('no-patch')) advices.push('OSおよびソフトウェアを最新バージョンに保ち、重要なセキュリティパッチは24時間以内に適用する体制を整備してください。');
+  if (!selectedCards.has('backup'))        advices.push('3-2-1バックアップルール（3コピー・2種類のメディア・1つはオフライン）を実践してください。ランサムウェアからの回復に不可欠です。');
+  if (!selectedCards.has('training'))      advices.push('定期的なフィッシング訓練メールと全従業員向けセキュリティ研修を実施してください。人的要因は最大の脆弱性です。');
+  if (!selectedCards.has('zero-trust'))    advices.push('ゼロトラストアーキテクチャの採用を検討してください。境界型セキュリティは現代の脅威に対応できません。');
+  if (selectedCards.has('cloud-misconfig')) advices.push('クラウドセキュリティポスチャ管理(CSPM)ツールを導入し、設定ミスを自動検出する仕組みを作ってください。');
+  if (!selectedCards.has('siem'))          advices.push('SIEM/SOCを構築し、ログの一元管理と24時間監視体制を整えてください。インシデントの平均検出時間を大幅に短縮できます。');
+
+  if (advices.length === 0) {
+    advices.push('素晴らしい防御体制です！定期的なペネトレーションテストと脅威インテリジェンスの活用でさらなる強化を図りましょう。');
+    advices.push('ゼロデイ脆弱性・サプライチェーン攻撃への備えとして、インシデントレスポンス計画の定期訓練を行うことを推奨します。');
+  }
+
+  advices.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'advice-item';
+    el.textContent = a;
+    list.appendChild(el);
+  });
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function restart() {
+  selectedCards.clear();
+  document.querySelectorAll('.card').forEach(el => el.classList.remove('selected'));
+  updateCounts();
+  showScreen('screen-select');
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+initCards();
+</script>
+</body>
+</html>

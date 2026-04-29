@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BEC詐欺体験シミュレーター｜セキュリティ研修</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Orbitron:wght@700&display=swap');
+
+/* ══════════════════════════════
+   ベース変数
+══════════════════════════════ */
+:root {
+  --bg:       #eef2f7;
+  --surface:  #ffffff;
+  --border:   #d8e2ef;
+  --text:     #1a2535;
+  --sub:      #4a6080;
+  --muted:    #8090a8;
+
+  --green:    #006f48;
+  --green-bg: #e6f4ee;
+  --green-bd: #9fd0ba;
+
+  --red:      #b81a2c;
+  --red-bg:   #fdedf0;
+  --red-bd:   #f0aab8;
+
+  --amber:    #855200;
+  --amber-bg: #fdf3e3;
+  --amber-bd: #eac87a;
+
+  --blue:     #1248a0;
+  --blue-bg:  #e6eefa;
+  --blue-bd:  #9ab8ea;
+
+  --shadow:   0 2px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.13);
+  --radius:   14px;
+}
+
+/* ══════════════════════════════
+   リセット・ベース
+══════════════════════════════ */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+/* ══════════════════════════════
+   ヘッダー
+══════════════════════════════ */
+.site-header {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 16px 0;
+  position: sticky; top: 0; z-index: 300;
+  box-shadow: var(--shadow);
+}
+.site-header .wrap {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.site-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px; font-weight: 700;
+  color: var(--green); letter-spacing: 2px;
+}
+.site-badge {
+  background: var(--red-bg); border: 1px solid var(--red-bd);
+  color: var(--red); font-size: 13px; font-weight: 700;
+  padding: 5px 14px; border-radius: 6px; letter-spacing: 1px;
+}
+
+/* ══════════════════════════════
+   進捗バー（ステッパー）
+══════════════════════════════ */
+.stepper {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  display: flex;
+}
+.step-tab {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 18px 12px;
+  font-size: 14px; font-weight: 700;
+  color: var(--muted);
+  border-right: 1px solid var(--border);
+  cursor: default; transition: all 0.3s;
+}
+.step-tab:last-child { border-right: none; }
+.step-tab.is-active { color: var(--blue); background: var(--blue-bg); }
+.step-tab.is-done   { color: var(--green); background: var(--green-bg); }
+
+.step-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--border); color: var(--muted); flex-shrink: 0;
+  transition: all 0.3s;
+}
+.step-tab.is-active .step-circle { background: var(--blue); color: #fff; }
+.step-tab.is-done   .step-circle { background: var(--green); color: #fff; }
+.step-text { font-size: 13px; }
+
+/* ══════════════════════════════
+   セクション切り替え
+══════════════════════════════ */
+.page { display: none; padding: 40px 0 80px; }
+.page.is-active { display: block; }
+
+/* ══════════════════════════════
+   汎用コンポーネント
+══════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.section-label {
+  font-size: 13px; font-weight: 700;
+  color: var(--muted); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+
+.page-title {
+  font-size: 28px; font-weight: 900; line-height: 1.3;
+  margin-bottom: 12px;
+}
+
+.page-lead {
+  font-size: 16px; color: var(--sub); line-height: 1.8;
+  margin-bottom: 32px;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 12px; font-weight: 700;
+  padding: 3px 10px; border-radius: 4px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.tag-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+.tag-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
+.tag-amber  { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-bd); }
+.tag-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-bd); }
+
+/* ボタン */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 17px; font-weight: 700; letter-spacing: 1px;
+  padding: 16px 48px; border-radius: 10px;
+  background: var(--blue); color: #fff; border: none;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 18px rgba(18,72,160,0.22);
+}
+.btn-primary:hover { background: #0c348a; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(18,72,160,0.30); }
+.btn-primary:disabled { background: #c0ccd8; color: #8090a0; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-danger {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 17px; font-weight: 700; letter-spacing: 1px;
+  padding: 16px 48px; border-radius: 10px;
+  background: var(--red); color: #fff; border: none;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 18px rgba(184,26,44,0.22);
+}
+.btn-danger:hover { background: #960f22; transform: translateY(-2px); }
+.btn-danger:disabled { background: #c0ccd8; color: #8090a0; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700;
+  padding: 12px 32px; border-radius: 10px;
+  background: var(--surface); color: var(--sub);
+  border: 2px solid var(--border);
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+
+/* ══════════════════════════════
+   警告バー
+══════════════════════════════ */
+.warn-bar {
+  background: var(--amber-bg); border: 1.5px solid var(--amber-bd);
+  border-radius: 10px; padding: 16px 20px;
+  display: flex; gap: 14px; align-items: flex-start;
+  margin-bottom: 32px;
+}
+.warn-bar .icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.warn-bar .text { font-size: 15px; color: var(--amber); line-height: 1.7; }
+.warn-bar .text strong { color: #5a3600; }
+
+/* ══════════════════════════════
+   PAGE 0: トップ（使い方）
+══════════════════════════════ */
+.hero {
+  background: linear-gradient(135deg, #1248a0 0%, #006f48 100%);
+  border-radius: var(--radius);
+  padding: 48px 40px;
+  color: #fff; margin-bottom: 32px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; opacity: 0.7; margin-bottom: 14px;
+}
+.hero-title {
+  font-size: 32px; font-weight: 900; line-height: 1.25;
+  margin-bottom: 16px;
+}
+.hero-title em { color: #7cf0b0; font-style: normal; }
+.hero-desc { font-size: 17px; opacity: 0.88; line-height: 1.8; max-width: 560px; }
+
+/* 使い方ステップ */
+.howto-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.howto-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.howto-num {
+  width: 40px; height: 40px; border-radius: 50%;
+  font-size: 18px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  background: var(--blue); color: #fff;
+}
+.howto-icon { font-size: 28px; margin-bottom: 10px; }
+.howto-title { font-size: 15px; font-weight: 900; margin-bottom: 8px; }
+.howto-desc { font-size: 13px; color: var(--sub); line-height: 1.7; }
+
+/* BEC概要 */
+.bec-intro {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px 36px;
+  margin-bottom: 32px; box-shadow: var(--shadow);
+}
+.bec-intro-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.bec-intro-icon { font-size: 32px; }
+.bec-intro-title { font-size: 20px; font-weight: 900; }
+.bec-intro-sub { font-size: 14px; color: var(--sub); margin-top: 3px; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 14px;
+  margin-bottom: 28px;
+}
+.stat-item {
+  background: var(--red-bg); border: 1px solid var(--red-bd);
+  border-radius: 10px; padding: 18px 14px; text-align: center;
+}
+.stat-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px; font-weight: 700; color: var(--red);
+  line-height: 1; margin-bottom: 8px;
+}
+.stat-lbl { font-size: 13px; color: var(--sub); line-height: 1.5; }
+
+.bec-points {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+.bec-point { display: flex; gap: 14px; align-items: flex-start; }
+.bec-point-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--red-bg); border: 1px solid var(--red-bd);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0; margin-top: 2px;
+}
+.bec-point-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.bec-point-body { font-size: 14px; color: var(--sub); line-height: 1.7; }
+.bec-point-body strong { color: var(--text); }
+
+/* TOPフッター */
+.top-cta { text-align: center; padding: 16px 0 8px; }
+.top-cta-note { font-size: 14px; color: var(--sub); margin-top: 12px; }
+
+/* ══════════════════════════════
+   PAGE 1: ハッカー視点
+══════════════════════════════ */
+.hacker-intro {
+  background: linear-gradient(135deg, #fdedf0, #fff8f0);
+  border: 1.5px solid var(--red-bd);
+  border-radius: var(--radius); padding: 28px 32px;
+  margin-bottom: 32px;
+}
+.hacker-intro h2 { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+.hacker-intro h2 em { color: var(--red); font-style: normal; }
+.hacker-intro p { font-size: 15px; color: var(--sub); line-height: 1.8; }
+
+/* 利益メーター */
+.profit-meter {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 28px;
+  display: flex; align-items: center; gap: 24px;
+  margin-bottom: 24px; box-shadow: var(--shadow); flex-wrap: wrap;
+}
+.profit-label { font-size: 13px; font-weight: 700; color: var(--sub); min-width: 120px; }
+.profit-amount {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px; font-weight: 700; color: var(--green); min-width: 160px;
+}
+.profit-track { flex: 1; min-width: 180px; }
+.profit-bar { height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; margin-bottom: 6px; border: 1px solid var(--border); }
+.profit-fill { height: 100%; background: linear-gradient(90deg, var(--green), #00c87a); border-radius: 5px; width: 0; transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.profit-note { font-size: 13px; color: var(--muted); }
+
+/* 選択中タグ表示 */
+.sel-display {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 20px;
+  margin-bottom: 36px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  min-height: 54px;
+}
+.sel-disp-label { font-size: 13px; font-weight: 700; color: var(--muted); margin-right: 4px; }
+.sel-disp-tag {
+  font-size: 13px; font-weight: 700; padding: 4px 14px;
+  border-radius: 20px; background: var(--blue-bg);
+  border: 1px solid var(--blue-bd); color: var(--blue);
+}
+.sel-disp-empty { font-size: 14px; color: #b0bcc8; font-style: italic; }
+
+/* フェーズブロック */
+.phase-block { margin-bottom: 40px; }
+.phase-header {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+  padding-bottom: 14px; border-bottom: 2px solid var(--border);
+}
+.phase-badge {
+  font-size: 13px; font-weight: 700; color: #fff;
+  padding: 6px 16px; border-radius: 6px; letter-spacing: 1px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.pb-1 { background: var(--green); }
+.pb-2 { background: #a06000; }
+.pb-3 { background: var(--red); }
+.pb-4 { background: var(--blue); }
+.phase-head-text { }
+.phase-head-title { font-size: 18px; font-weight: 900; }
+.phase-head-sub { font-size: 13px; color: var(--sub); margin-top: 2px; }
+
+/* 選択カード */
+.hcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
+
+.hcard {
+  background: var(--surface); border: 2.5px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  cursor: pointer; transition: all 0.2s; position: relative;
+}
+.hcard:hover { border-color: #b0c8e8; box-shadow: var(--shadow); transform: translateY(-2px); }
+.hcard.is-sel-green  { border-color: var(--green);  background: var(--green-bg);  box-shadow: 0 0 0 3px rgba(0,111,72,0.10), var(--shadow); }
+.hcard.is-sel-red    { border-color: var(--red);    background: var(--red-bg);    box-shadow: 0 0 0 3px rgba(184,26,44,0.10), var(--shadow); }
+.hcard.is-sel-amber  { border-color: #c07800;       background: var(--amber-bg);  box-shadow: 0 0 0 3px rgba(133,82,0,0.10), var(--shadow); }
+.hcard.is-sel-blue   { border-color: var(--blue);   background: var(--blue-bg);   box-shadow: 0 0 0 3px rgba(18,72,160,0.10), var(--shadow); }
+
+.hcard-emoji { font-size: 28px; margin-bottom: 10px; }
+.hcard-title { font-size: 15px; font-weight: 900; margin-bottom: 8px; line-height: 1.4; }
+.hcard-desc { font-size: 14px; color: var(--sub); line-height: 1.7; margin-bottom: 14px; }
+.hcard-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 12px; border-top: 1px solid var(--border); gap: 8px;
+}
+.hcard-meta { font-size: 13px; font-weight: 700; color: var(--green); }
+.hcard-risk { font-size: 12px; color: var(--muted); }
+.hcard-check {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: 2.5px solid var(--border); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: transparent; flex-shrink: 0; transition: all 0.2s;
+}
+.hcard.is-sel-green  .hcard-check { background: var(--green);  border-color: var(--green);  color: #fff; }
+.hcard.is-sel-red    .hcard-check { background: var(--red);    border-color: var(--red);    color: #fff; }
+.hcard.is-sel-amber  .hcard-check { background: #c07800;       border-color: #c07800;       color: #fff; }
+.hcard.is-sel-blue   .hcard-check { background: var(--blue);   border-color: var(--blue);   color: #fff; }
+
+/* 実行エリア */
+.exec-area { text-align: center; padding: 32px 0 16px; }
+.exec-hint { font-size: 14px; color: var(--sub); margin-top: 14px; }
+
+/* ══════════════════════════════
+   PAGE 2: 被害者体験
+══════════════════════════════ */
+.victim-bar {
+  background: linear-gradient(135deg, #fdedf0, #fff);
+  border: 1.5px solid var(--red-bd); border-radius: var(--radius);
+  padding: 22px 28px; margin-bottom: 28px;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.victim-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--blue-bg); border: 2px solid var(--blue-bd);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0;
+}
+.victim-name { font-size: 17px; font-weight: 900; }
+.victim-role { font-size: 14px; color: var(--sub); margin-top: 3px; }
+.victim-alert {
+  margin-left: auto; background: var(--red-bg);
+  border: 1px solid var(--red-bd); border-radius: 8px;
+  padding: 10px 18px; font-size: 14px; color: var(--red);
+  font-weight: 700; text-align: center; flex-shrink: 0; line-height: 1.5;
+}
+
+/* ミニ進捗 */
+.mini-progress {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 22px; flex-wrap: wrap;
+}
+.mprog-dot {
+  width: 32px; height: 10px; border-radius: 5px;
+  background: var(--border); transition: all 0.3s;
+}
+.mprog-dot.done { background: var(--green); }
+.mprog-dot.current { background: var(--blue); }
+.mprog-count { font-size: 14px; color: var(--muted); margin-left: 8px; font-weight: 700; }
+
+/* シナリオカード */
+.scene-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.scene-head {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.scene-ch-badge {
+  font-size: 13px; font-weight: 700;
+  padding: 5px 14px; border-radius: 20px;
+}
+.sch-email    { background: #eef2ff; border: 1px solid #b8c8f0; color: #2040c0; }
+.sch-sms      { background: #f0fff4; border: 1px solid #90d8a0; color: #147840; }
+.sch-line     { background: #e8ffe8; border: 1px solid #70c870; color: #006000; }
+.sch-system   { background: var(--amber-bg); border: 1px solid var(--amber-bd); color: var(--amber); }
+.scene-title  { font-size: 16px; font-weight: 900; flex: 1; }
+.scene-count  { font-size: 13px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+.scene-body   { padding: 24px; }
+.scene-atk-label {
+  font-size: 12px; font-weight: 700; color: var(--red);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px;
+}
+
+/* メールUI */
+.email-frame {
+  background: #f8fafd; border: 1px solid #d8e4f0; border-radius: 10px; overflow: hidden;
+}
+.email-topbar {
+  background: #eef2f8; border-bottom: 1px solid #d8e4f0;
+  padding: 10px 16px; display: flex; gap: 8px;
+}
+.email-dot { width: 12px; height: 12px; border-radius: 50%; }
+.email-meta { padding: 18px 20px; border-bottom: 1px solid #d8e4f0; }
+.email-row { display: flex; gap: 12px; font-size: 14px; margin-bottom: 8px; align-items: baseline; }
+.email-field { font-size: 13px; color: var(--muted); min-width: 48px; flex-shrink: 0; font-weight: 700; }
+.email-val { color: var(--text); word-break: break-all; }
+.email-fake { color: var(--red); font-weight: 700; }
+.email-subject { font-size: 16px; font-weight: 900; color: var(--text); margin-top: 12px; }
+.email-body { padding: 20px; font-size: 15px; line-height: 2.0; color: var(--text); }
+.email-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 14px; padding: 12px 18px;
+  background: #eef2ff; border: 1px solid #b8c8f0; border-radius: 8px;
+  font-size: 14px; color: var(--blue); font-weight: 700;
+}
+.email-sig { padding: 16px 20px; border-top: 1px solid #d8e4f0; font-size: 13px; color: var(--muted); line-height: 1.8; }
+
+/* SMS UI */
+.sms-frame {
+  background: #1c1c1e; border-radius: 20px; padding: 20px;
+  max-width: 360px; margin: 0 auto;
+}
+.sms-header { text-align: center; margin-bottom: 16px; }
+.sms-from { font-size: 15px; font-weight: 700; color: #fff; }
+.sms-fromsub { font-size: 12px; color: #888; margin-top: 2px; }
+.sms-bubbles { display: flex; flex-direction: column; gap: 10px; }
+.sms-bubble {
+  background: #2c2c2e; border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px; font-size: 14px; color: #fff;
+  line-height: 1.7; max-width: 88%; word-break: break-word;
+}
+.sms-time { font-size: 11px; color: #666; margin-top: 4px; padding-left: 4px; }
+
+/* LINE UI */
+.line-frame { background: #87ceab; border-radius: 14px; overflow: hidden; max-width: 380px; margin: 0 auto; }
+.line-header { background: #06c755; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+.line-hav {
+  width: 40px; height: 40px; border-radius: 50%; background: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.line-hname { font-size: 15px; font-weight: 700; color: #fff; }
+.line-msgs { padding: 18px 14px; display: flex; flex-direction: column; gap: 12px; }
+.line-msg-row { display: flex; align-items: flex-end; gap: 8px; }
+.line-msg-av {
+  width: 34px; height: 34px; border-radius: 50%; background: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+}
+.line-bubble {
+  background: #fff; border-radius: 2px 14px 14px 14px;
+  padding: 12px 16px; font-size: 14px; color: var(--text);
+  line-height: 1.7; max-width: 80%; word-break: break-word;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.line-mtime { font-size: 11px; color: #555; flex-shrink: 0; }
+
+/* 偽ログイン */
+.fake-browser { background: #fff; border: 1px solid #c8d8e8; border-radius: 10px; overflow: hidden; }
+.fake-urlbar {
+  background: #f0f4f8; border-bottom: 1px solid #d0dce8;
+  padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 13px;
+}
+.fake-url { font-family: monospace; color: var(--sub); }
+.fake-url .danger { color: var(--red); font-weight: 700; }
+.fake-content { padding: 28px 24px; }
+.fake-form { display: flex; flex-direction: column; gap: 14px; max-width: 380px; }
+.fake-form-title { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+.fake-form-sub { font-size: 14px; color: var(--sub); margin-bottom: 8px; }
+.fake-input {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 15px; background: var(--bg); color: var(--text);
+}
+.fake-submit {
+  padding: 12px; background: var(--blue); color: #fff;
+  border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: default;
+}
+.fake-warning {
+  font-size: 13px; color: var(--red); font-weight: 700;
+  padding: 10px 14px; background: var(--red-bg); border: 1px solid var(--red-bd); border-radius: 6px; margin-top: 4px;
+}
+
+/* 内部情報ボックス */
+.info-box {
+  background: var(--amber-bg); border: 1.5px solid var(--amber-bd);
+  border-radius: 10px; padding: 20px;
+}
+.info-box-title { font-size: 15px; font-weight: 700; color: var(--amber); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table th { background: rgba(133,82,0,0.10); padding: 9px 12px; text-align: left; border: 1px solid var(--amber-bd); font-weight: 700; font-size: 13px; }
+.data-table td { padding: 9px 12px; border: 1px solid var(--amber-bd); }
+.data-table tr:nth-child(even) td { background: rgba(255,255,255,0.5); }
+
+/* 解説ボックス */
+.explain-box {
+  background: var(--red-bg); border: 1.5px solid var(--red-bd);
+  border-radius: 10px; padding: 16px 20px;
+  margin-top: 18px; display: flex; gap: 14px; align-items: flex-start;
+}
+.explain-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.explain-text { font-size: 15px; color: var(--red); line-height: 1.8; font-weight: 500; }
+.explain-text strong { color: #7a0c1c; }
+
+/* 次へボタンエリア */
+.next-area { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 24px; }
+.next-progress-text { font-size: 14px; color: var(--sub); }
+
+/* ══════════════════════════════
+   PAGE 3: 結果
+══════════════════════════════ */
+.result-hero {
+  background: linear-gradient(135deg, #fdedf0, #fff);
+  border: 2px solid var(--red-bd); border-radius: var(--radius);
+  padding: 36px; text-align: center; margin-bottom: 28px; box-shadow: var(--shadow);
+}
+.result-title { font-size: 28px; font-weight: 900; color: var(--red); margin-bottom: 8px; }
+.result-subtitle { font-size: 16px; color: var(--sub); margin-bottom: 28px; }
+.damage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 16px; margin-bottom: 24px; }
+.damage-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+}
+.damage-lbl { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+.damage-val { font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 700; color: var(--red); }
+.damage-note { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+.result-msg {
+  background: var(--red-bg); border: 1px solid var(--red-bd);
+  border-radius: 10px; padding: 18px 22px;
+  font-size: 15px; color: var(--red); line-height: 1.8; font-weight: 500;
+}
+
+/* 学習リスト */
+.learn-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow);
+}
+.learn-head { font-size: 20px; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.learn-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 18px; margin-bottom: 10px;
+  background: var(--blue-bg); border: 1px solid var(--blue-bd);
+  border-radius: 10px; font-size: 15px; color: var(--text); line-height: 1.7;
+}
+.learn-item::before { content: '✓'; color: var(--blue); font-weight: 900; font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+
+/* ══════════════════════════════
+   フッター
+══════════════════════════════ */
+.site-footer {
+  background: var(--surface); border-top: 2px solid var(--border);
+  padding: 28px 0; text-align: center;
+  font-size: 14px; color: var(--sub); line-height: 1.8; margin-top: 40px;
+}
+.site-footer small { font-size: 12px; color: var(--muted); }
+
+/* ══════════════════════════════
+   アニメーション
+══════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+.fade-up { animation: fadeUp 0.4s ease both; }
+
+@keyframes pop { from { transform: scale(1.15); } to { transform: scale(1); } }
+.pop { animation: pop 0.3s ease; }
+
+/* ══════════════════════════════
+   レスポンシブ
+══════════════════════════════ */
+@media (max-width: 680px) {
+  .howto-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .bec-points { grid-template-columns: 1fr; }
+  .hcard-grid { grid-template-columns: 1fr; }
+  .damage-grid { grid-template-columns: 1fr 1fr; }
+  .step-text { display: none; }
+  .hero-title { font-size: 24px; }
+  .page-title { font-size: 22px; }
+}
+@media (max-width: 440px) {
+  .howto-grid { grid-template-columns: 1fr; }
+  .damage-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── ヘッダー ─── -->
+<header class="site-header">
+  <div class="wrap">
+    <div class="site-logo">🔒 Security Simulator</div>
+    <div class="site-badge">⚠ 研修モード</div>
+  </div>
+</header>
+
+<!-- ─── ステッパー ─── -->
+<nav class="stepper" id="stepper">
+  <div class="step-tab is-active" id="stab-0">
+    <div class="step-circle">1</div>
+    <div class="step-text">はじめに</div>
+  </div>
+  <div class="step-tab" id="stab-1">
+    <div class="step-circle">2</div>
+    <div class="step-text">攻撃を選ぶ</div>
+  </div>
+  <div class="step-tab" id="stab-2">
+    <div class="step-circle">3</div>
+    <div class="step-text">被害を体験</div>
+  </div>
+  <div class="step-tab" id="stab-3">
+    <div class="step-circle">4</div>
+    <div class="step-text">振り返り</div>
+  </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════
+  PAGE 0: はじめに
+════════════════════════════════════════ -->
+<div class="page is-active" id="page-0">
+<div class="wrap">
+
+  <!-- ヒーロー -->
+  <div class="hero" style="margin-top:32px;">
+    <div class="hero-eyebrow">🎓 セキュリティ研修 | BEC詐欺体験シミュレーター</div>
+    <div class="hero-title">ハッカーの手口を<em>自分で選んで</em>、<br>被害者の体験をする</div>
+    <div class="hero-desc">ビジネスメール詐欺（BEC）がどのように行われ、被害者がどんな目に遭うのかを、ゲーム感覚で体験できる研修ツールです。</div>
+  </div>
+
+  <!-- 使い方 -->
+  <div style="margin-bottom:12px;">
+    <div class="section-label">📖 このシミュレーターの使い方</div>
+  </div>
+  <div class="howto-grid" style="margin-bottom:36px;">
+    <div class="howto-card">
+      <div class="howto-num">1</div>
+      <div class="howto-icon">📖</div>
+      <div class="howto-title">BECを知る</div>
+      <div class="howto-desc">ビジネスメール詐欺の概要・被害規模・攻撃の仕組みを学びます</div>
+    </div>
+    <div class="howto-card">
+      <div class="howto-num" style="background:var(--amber);">2</div>
+      <div class="howto-icon">🎭</div>
+      <div class="howto-title">攻撃手法を選ぶ</div>
+      <div class="howto-desc">あなたがハッカーになって攻撃のカードを選択します（複数選択可）</div>
+    </div>
+    <div class="howto-card">
+      <div class="howto-num" style="background:var(--red);">3</div>
+      <div class="howto-icon">👩‍💼</div>
+      <div class="howto-title">被害者を体験する</div>
+      <div class="howto-desc">選んだ手法が被害者にどう届くかを「次へ」で順番に体験します</div>
+    </div>
+    <div class="howto-card">
+      <div class="howto-num" style="background:#444;">4</div>
+      <div class="howto-icon">💡</div>
+      <div class="howto-title">振り返る</div>
+      <div class="howto-desc">被害の規模と、今日から使える防御策を確認して完了です</div>
+    </div>
+  </div>
+
+  <!-- BEC概要 -->
+  <div class="bec-intro">
+    <div class="bec-intro-head">
+      <div class="bec-intro-icon">📧</div>
+      <div>
+        <div class="bec-intro-title">ビジネスメール詐欺（BEC）とは？</div>
+        <div class="bec-intro-sub">Business Email Compromise — 世界で最も被害額が大きいサイバー犯罪のひとつ</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-item"><div class="stat-num">$2.9B</div><div class="stat-lbl">2023年 世界の被害総額<br>（FBI 公式報告）</div></div>
+      <div class="stat-item"><div class="stat-num">21,489</div><div class="stat-lbl">2023年 被害件数<br>（米国内のみ）</div></div>
+      <div class="stat-item"><div class="stat-num">¥4.2億</div><div class="stat-lbl">日本国内 1件あたり<br>平均被害額</div></div>
+      <div class="stat-item"><div class="stat-num">7%</div><div class="stat-lbl">資金を回収できた<br>割合（平均）</div></div>
+    </div>
+
+    <div class="bec-points">
+      <div class="bec-point">
+        <div class="bec-point-icon">🎯</div>
+        <div>
+          <div class="bec-point-title">どんな攻撃？</div>
+          <div class="bec-point-body">CEO・取引先・IT部門になりすまし、メール・SMS・LINEで<strong>不正送金や個人情報の開示</strong>を指示する詐欺。ウイルスやハッキングではなく<strong>人間の信頼関係を悪用</strong>するため発見が難しい。</div>
+        </div>
+      </div>
+      <div class="bec-point">
+        <div class="bec-point-icon">💰</div>
+        <div>
+          <div class="bec-point-title">なぜ攻撃者はBECを選ぶ？</div>
+          <div class="bec-point-body"><strong>初期コストがほぼゼロ</strong>（ドメイン取得は数百円〜）で、成功すれば数百万〜数千万円の利益になる。マネーミュールと暗号資産を使えば追跡も困難。<strong>「リスクが低く、利益が高い」</strong>のが理由。</div>
+        </div>
+      </div>
+      <div class="bec-point">
+        <div class="bec-point-icon">🏢</div>
+        <div>
+          <div class="bec-point-title">狙われやすい組織は？</div>
+          <div class="bec-point-body">経理・財務部門を持つ企業、海外送金が多い組織、M&A中の会社。特に<strong>「上司の命令は確認しない」「急ぎの送金は1人で処理する」</strong>文化がある組織は危険。</div>
+        </div>
+      </div>
+      <div class="bec-point">
+        <div class="bec-point-icon">📋</div>
+        <div>
+          <div class="bec-point-title">狙われる情報は？</div>
+          <div class="bec-point-body">お金だけでなく<strong>社員名簿・住所・給与情報・口座情報</strong>も標的になる。盗まれた個人情報は振込先変更詐欺や二次攻撃にも悪用される。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- スタートボタン -->
+  <div class="top-cta">
+    <button class="btn-primary" onclick="goPage(1)">
+      ▶&nbsp; シミュレーションを始める
+    </button>
+    <div class="top-cta-note">※ 所要時間：約5〜10分 ／ 研修目的のシミュレーションです</div>
+  </div>
+
+</div>
+</div><!-- /page-0 -->
+
+
+<!-- ════════════════════════════════════════
+  PAGE 1: ハッカー視点
+════════════════════════════════════════ -->
+<div class="page" id="page-1">
+<div class="wrap">
+
+  <div class="hacker-intro">
+    <h2>🎭 あなたは今から、<em>ハッカー</em>になります</h2>
+    <p>下のカードから「使う手法」を選んでください。<br>選んだ手法をもとに、被害者（経理担当者）がどんな攻撃を受けるかが決まります。<br><strong>複数選ぶほど、攻撃は巧妙になります。</strong></p>
+  </div>
+
+  <div class="warn-bar">
+    <div class="icon">⚠️</div>
+    <div class="text"><strong>研修目的のシミュレーションです。</strong>ここで体験する手法はすべて教育目的で再現されたものです。実際に行った場合は不正アクセス禁止法・詐欺罪等の刑事罰の対象となります。</div>
+  </div>
+
+  <!-- 利益メーター -->
+  <div class="profit-meter">
+    <div class="profit-label">💰 ハッカーの期待利益</div>
+    <div class="profit-amount" id="profitAmt">¥0</div>
+    <div class="profit-track">
+      <div class="profit-bar"><div class="profit-fill" id="profitFill"></div></div>
+      <div class="profit-note">選択した手法の合計（最大 ¥10,000,000）</div>
+    </div>
+  </div>
+
+  <!-- 選択中タグ -->
+  <div class="sel-display" id="selDisplay">
+    <span class="sel-disp-label">選択中：</span>
+    <span class="sel-disp-empty" id="selEmpty">カードをクリックして手法を選んでください</span>
+  </div>
+
+  <!-- ── STEP 1: 偵察 ── -->
+  <div class="phase-block">
+    <div class="phase-header">
+      <span class="phase-badge pb-1">STEP 1</span>
+      <div class="phase-head-text">
+        <div class="phase-head-title">🔍 ターゲットを調べる（偵察）</div>
+        <div class="phase-head-sub">攻撃前に誰を狙うか・どんな情報があるかを調べます</div>
+      </div>
+    </div>
+    <div class="hcard-grid">
+
+      <div class="hcard" data-id="osint" data-profit="0" data-label="OSINT調査" data-c="green" onclick="toggleCard(this)">
+        <div class="hcard-emoji">🔍</div>
+        <span class="tag tag-green">OSINT</span>
+        <div class="hcard-title">SNS・会社サイトで社員情報を収集する</div>
+        <div class="hcard-desc">LinkedInや会社のウェブサイトから、社員名・役職・メールアドレスを無料で入手。経理担当者や上司の名前・関係性をすべて把握する。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">費用: ¥0 / 時間: 30分</div>
+            <div class="hcard-risk">検知される可能性: ほぼゼロ</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+      <div class="hcard" data-id="phish-cred" data-profit="0" data-label="フィッシングで認証情報を盗む" data-c="amber" onclick="toggleCard(this)">
+        <div class="hcard-emoji">🎣</div>
+        <span class="tag tag-amber">PHISHING</span>
+        <div class="hcard-title">偽のログイン画面でIDとパスワードを盗む</div>
+        <div class="hcard-desc">「システムメンテナンスのためパスワードを再設定してください」という偽メールを送り、本物そっくりのログイン画面に誘導して認証情報を盗み取る。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">アカウント乗っ取りが可能になる</div>
+            <div class="hcard-risk">検知される可能性: 低〜中</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 2: 接触手段 ── -->
+  <div class="phase-block">
+    <div class="phase-header">
+      <span class="phase-badge pb-2">STEP 2</span>
+      <div class="phase-head-text">
+        <div class="phase-head-title">📨 どのチャネルで接触するか（複数選択可）</div>
+        <div class="phase-head-sub">被害者にどうやって連絡を取るかを選びます</div>
+      </div>
+    </div>
+    <div class="hcard-grid">
+
+      <div class="hcard" data-id="ch-email" data-profit="0" data-label="メールで攻撃" data-c="blue" onclick="toggleCard(this)">
+        <div class="hcard-emoji">📧</div>
+        <span class="tag tag-blue">EMAIL</span>
+        <div class="hcard-title">なりすましメールを送る</div>
+        <div class="hcard-desc">CEO・取引先・IT部門を装ったメールを送信する。送信元アドレスを1文字変えた偽ドメインを使うか、乗っ取った本物のアカウントから送る。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">到達率: 95%以上</div>
+            <div class="hcard-risk">最も多く使われる主力の手段</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+      <div class="hcard" data-id="ch-sms" data-profit="0" data-label="SMSで攻撃" data-c="green" onclick="toggleCard(this)">
+        <div class="hcard-emoji">💬</div>
+        <span class="tag tag-green">SMS</span>
+        <div class="hcard-title">上司になりすましてSMSで緊急指示を送る</div>
+        <div class="hcard-desc">「急ぎで対応して。他の人には言わないで」とSMSで送り、メールをチェックさせたり直接リンクを送ったりする。SMSは開封率が98%と高い。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">開封率: 98%</div>
+            <div class="hcard-risk">緊急性を演出するのに最適</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+      <div class="hcard" data-id="ch-line" data-profit="0" data-label="LINEで攻撃" data-c="green" onclick="toggleCard(this)">
+        <div class="hcard-emoji">💚</div>
+        <span class="tag tag-green">LINE</span>
+        <div class="hcard-title">取引先や同僚になりすましてLINEで誘導する</div>
+        <div class="hcard-desc">LINEは親近感があるためメールより警戒心が下がる。取引先の担当者になりすまし「口座が変わりました」などを気軽な文体で送る。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">信頼度: 高い（警戒されにくい）</div>
+            <div class="hcard-risk">確認を省略させやすい</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 3: 目的 ── -->
+  <div class="phase-block">
+    <div class="phase-header">
+      <span class="phase-badge pb-3">STEP 3</span>
+      <div class="phase-head-text">
+        <div class="phase-head-title">💰 何を奪うか（複数選択可）</div>
+        <div class="phase-head-sub">攻撃で何を手に入れるかを選びます</div>
+      </div>
+    </div>
+    <div class="hcard-grid">
+
+      <div class="hcard" data-id="goal-wire" data-profit="3500000" data-label="不正送金" data-c="red" onclick="toggleCard(this)">
+        <div class="hcard-emoji">💸</div>
+        <span class="tag tag-red">高額狙い</span>
+        <div class="hcard-title">お金を振り込ませる（不正送金）</div>
+        <div class="hcard-desc">CEOや取引先を装って経理担当者に送金を指示する。「口座が変わった」「急ぎの案件で今日中に」と焦らせて、確認する時間を与えない。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">期待利益: +¥3,500,000</div>
+            <div class="hcard-risk">成功率: 18%（十分割に合う）</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+      <div class="hcard" data-id="goal-data" data-profit="1200000" data-label="社員名簿を盗む" data-c="amber" onclick="toggleCard(this)">
+        <div class="hcard-emoji">📋</div>
+        <span class="tag tag-amber">情報窃取</span>
+        <div class="hcard-title">社員名簿・個人情報を送信させる</div>
+        <div class="hcard-desc">人事・総務担当者に「監査対応」「システム移行」を理由に、全社員の名前・住所・給与情報・口座情報を添付ファイルで送信させる。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">期待利益: +¥1,200,000</div>
+            <div class="hcard-risk">二次攻撃・売却にも使える</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+      <div class="hcard" data-id="goal-takeover" data-profit="5000000" data-label="メールを乗っ取る" data-c="red" onclick="toggleCard(this)">
+        <div class="hcard-emoji">🔑</div>
+        <span class="tag tag-red">最高価値</span>
+        <div class="hcard-title">メールアカウントを完全に乗っ取る</div>
+        <div class="hcard-desc">盗んだIDとパスワードで本物のメールアカウントにログイン。実際の過去の会話を使ってなりすます——完璧な偽装。セキュリティシステムも検知できない。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">期待利益: +¥5,000,000</div>
+            <div class="hcard-risk">検知がほぼ不可能</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 4: 逃走 ── -->
+  <div class="phase-block">
+    <div class="phase-header">
+      <span class="phase-badge pb-4">STEP 4</span>
+      <div class="phase-head-text">
+        <div class="phase-head-title">🧹 証拠を消して逃げる（逃走工作）</div>
+        <div class="phase-head-sub">盗んだお金を追跡不能にする手段を選びます</div>
+      </div>
+    </div>
+    <div class="hcard-grid">
+
+      <div class="hcard" data-id="esc-mule" data-profit="0" data-label="マネーミュール口座を使う" data-c="blue" onclick="toggleCard(this)">
+        <div class="hcard-emoji">🏦</div>
+        <span class="tag tag-blue">資金洗浄</span>
+        <div class="hcard-title">複数の口座を経由して追跡を困難にする</div>
+        <div class="hcard-desc">着金後30分以内に8つ以上の中継口座（マネーミュール）へ分散送金する。警察が口座凍結を依頼する頃には、すでに別の口座に移動している。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">回収阻止率: +85%</div>
+            <div class="hcard-risk">必須の逃走工程</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+      <div class="hcard" data-id="esc-crypto" data-profit="0" data-label="暗号資産に変換する" data-c="blue" onclick="toggleCard(this)">
+        <div class="hcard-emoji">🪙</div>
+        <span class="tag tag-blue">暗号資産</span>
+        <div class="hcard-title">ビットコインに変換して海外へ送る</div>
+        <div class="hcard-desc">ビットコイン・モネロに変換後、海外の匿名ウォレットへ。銀行の「組戻し」ができる時間（約24時間）を超えると、回収はほぼ不可能になる。</div>
+        <div class="hcard-foot">
+          <div>
+            <div class="hcard-meta">追跡不能化: 完了</div>
+            <div class="hcard-risk">変換後の回収率: ほぼ0%</div>
+          </div>
+          <div class="hcard-check">✓</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 実行エリア -->
+  <div class="exec-area">
+    <button class="btn-danger" id="execBtn" disabled onclick="startVictim()">
+      👩‍💼&nbsp; 被害者の立場で体験する
+    </button>
+    <div class="exec-hint" id="execHint">※ 1つ以上のカードを選んでください</div>
+  </div>
+
+</div>
+</div><!-- /page-1 -->
+
+
+<!-- ════════════════════════════════════════
+  PAGE 2: 被害者体験
+════════════════════════════════════════ -->
+<div class="page" id="page-2">
+<div class="wrap">
+
+  <!-- 被害者バー -->
+  <div class="victim-bar">
+    <div class="victim-avatar">👩‍💼</div>
+    <div>
+      <div class="victim-name">鈴木 花子（経理部 主任）</div>
+      <div class="victim-role">田中商事株式会社 ／ 経理・総務兼任 ／ 入社10年目</div>
+    </div>
+    <div class="victim-alert">⚠️ 攻撃が<br>始まっています</div>
+  </div>
+
+  <!-- ミニ進捗 -->
+  <div class="mini-progress" id="miniProgress"></div>
+
+  <!-- シナリオ表示エリア -->
+  <div id="victimContent" class="fade-up"></div>
+
+  <!-- 次へボタン -->
+  <div class="next-area">
+    <div class="next-progress-text" id="nextProgressTxt"></div>
+    <button class="btn-primary" id="nextBtn" onclick="nextStep()">
+      次へ&nbsp;→
+    </button>
+  </div>
+
+</div>
+</div><!-- /page-2 -->
+
+
+<!-- ════════════════════════════════════════
+  PAGE 3: 振り返り
+════════════════════════════════════════ -->
+<div class="page" id="page-3">
+<div class="wrap" style="padding-top: 36px;">
+
+  <div id="resultArea" class="result-hero fade-up"></div>
+  <div id="learnArea" class="learn-box fade-up" style="margin-top: 24px;"></div>
+
+  <div style="text-align:center; margin-top: 32px;">
+    <button class="btn-ghost" onclick="restart()">← 最初からやり直す</button>
+  </div>
+
+</div>
+</div><!-- /page-3 -->
+
+
+<!-- ─── フッター ─── -->
+<footer class="site-footer">
+  <div class="wrap">
+    🔒 Security Awareness Training | Business Email Compromise Simulator<br>
+    <small>このシミュレーターは教育・研修目的専用です。実際の攻撃行為は不正アクセス禁止法・詐欺罪等の刑事罰の対象となります。</small>
+  </div>
+</footer>
+
+
+<script>
+/* ═══════════════════════════════
+   状態管理
+═══════════════════════════════ */
+var SEL = {};        // 選択済みカードID
+var STEPS = [];      // 被害者シナリオの配列
+var STEP_IDX = 0;    // 現在のステップ
+
+/* ═══════════════════════════════
+   ページ移動
+═══════════════════════════════ */
+function goPage(n) {
+  for (var i = 0; i < 4; i++) {
+    document.getElementById('page-' + i).classList.toggle('is-active', i === n);
+    var tab = document.getElementById('stab-' + i);
+    tab.classList.remove('is-active', 'is-done');
+    if (i < n)      tab.classList.add('is-done');
+    else if (i === n) tab.classList.add('is-active');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ═══════════════════════════════
+   カード選択トグル
+═══════════════════════════════ */
+function toggleCard(card) {
+  var id = card.dataset.id;
+  var c  = card.dataset.c || 'green';
+  var cls = 'is-sel-' + c;
+  ['is-sel-green','is-sel-red','is-sel-amber','is-sel-blue'].forEach(function(x){ card.classList.remove(x); });
+  if (SEL[id]) {
+    delete SEL[id];
+  } else {
+    SEL[id] = true;
+    card.classList.add(cls);
+  }
+  updateHackerUI();
+}
+
+function updateHackerUI() {
+  var profit = 0;
+  var keys = Object.keys(SEL);
+  keys.forEach(function(id) {
+    var el = document.querySelector('[data-id="' + id + '"]');
+    if (el) profit += parseInt(el.dataset.profit) || 0;
+  });
+
+  var am = document.getElementById('profitAmt');
+  am.textContent = '¥' + profit.toLocaleString();
+  am.classList.remove('pop'); void am.offsetWidth; am.classList.add('pop');
+  document.getElementById('profitFill').style.width = Math.min(profit / 10000000 * 100, 100) + '%';
+
+  // 選択タグ
+  var box = document.getElementById('selDisplay');
+  box.querySelectorAll('.sel-disp-tag').forEach(function(e) { e.remove(); });
+  var empty = document.getElementById('selEmpty');
+  if (!keys.length) {
+    empty.style.display = '';
+  } else {
+    empty.style.display = 'none';
+    keys.forEach(function(id) {
+      var el = document.querySelector('[data-id="' + id + '"]');
+      if (!el) return;
+      var t = document.createElement('span');
+      t.className = 'sel-disp-tag';
+      t.textContent = el.dataset.label;
+      box.appendChild(t);
+    });
+  }
+
+  var btn = document.getElementById('execBtn');
+  var hint = document.getElementById('execHint');
+  if (keys.length) {
+    btn.disabled = false;
+    hint.textContent = keys.length + '個の手法を選択中 ── 準備ができたら上のボタンを押してください';
+  } else {
+    btn.disabled = true;
+    hint.textContent = '※ 1つ以上のカードを選んでください';
+  }
+}
+
+/* ═══════════════════════════════
+   シナリオ生成
+═══════════════════════════════ */
+function buildSteps() {
+  var steps = [];
+  var E   = !!SEL['ch-email'];
+  var SMS = !!SEL['ch-sms'];
+  var LN  = !!SEL['ch-line'];
+  var OSN = !!SEL['osint'];
+  var PHI = !!SEL['phish-cred'];
+  var WIR = !!SEL['goal-wire'];
+  var DAT = !!SEL['goal-data'];
+  var TAK = !!SEL['goal-takeover'];
+  var MUL = !!SEL['esc-mule'];
+  var CRY = !!SEL['esc-crypto'];
+
+  // デフォルト
+  if (!E && !SMS && !LN) E = true;
+  if (!WIR && !DAT && !TAK) WIR = true;
+
+  // 1. 偵察結果
+  if (OSN) {
+    steps.push({ type: 'recon', ch: 'system',
+      title: '攻撃者があなたの情報を収集しました',
+      explain: 'これらの情報はすべてLinkedIn・会社のウェブサイト・プレスリリースから無料で集めたものです。公開情報だけで、攻撃者は完璧ななりすましができてしまいます。' });
+  }
+
+  // 2. フィッシングメール
+  if (PHI && E) {
+    steps.push({ type: 'phish-email', ch: 'email',
+      title: 'IT部門を装ったメールが届きました',
+      explain: '送信元のメールアドレスをよく見てください。「tanaka-shoji」ではなく「tanaka-sh0ji」（oが数字の0）になっています。このリンクをクリックすると偽のログイン画面に飛ばされます。' });
+    steps.push({ type: 'fake-login', ch: 'system',
+      title: '偽のログイン画面が表示されました',
+      explain: '本物のログイン画面と見分けがつきません。URLバーを見ると「sh0ji」と数字の0が使われています。ここにIDとパスワードを入力すると、攻撃者のサーバーに直接送信されます。' });
+  }
+
+  // 3. アカウント乗っ取り
+  if (TAK) {
+    steps.push({ type: 'takeover', ch: 'system',
+      title: 'あなたのメールアカウントが乗っ取られました',
+      explain: '攻撃者は今、あなたのメールボックスを自由に閲覧しています。過去の取引メール・振込先情報・社員情報がすべて攻撃者の手に渡りました。' });
+  }
+
+  // 4. SMSで緊急連絡
+  if (SMS && (WIR || TAK)) {
+    steps.push({ type: 'sms-boss', ch: 'sms',
+      title: '上司（CFO）を名乗るSMSが届きました',
+      explain: '「他の人には言わないで」は詐欺の典型的なキーワードです。電話番号は偽装できるため、知っている名前が表示されていても安心できません。本物かどうか、必ず別の手段で確認してください。' });
+  }
+
+  // 5. LINEで口座変更
+  if (LN && (WIR || DAT)) {
+    steps.push({ type: 'line-vendor', ch: 'line',
+      title: 'LINEで取引先から「口座変更」の連絡が来ました',
+      explain: 'LINEでの口座変更の連絡は100%疑ってください。親しみやすい文体と絵文字で警戒心を下げ、確認を省略させようとしています。必ず電話（知っている番号）で直接確認が必要です。' });
+  }
+
+  // 6. メールで送金依頼
+  if (E && WIR) {
+    steps.push({ type: 'email-wire', ch: 'email', isTakeover: TAK,
+      title: 'CFOを装ったメールで送金を指示されました',
+      explain: TAK
+        ? '⚠️ これは乗っ取られた本物のアカウントから送信されています。セキュリティシステムも「正規の送信」として検知しません。どんなに本物らしく見えても、送金依頼は必ず電話で本人確認してください。'
+        : '送信元アドレスをよく確認してください。「sh0ji」（oが0）になっています。「他の人への確認不要」「メールのみで連絡を」は詐欺の重要なサインです。' });
+  }
+
+  // 7. データ窃取メール
+  if (E && DAT) {
+    steps.push({ type: 'email-data', ch: 'email',
+      title: '上司を装ったメールで社員データの送付を求められました',
+      explain: '「監査」「コンプライアンス」「緊急」という言葉で警戒心を下げています。社員の個人情報・給与情報を添付で送るよう求めるメールは、必ず上司（直接会うか電話で）に確認してから対応してください。' });
+  }
+
+  // 8. データ流出
+  if (DAT) {
+    steps.push({ type: 'stolen-data', ch: 'system',
+      title: '攻撃者が社員名簿を入手しました',
+      explain: 'この情報はダークウェブで販売されたり、給与振込先変更詐欺・さらなるフィッシング攻撃に使われたりします。一度流出した個人情報は取り戻せません。' });
+  }
+
+  // 9. 送金完了
+  if (WIR) {
+    steps.push({ type: 'wire-done', ch: 'system',
+      title: '送金処理が完了してしまいました',
+      explain: '攻撃者の口座へ¥3,500,000が着金しました。今すぐ銀行に電話して「組戻し」を依頼する必要があります。1時間でも遅れると、回収の可能性が急激に下がります。' });
+  }
+
+  // 10. 資金洗浄
+  if (WIR && (MUL || CRY)) {
+    steps.push({ type: 'laundering', ch: 'system', useMule: MUL, useCrypto: CRY,
+      title: '攻撃者が資金を隠蔽しました',
+      explain: '着金から30分以内に資金が複数の口座に分散され、暗号資産に変換されました。この段階になると回収はほぼ不可能です。被害を防ぐ唯一の方法は「送金前の確認」しかありません。' });
+  }
+
+  // 11. 発覚
+  steps.push({ type: 'discovery', ch: 'system', hasWire: WIR, hasData: DAT,
+    title: '被害が発覚しました',
+    explain: '被害に気づくまでに平均17日かかります。「怪しいな」と感じた瞬間が唯一のチャンスです。迷ったら必ず確認する習慣が、あなたと会社を守る唯一の防御策です。' });
+
+  return steps;
+}
+
+/* ═══════════════════════════════
+   被害者フェーズ開始
+═══════════════════════════════ */
+function startVictim() {
+  STEPS = buildSteps();
+  STEP_IDX = 0;
+  goPage(2);
+  renderStep();
+}
+
+function renderStep() {
+  var step = STEPS[STEP_IDX];
+  var total = STEPS.length;
+
+  // ミニ進捗更新
+  var prog = document.getElementById('miniProgress');
+  prog.innerHTML = '';
+  for (var i = 0; i < total; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'mprog-dot' + (i < STEP_IDX ? ' done' : i === STEP_IDX ? ' current' : '');
+    prog.appendChild(dot);
+  }
+  var cnt = document.createElement('div');
+  cnt.className = 'mprog-count';
+  cnt.textContent = (STEP_IDX + 1) + ' / ' + total + ' ステップ';
+  prog.appendChild(cnt);
+
+  // コンテンツ描画
+  var el = document.getElementById('victimContent');
+  el.classList.remove('fade-up'); void el.offsetWidth; el.classList.add('fade-up');
+  el.innerHTML = renderSceneCard(step);
+
+  // 次へボタン
+  var nb = document.getElementById('nextBtn');
+  var pt = document.getElementById('nextProgressTxt');
+  if (STEP_IDX >= total - 1) {
+    nb.innerHTML = '振り返りへ &#8594;';
+    pt.textContent = '最後のステップです';
+  } else {
+    nb.innerHTML = '次へ &#8594;';
+    pt.textContent = '残り ' + (total - STEP_IDX - 1) + ' ステップ';
+  }
+}
+
+function nextStep() {
+  if (STEP_IDX < STEPS.length - 1) {
+    STEP_IDX++;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderStep();
+  } else {
+    showResult();
+  }
+}
+
+/* ═══════════════════════════════
+   シナリオカードHTML生成
+═══════════════════════════════ */
+function chBadge(ch) {
+  var map = {
+    'email':  '<span class="scene-ch-badge sch-email">📧 メール</span>',
+    'sms':    '<span class="scene-ch-badge sch-sms">💬 SMS</span>',
+    'line':   '<span class="scene-ch-badge sch-line">💚 LINE</span>',
+    'system': '<span class="scene-ch-badge sch-system">⚙️ システム</span>'
+  };
+  return map[ch] || map['system'];
+}
+
+function renderSceneCard(step) {
+  var inner = makeInner(step);
+  return '<div class="scene-card">'
+    + '<div class="scene-head">' + chBadge(step.ch)
+    + '<div class="scene-title">' + step.title + '</div>'
+    + '<div class="scene-count">' + (STEP_IDX + 1) + '&nbsp;/&nbsp;' + STEPS.length + '</div>'
+    + '</div>'
+    + '<div class="scene-body">'
+    + '<div class="scene-atk-label">// 攻撃シナリオ進行中</div>'
+    + inner
+    + '<div class="explain-box"><div class="explain-icon">💡</div><div class="explain-text">' + step.explain + '</div></div>'
+    + '</div></div>';
+}
+
+function makeInner(step) {
+  var t = step.type;
+
+  if (t === 'recon') {
+    return '<div class="info-box">'
+      + '<div class="info-box-title">🔍 攻撃者が収集した情報（公開情報のみ）</div>'
+      + '<table class="data-table">'
+      + '<tr><th>項目</th><th>入手した内容</th><th>情報源</th></tr>'
+      + '<tr><td>氏名・役職</td><td>鈴木 花子（経理部 主任）</td><td>会社ウェブサイト</td></tr>'
+      + '<tr><td>メールアドレス</td><td>hanako.suzuki@tanaka-shoji.co.jp</td><td>LinkedIn</td></tr>'
+      + '<tr><td>上司の名前</td><td>山田 太郎（CFO・取締役）</td><td>LinkedIn</td></tr>'
+      + '<tr><td>主要取引先</td><td>株式会社ヤマモト物流</td><td>プレスリリース</td></tr>'
+      + '<tr><td>進行中の案件</td><td>M&A検討中（規模3,000万円）</td><td>業界紙の記事</td></tr>'
+      + '</table>'
+      + '<div style="margin-top:14px;font-size:14px;color:var(--amber);font-weight:700;">→ これらの情報は無料で、誰でも入手できます。費用: ¥0 / 時間: 約30分</div>'
+      + '</div>';
+  }
+
+  if (t === 'phish-email') {
+    return '<div class="email-frame">'
+      + '<div class="email-topbar"><div class="email-dot" style="background:#ff5f57"></div><div class="email-dot" style="background:#febc2e"></div><div class="email-dot" style="background:#28c840"></div></div>'
+      + '<div class="email-meta">'
+      + '<div class="email-row"><span class="email-field">差出人</span><span class="email-val email-fake">ITサポートセンター &lt;it-support@tanaka-<strong>sh0ji</strong>.co.jp&gt;　⚠️ 偽装アドレス（oが0）</span></div>'
+      + '<div class="email-row"><span class="email-field">宛先</span><span class="email-val">hanako.suzuki@tanaka-shoji.co.jp</span></div>'
+      + '<div class="email-subject">【重要】メールシステムメンテナンスによるパスワード再設定のお願い</div>'
+      + '</div>'
+      + '<div class="email-body">鈴木様<br><br>平素よりお世話になっております。ITサポートセンターでございます。<br><br>本日深夜、メールシステムの定期メンテナンスを実施いたします。<br>セキュリティ強化のため、下記リンクよりパスワードの再設定をお願いいたします。<br><br><strong>期限：本日中にお手続きをお願いします</strong><br><br><div class="email-link">🔗 パスワード再設定はこちら → https://tanaka-sh0ji.co.jp/reset</div></div>'
+      + '<div class="email-sig">ITサポートセンター&nbsp; / &nbsp;TEL: 03-XXXX-XXXX</div>'
+      + '</div>';
+  }
+
+  if (t === 'fake-login') {
+    return '<div class="fake-browser">'
+      + '<div class="fake-urlbar"><span>🔒</span><span class="fake-url">https://tanaka-<span class="danger">sh0ji</span>.co.jp/login &nbsp;⚠️ URLが偽物！</span></div>'
+      + '<div class="fake-content"><div class="fake-form">'
+      + '<div class="fake-form-title">🏢 田中商事 社内ポータル</div>'
+      + '<div class="fake-form-sub">セキュリティ強化のためパスワードを再設定してください</div>'
+      + '<input class="fake-input" type="text" value="hanako.suzuki@tanaka-shoji.co.jp" readonly>'
+      + '<input class="fake-input" type="password" value="••••••••" readonly>'
+      + '<button class="fake-submit">ログイン / パスワード変更</button>'
+      + '<div class="fake-warning">⚠️ この画面で入力すると、IDとパスワードが攻撃者のサーバーに送信されます</div>'
+      + '</div></div></div>';
+  }
+
+  if (t === 'takeover') {
+    return '<div style="background:var(--red-bg);border:1.5px solid var(--red-bd);border-radius:12px;padding:28px;text-align:center;">'
+      + '<div style="font-size:48px;margin-bottom:14px;">🔓</div>'
+      + '<div style="font-size:20px;font-weight:900;color:var(--red);margin-bottom:12px;">メールアカウントが乗っ取られました</div>'
+      + '<div style="font-size:15px;color:var(--sub);line-height:1.9;max-width:480px;margin:0 auto;">'
+      + '攻撃者は今、あなたのメールボックスを自由に閲覧しています。<br>'
+      + '過去の取引履歴・振込先・社員情報・経営情報——<br>'
+      + 'すべてが攻撃者の手に渡りました。<br><br>'
+      + '<strong style="color:var(--red);">攻撃者はあなたの本物のアカウントから<br>取引先・同僚にメールを送ることができます。</strong>'
+      + '</div></div>';
+  }
+
+  if (t === 'sms-boss') {
+    return '<div class="sms-frame">'
+      + '<div class="sms-header"><div class="sms-from">山田 太郎（CFO）</div><div class="sms-fromsub">メッセージ ／ 送信者名は偽装可能</div></div>'
+      + '<div class="sms-bubbles">'
+      + '<div><div class="sms-bubble">鈴木さん、今ちょっといい？急ぎで頼みたいことがあって</div><div class="sms-time">10:32</div></div>'
+      + '<div><div class="sms-bubble">メールで送ったから確認してほしい。今日中に対応お願いします。<br><br>他の人には言わないでください</div><div class="sms-time">10:33</div></div>'
+      + '</div></div>';
+  }
+
+  if (t === 'line-vendor') {
+    return '<div class="line-frame">'
+      + '<div class="line-header"><div class="line-hav">🏢</div><div class="line-hname">株式会社ヤマモト物流 佐々木</div></div>'
+      + '<div class="line-msgs">'
+      + '<div class="line-msg-row"><div class="line-msg-av">🏢</div><div class="line-bubble">鈴木さん、お世話になっております！😊<br>弊社、先月から振込先口座が変わりまして<br>今月分からこちらにお願いできますか？</div><div class="line-mtime">11:05</div></div>'
+      + '<div class="line-msg-row"><div class="line-msg-av">🏢</div><div class="line-bubble">口座情報<br>銀行名：〇〇銀行 渋谷支店<br>口座番号：1234567<br>口座名義：カ）ヤマモトブツリュウ</div><div class="line-mtime">11:06</div></div>'
+      + '<div class="line-msg-row"><div class="line-msg-av">🏢</div><div class="line-bubble">いつものメールよりLINEの方が早くてすみません笑<br>急いでお伝えしたくて！よろしくお願いします🙏</div><div class="line-mtime">11:07</div></div>'
+      + '</div></div>';
+  }
+
+  if (t === 'email-wire') {
+    var fromStr = step.isTakeover
+      ? 'taro.yamada@tanaka-shoji.co.jp&nbsp;&nbsp;<span style="background:var(--red);color:#fff;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:700;">乗っ取り済みの本物アカウント</span>'
+      : 'taro.yamada@tanaka-<strong>sh0ji</strong>.co.jp&nbsp;&nbsp;<span style="background:var(--red-bg);color:var(--red);font-size:12px;padding:2px 8px;border-radius:4px;font-weight:700;border:1px solid var(--red-bd);">⚠️ 偽装アドレス</span>';
+    return '<div class="email-frame">'
+      + '<div class="email-topbar"><div class="email-dot" style="background:#ff5f57"></div><div class="email-dot" style="background:#febc2e"></div><div class="email-dot" style="background:#28c840"></div></div>'
+      + '<div class="email-meta">'
+      + '<div class="email-row"><span class="email-field">差出人</span><span class="email-val">山田 太郎（CFO）&lt;' + fromStr + '&gt;</span></div>'
+      + '<div class="email-row"><span class="email-field">宛先</span><span class="email-val">hanako.suzuki@tanaka-shoji.co.jp</span></div>'
+      + '<div class="email-subject">【至急・機密】送金処理のお願い</div>'
+      + '</div>'
+      + '<div class="email-body">鈴木さん<br><br>お疲れ様です。山田です。<br><br>現在、M&A案件で急ぎの対応が必要となりました。<br>本件は取締役会の決定事項で、クロージング前のため<strong>極秘</strong>でお願いします。<br><br>下記口座に<strong style="color:var(--red);">本日17時まで</strong>に送金処理をお願いします。<br><br>&nbsp;&nbsp;金額：3,500,000円<br>&nbsp;&nbsp;銀行：〇〇銀行 新宿支店<br>&nbsp;&nbsp;口座番号：7654321<br>&nbsp;&nbsp;名義：カ）フロンティアパートナーズ<br><br>今回は法務上の理由から<strong style="color:var(--red);">他の方への確認は不要</strong>です。<br>私への連絡も<strong style="color:var(--red);">メールのみ</strong>でお願いします。<br><br>よろしく。</div>'
+      + '<div class="email-sig">山田 太郎&nbsp; 取締役 CFO&nbsp; 田中商事株式会社</div>'
+      + '</div>';
+  }
+
+  if (t === 'email-data') {
+    return '<div class="email-frame">'
+      + '<div class="email-topbar"><div class="email-dot" style="background:#ff5f57"></div><div class="email-dot" style="background:#febc2e"></div><div class="email-dot" style="background:#28c840"></div></div>'
+      + '<div class="email-meta">'
+      + '<div class="email-row"><span class="email-field">差出人</span><span class="email-val email-fake">総務部長 田村 健一 &lt;k.tamura@tanaka-<strong>sh0ji</strong>.co.jp&gt;&nbsp; ⚠️ 偽装</span></div>'
+      + '<div class="email-row"><span class="email-field">宛先</span><span class="email-val">hanako.suzuki@tanaka-shoji.co.jp</span></div>'
+      + '<div class="email-subject">【緊急】年次コンプライアンス監査対応 — 社員データ送付のお願い</div>'
+      + '</div>'
+      + '<div class="email-body">鈴木さん<br><br>今週実施の外部監査への対応として、下記情報の提出が必要となりました。<br><br>■ 必要情報（<strong style="color:var(--red);">本日中</strong>）<br>&nbsp;・全社員名簿（氏名・住所・電話番号・給与等級）<br>&nbsp;・直近3ヶ月の振込先口座一覧<br><br>監査法人より直接提出を求められているため、<br>添付ファイルにまとめてご返信ください。<br><br>取り急ぎご対応のほどよろしくお願いします。</div>'
+      + '<div class="email-sig">田村 健一&nbsp; 総務部長&nbsp; 田中商事株式会社</div>'
+      + '</div>';
+  }
+
+  if (t === 'stolen-data') {
+    return '<div class="info-box">'
+      + '<div class="info-box-title">📋 攻撃者が入手した社員名簿（一部抜粋）</div>'
+      + '<table class="data-table">'
+      + '<tr><th>氏名</th><th>部署</th><th>住所（一部）</th><th>給与等級</th><th>振込口座</th></tr>'
+      + '<tr><td>鈴木 花子</td><td>経理部</td><td>東京都渋谷区〇〇</td><td>G4</td><td>〇〇銀行 ****1234</td></tr>'
+      + '<tr><td>田中 一郎</td><td>営業部</td><td>神奈川県横浜市〇〇</td><td>G5</td><td>△△銀行 ****5678</td></tr>'
+      + '<tr><td>佐藤 美咲</td><td>総務部</td><td>東京都新宿区〇〇</td><td>G3</td><td>□□銀行 ****9012</td></tr>'
+      + '<tr><td>山本 健太</td><td>IT部</td><td>千葉県船橋市〇〇</td><td>G4</td><td>〇〇銀行 ****3456</td></tr>'
+      + '<tr><td colspan="5" style="text-align:center;color:var(--muted);font-style:italic;padding:12px;">…以下、全社員 87名分のデータが流出</td></tr>'
+      + '</table></div>';
+  }
+
+  if (t === 'wire-done') {
+    return '<div style="background:var(--red-bg);border:1.5px solid var(--red-bd);border-radius:12px;padding:28px;text-align:center;">'
+      + '<div style="font-size:48px;margin-bottom:10px;">💸</div>'
+      + '<div style="font-size:16px;color:var(--muted);margin-bottom:8px;">送金完了通知</div>'
+      + '<div style="font-family:Orbitron,monospace;font-size:36px;font-weight:700;color:var(--red);">¥3,500,000</div>'
+      + '<div style="font-size:15px;color:var(--sub);margin-top:14px;line-height:1.9;">'
+      + '振込先：カ）フロンティアパートナーズ<br>〇〇銀行 新宿支店 7654321<br><br>'
+      + '<strong style="color:var(--red);">→ この口座は攻撃者が用意したマネーミュール口座です</strong>'
+      + '</div></div>';
+  }
+
+  if (t === 'laundering') {
+    var rows = '';
+    if (step.useMule) {
+      rows += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#fff;border-radius:8px;border:1px solid var(--border);">'
+        + '<span style="background:var(--red);color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:6px;white-space:nowrap;flex-shrink:0;">+0分</span>'
+        + '<span style="font-size:15px;">着金確認 → 即座に<strong>8つの中継口座</strong>へ分散送金。追跡が極めて困難に。</span></div>';
+      rows += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#fff;border-radius:8px;border:1px solid var(--border);">'
+        + '<span style="background:var(--amber);color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:6px;white-space:nowrap;flex-shrink:0;">+30分</span>'
+        + '<span style="font-size:15px;">警察が口座凍結を依頼。しかし資金はすでに移動済み。</span></div>';
+    }
+    if (step.useCrypto) {
+      rows += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#fff;border-radius:8px;border:1px solid var(--border);">'
+        + '<span style="background:var(--blue);color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:6px;white-space:nowrap;flex-shrink:0;">+2時間</span>'
+        + '<span style="font-size:15px;">ビットコインに変換 → 匿名の海外ウォレットへ送金</span></div>';
+      rows += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#fff;border-radius:8px;border:1px solid var(--border);">'
+        + '<span style="background:#444;color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:6px;white-space:nowrap;flex-shrink:0;">+4時間</span>'
+        + '<span style="font-size:15px;">Monero（追跡不能な暗号資産）に変換完了。法執行機関でも追跡は極めて困難。</span></div>';
+    }
+    rows += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:var(--red-bg);border-radius:8px;border:1px solid var(--red-bd);">'
+      + '<span style="background:#333;color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:6px;white-space:nowrap;flex-shrink:0;">+17日後</span>'
+      + '<span style="font-size:15px;color:var(--red);font-weight:700;">被害発覚。警察に届出。この時点での資金回収はほぼ不可能。</span></div>';
+
+    return '<div style="background:var(--blue-bg);border:1.5px solid var(--blue-bd);border-radius:12px;padding:24px;">'
+      + '<div style="font-size:17px;font-weight:900;color:var(--blue);margin-bottom:16px;">🏃 資金移動タイムライン</div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px;">' + rows + '</div>'
+      + '</div>';
+  }
+
+  if (t === 'discovery') {
+    var items = '';
+    if (step.hasWire) items += '<div style="font-size:15px;margin-bottom:10px;padding:14px 18px;background:#fff;border-radius:8px;border:1px solid var(--border);">💸 <strong>送金詐欺：</strong>翌月、本物の取引先から「入金がない」と連絡が来て発覚。すでに17日が経過。</div>';
+    if (step.hasData) items += '<div style="font-size:15px;margin-bottom:10px;padding:14px 18px;background:#fff;border-radius:8px;border:1px solid var(--border);">📋 <strong>情報漏洩：</strong>社員の個人情報がダークウェブに出回っていることが判明。87名全員への通知が必要に。</div>';
+    return '<div style="background:var(--amber-bg);border:1.5px solid var(--amber-bd);border-radius:12px;padding:24px;">'
+      + '<div style="font-size:17px;font-weight:900;color:var(--amber);margin-bottom:16px;">📢 被害が発覚した経緯</div>'
+      + items
+      + '<div style="font-size:15px;color:var(--sub);margin-top:14px;line-height:1.9;padding:14px 18px;background:#fff;border-radius:8px;border:1px solid var(--border);">'
+      + '<strong>発覚後にやること（すべて負担）：</strong><br>'
+      + '🔴 警察・銀行への届出&nbsp; / &nbsp;個人情報保護委員会への報告義務<br>'
+      + '🔴 87名の社員・全取引先への謝罪・説明&nbsp; / &nbsp;再発防止策の策定<br>'
+      + '🔴 弁護士費用・調査費用・信頼回復にかかるコスト'
+      + '</div></div>';
+  }
+
+  return '<div style="padding:20px;color:var(--sub);">（コンテンツなし）</div>';
+}
+
+/* ═══════════════════════════════
+   結果表示
+═══════════════════════════════ */
+function showResult() {
+  var WIR = !!SEL['goal-wire'];
+  var DAT = !!SEL['goal-data'];
+  var TAK = !!SEL['goal-takeover'];
+  var MUL = !!SEL['esc-mule'];
+  var CRY = !!SEL['esc-crypto'];
+
+  // ダメージ
+  var dmg = '';
+  if (WIR) dmg += '<div class="damage-item"><div class="damage-lbl">不正送金額</div><div class="damage-val">¥3,500,000</div><div class="damage-note">回収できる確率: 約7%</div></div>';
+  if (DAT) dmg += '<div class="damage-item"><div class="damage-lbl">漏洩した社員数</div><div class="damage-val" style="font-size:28px;">87名</div><div class="damage-note">氏名・住所・給与・口座情報</div></div>';
+  if (TAK) dmg += '<div class="damage-item"><div class="damage-lbl">侵害期間</div><div class="damage-val" style="font-size:20px;color:var(--amber);">不明</div><div class="damage-note">いつから監視されていたか不明</div></div>';
+  if (MUL || CRY) dmg += '<div class="damage-item"><div class="damage-lbl">資金回収可能性</div><div class="damage-val" style="font-size:20px;color:var(--sub);">ほぼ0%</div><div class="damage-note">暗号資産変換後は追跡不能</div></div>';
+  if (!dmg) dmg = '<div class="damage-item"><div class="damage-lbl">現段階</div><div class="damage-val" style="font-size:18px;color:var(--green);">偵察段階</div><div class="damage-note">実行フェーズが加わると被害が発生</div></div>';
+
+  document.getElementById('resultArea').innerHTML =
+    '<div class="result-title">🚨 シミュレーション完了</div>'
+    + '<div class="result-subtitle">攻撃者の視点と被害者の体験、両方を通じて何を学びましたか？</div>'
+    + '<div class="damage-grid">' + dmg + '</div>'
+    + '<div class="result-msg">⚠️ これはすべて、<strong>メール1通・SMS1件・LINEメッセージ1つ</strong>から始まりました。<br>攻撃者が攻撃する理由は明快です——<strong>利益があるから</strong>。その利益を生み出さないことが私たちの仕事です。</div>';
+
+  // 学習ポイント
+  var learns = [
+    '📞 送金依頼・口座変更の連絡が来たら、まず電話（知っている番号）で本人に直接確認する',
+    '🔍 メールの「差出人の名前」ではなく「@以降のドメイン名」を必ず確認する',
+    '🚨 「急いで」「秘密に」「他の人に言わないで」という言葉が出たら詐欺を疑う'
+  ];
+  if (WIR) learns.push('💸 送金処理は必ず2名以上が関与するルールを作る。1人では完結させない');
+  if (DAT) learns.push('📋 社員の個人情報・給与情報の送付依頼は、必ず上司に面談または電話で確認してから対応する');
+  if (TAK) learns.push('🔑 すべてのアカウントに多要素認証（MFA）を設定する——これが最も効果的な防御策');
+  if (MUL || CRY) learns.push('⏰ 被害に気づいたら銀行に「今すぐ」電話する。1時間の差が回収率を大きく左右する');
+  learns.push('📱 SMS・LINEで届く口座変更・送金依頼は、どんな内容でも100%疑ってかかる');
+  learns.push('🎓 定期的なセキュリティ研修と模擬フィッシング訓練を組織全体で実施する');
+  learns.push('🗣️ 「怪しいと思ったけど対応した」がなくなるよう、迷ったら相談できる文化を作る');
+
+  document.getElementById('learnArea').innerHTML =
+    '<div class="learn-head">✅ 今日から実践できる防御策</div>'
+    + learns.map(function(l) { return '<div class="learn-item">' + l + '</div>'; }).join('');
+
+  goPage(3);
+}
+
+/* ═══════════════════════════════
+   リスタート
+═══════════════════════════════ */
+function restart() {
+  SEL = {}; STEPS = []; STEP_IDX = 0;
+  document.querySelectorAll('.hcard').forEach(function(c) {
+    c.classList.remove('is-sel-green','is-sel-red','is-sel-amber','is-sel-blue');
+  });
+  updateHackerUI();
+  goPage(0);
+}
+</script>
+</body>
+</html>
