@@ -252,6 +252,11 @@ html,body{height:100%;font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic P
   </div>
 </div>
 
+<!-- ROLL -->
+<div id="page-roll" style="display:none;position:fixed;inset:0;background:#0A0A12;z-index:50;overflow:hidden;cursor:default">
+  <div id="roll-lines" style="position:absolute;width:100%;text-align:center;bottom:-40px"></div>
+</div>
+
 <!-- INCIDENT -->
 <div id="page-inc">
   <div class="inc-topbar">
@@ -704,7 +709,7 @@ const logItems = [];
 let typeTimer = null;
 
 function show(id) {
-  ['page-top','page-sim','page-inc','page-sum'].forEach(pid => {
+  ['page-top','page-sim','page-roll','page-inc','page-sum'].forEach(pid => {
     const el = document.getElementById(pid);
     if(!el) return;
     el.style.display = pid===id ? (pid==='page-sim'?'flex':'block') : 'none';
@@ -797,8 +802,84 @@ function doStep() {
   const s = SCENES[simStep];
   if(s.log) logItems.push(s.log);
   simStep++;
-  if(simStep>=SCENES.length){ fade(()=>{ incStep=0; renderInc(); show('page-inc'); }); }
+  if(simStep>=SCENES.length){ fade(()=>{ show('page-roll'); startRoll(); }); }
   else { renderScene(); }
+}
+
+/* ============================================================
+   ROLL
+============================================================ */
+const ROLL_LINES = [
+  { text: 'あなたは今日もカフェで仕事をした。', style: 'body' },
+  { text: 'いつもと変わらない、穏やかな午後。', style: 'body' },
+  { text: '', style: 'spacer' },
+  { text: 'しかし――', style: 'emphasis' },
+  { text: '', style: 'spacer' },
+  { text: 'その何気ない選択のひとつひとつに、', style: 'body' },
+  { text: '見えない脅威が忍び込んでいた。', style: 'body' },
+  { text: '', style: 'spacer' },
+  { text: 'フリーWi-Fi。', style: 'item' },
+  { text: '画面の無施錠。', style: 'item' },
+  { text: 'VPNなしのファイルアクセス。', style: 'item' },
+  { text: 'スピーカーでのWeb会議。', style: 'item' },
+  { text: '公共USBポートでの充電。', style: 'item' },
+  { text: '', style: 'spacer' },
+  { text: 'それぞれが、攻撃者への入口になっていた。', style: 'body' },
+  { text: '', style: 'spacer' },
+  { text: '今から、あなたの行動を振り返る。', style: 'body' },
+  { text: '', style: 'spacer' },
+  { text: '何が起きていたのか。', style: 'emphasis' },
+];
+
+function startRoll() {
+  const container = document.getElementById('roll-lines');
+  container.innerHTML = '';
+
+  ROLL_LINES.forEach(line => {
+    const el = document.createElement('div');
+    if(line.style === 'spacer') {
+      el.style.cssText = 'height:32px';
+    } else if(line.style === 'emphasis') {
+      el.style.cssText = 'font-size:24px;font-weight:700;color:#FFFFFF;letter-spacing:.06em;margin:4px 0;line-height:1.6';
+      el.textContent = line.text;
+    } else if(line.style === 'item') {
+      el.style.cssText = 'font-size:18px;color:#00E5A0;letter-spacing:.04em;margin:2px 0;line-height:1.7';
+      el.textContent = '・' + line.text;
+    } else {
+      el.style.cssText = 'font-size:19px;color:#BBBBCC;letter-spacing:.04em;margin:2px 0;line-height:1.75';
+      el.textContent = line.text;
+    }
+    container.appendChild(el);
+  });
+
+  const skip = document.createElement('div');
+  skip.style.cssText = 'margin-top:64px;font-size:14px;color:rgba(255,255,255,.3);letter-spacing:.1em';
+  skip.textContent = '— tap to continue —';
+  container.appendChild(skip);
+
+  const totalH = container.scrollHeight;
+  const vh = window.innerHeight;
+  const duration = (totalH + vh + 60) / 55;
+
+  container.style.transition = 'none';
+  container.style.bottom = (-totalH - 20) + 'px';
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      container.style.transition = `bottom ${duration}s linear`;
+      container.style.bottom = (vh + 40) + 'px';
+    });
+  });
+
+  const pg = document.getElementById('page-roll');
+  pg.onclick = goToInc;
+  setTimeout(goToInc, duration * 1000);
+}
+
+function goToInc() {
+  const pg = document.getElementById('page-roll');
+  pg.onclick = null;
+  fade(() => { incStep = 0; renderInc(); show('page-inc'); });
 }
 
 /* ============================================================
